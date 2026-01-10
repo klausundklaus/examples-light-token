@@ -6,7 +6,10 @@ import { createAssociatedTokenAccount } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
 const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// localnet:
+// const RPC_URL = undefined;
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
         JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
@@ -14,7 +17,10 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
+    // devnet:
     const rpc = createRpc(RPC_URL);
+    // localnet:
+    // const rpc = createRpc();
 
     // Setup: Get SPL tokens (needed to compress)
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
