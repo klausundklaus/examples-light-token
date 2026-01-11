@@ -5,3 +5,10 @@
 **/package-lock.json
 **/*.json.bak
 **/test-ledger
+
+# Ruby
+**/vendor/
+**/coverage/
+**/.bundle/
+**/.rspec_status
+**/*.gem
