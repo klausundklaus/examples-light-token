@@ -1,36 +1,4 @@
 # Light Token Examples
-
-## Setup
-
-```bash
-npm install @lightprotocol/stateless.js@alpha \
-            @lightprotocol/compressed-token@alpha
-```
-
-```bash
-cp .env.example .env # ...and set RPC_URL
-```
-
-## Run
-
-From repo root:
-
-```bash
-# quickstart
-npm run quickstart
-
-# cookbook (local)
-npm run cookbook create-mint:action
-npm run cookbook compress:action
-# ... see cookbook/package.json for more
-
-# payments
-npm run toolkit:payments send-and-receive
-```
-
-
-For local net, install via `npm i -g @lightprotocol/zk-compression-cli@alpha`, then run `light test-validator` in a separate terminal.
-
 ## Quickstart
 
 ### [Devnet Quickstart](devnet-quickstart/)
@@ -78,3 +46,40 @@ Examples for wallet integrations and payment flows:
 ### [Streaming Tokens](toolkits/streaming-tokens/)
 
 Rust program example with test to stream mint events of the Light-Token Program.
+
+
+## Setup
+
+```bash
+npm install @lightprotocol/stateless.js@alpha \
+            @lightprotocol/compressed-token@alpha
+```
+
+```bash
+cp .env.example .env # ...and set RPC_URL
+```
+
+## Run
+
+From repo root:
+
+```bash
+# quickstart
+npm run quickstart
+
+# cookbook (local)
+npm run cookbook create-mint:action
+npm run cookbook compress:action
+# ... see cookbook/package.json for more
+
+# payments
+npm run toolkit:payments send-and-receive
+```
+
+
+For local net, install via `npm i -g @lightprotocol/zk-compression-cli@alpha`, then run `light test-validator` in a separate terminal.
+
+## Documentation
+
+Learn more [about to Light-Token here](https://www.zkcompression.com/light-token/welcome).
+
