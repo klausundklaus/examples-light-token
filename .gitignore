@@ -1,12 +1,35 @@
-**/node_modules/
+# Build artifacts
+**/target/
 **/dist/
+**/build/
+
+# Dependencies
+**/node_modules/
+
+# Anchor
+**/.anchor/
+**/Anchor.lock
+
+# Environment and secrets
 **/.env
+**/.env.*
+**/*-keypair.json
+**/*.pem
+
+# Test artifacts
+**/test-ledger/
+
+# Lock files (optional for examples)
 **/pnpm-lock.yaml
 **/package-lock.json
-**/*.json.bak
-**/test-ledger
+**/Cargo.lock
 
-# Ruby
+# Editor/OS
+**/.DS_Store
+**/*.rs.bk
+**/*.json.bak
+
+# Ruby (if applicable)
 **/vendor/
 **/coverage/
 **/.bundle/
