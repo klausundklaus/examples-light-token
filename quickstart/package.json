@@ -2,6 +2,6 @@
     "name": "quickstart",
     "type": "module",
     "scripts": {
-        "start": "cd .. && ts-node-esm quickstart/index.ts"
+        "start": "cd .. && tsx quickstart/index.ts"
     }
 }
