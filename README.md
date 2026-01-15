@@ -19,7 +19,7 @@ TypeScript examples for light-token-sdk.
   - [Action](typescript-client/actions/create-mint.ts) | [Instruction](typescript-client/instructions/create-mint.ts)
 - **create-ata** - Create an associated light-token account
   - [Action](typescript-client/actions/create-ata.ts) | [Instruction](typescript-client/instructions/create-ata.ts)
-- **load-ata** - Load cold token account to hot balance
+- **load-ata** - Load token accounts from light-token, compressed tokens, SPL/T22 to one unified balance.
   - [Action](typescript-client/actions/load-ata.ts) | [Instruction](typescript-client/instructions/load-ata.ts)
 - **mint-to** - Mint tokens to a light-account
   - [Action](typescript-client/actions/mint-to.ts) | [Instruction](typescript-client/instructions/mint-to.ts)
