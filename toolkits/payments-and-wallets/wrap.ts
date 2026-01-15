@@ -35,10 +35,10 @@ const payer = Keypair.fromSecretKey(
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
     await decompress(rpc, payer, mint, bn(1000), payer, splAta);
 
-    const ctokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
-    const tx = await wrap(rpc, payer, splAta, ctokenAta, payer, mint, bn(500));
+    const tx = await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, bn(500));
 
     console.log("Tx:", tx);
 })();

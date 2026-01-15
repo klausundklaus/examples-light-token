@@ -32,8 +32,8 @@ const payer = Keypair.fromSecretKey(
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
 
     // Load compressed tokens to hot balance, then create unwrap instruction
-    const ctokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
-    await loadAta(rpc, ctokenAta, payer, mint, payer);
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await loadAta(rpc, lightTokenAta, payer, mint, payer);
 
     const splAta = await createAssociatedTokenAccount(
         rpc,
@@ -50,7 +50,7 @@ const payer = Keypair.fromSecretKey(
     if (!splInterfaceInfo) throw new Error("No SPL interface found");
 
     const ix = createUnwrapInstruction(
-        ctokenAta,
+        lightTokenAta,
         splAta,
         payer.publicKey,
         mint,

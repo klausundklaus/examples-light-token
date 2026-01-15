@@ -11,7 +11,7 @@ use helius_laserstream::{ subscribe, CommitmentLevel, LaserstreamConfig, Subscri
 use solana_pubkey::Pubkey;
 
 use light_compressed_account::indexer_event::parse::event_from_light_transaction;
-use light_ctoken_types::state::{ CompressedMint, ExtensionStruct };
+use light_token_types::state::{ CompressedMint, ExtensionStruct };
 
 const LIGHT_SYSTEM_PROGRAM: &str = "SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7";
 
@@ -53,15 +53,15 @@ async fn process_transaction(tx: &Transaction) -> anyhow::Result<()> {
     if let Some(batches) = event_from_light_transaction(&program_ids, &instruction_data, accounts_per_ix)? {
         for event in batches {
             // new mints
-            for m in extract_new_mints(&event, ctoken_program_id, mint_storage)? {
-                println!("new cToken mint: {}", m.mint.metadata.spl_mint);
+            for m in extract_new_mints(&event, light_token_program_id, mint_storage)? {
+                println!("new Light Token mint: {}", m.mint.metadata.spl_mint);
                 if let Some(meta) = extract_token_metadata(m.mint) {
                     println!("{} ({})", meta.name, meta.symbol);
                 }
             }
 
             // updates
-            for m in extract_mint_updates(&event, ctoken_program_id, mint_storage)? {
+            for m in extract_mint_updates(&event, light_token_program_id, mint_storage)? {
                 println!("mint update: {}", m.mint.metadata.spl_mint);
             }
         }
@@ -196,37 +196,37 @@ where
 ```rust
 pub fn extract_new_mints<'a>(
     event: &'a PublicTransactionEvent,
-    ctoken_program_id: &Pubkey,
+    light_token_program_id: &Pubkey,
     mint_storage: &'a mut Vec<CompressedMint>,
 ) -> Result<Vec<MintRef<'a>>, std::io::Error> {
-    let mints = extract_mints(event, ctoken_program_id, mint_storage)?;
+    let mints = extract_mints(event, light_token_program_id, mint_storage)?;
     Ok(mints.into_iter().filter(|m| m.is_new).collect())
 }
 
 pub fn extract_mint_updates<'a>(
     event: &'a PublicTransactionEvent,
-    ctoken_program_id: &Pubkey,
+    light_token_program_id: &Pubkey,
     mint_storage: &'a mut Vec<CompressedMint>,
 ) -> Result<Vec<MintRef<'a>>, std::io::Error> {
-    let mints = extract_mints(event, ctoken_program_id, mint_storage)?;
+    let mints = extract_mints(event, light_token_program_id, mint_storage)?;
     Ok(mints.into_iter().filter(|m| !m.is_new).collect())
 }
 
 pub fn extract_mints<'a>(
     event: &'a PublicTransactionEvent,
-    ctoken_program_id: &Pubkey,
+    light_token_program_id: &Pubkey,
     mint_storage: &'a mut Vec<CompressedMint>,
 ) -> Result<Vec<MintRef<'a>>, std::io::Error> {
     let mut indices = Vec::new();
 
     for (idx, output) in event.output_compressed_accounts.iter().enumerate() {
 
-        if output.compressed_account.owner != *ctoken_program_id {
+        if output.compressed_account.owner != *light_token_program_id {
             continue;
         }
 
         let data = match &output.compressed_account.data {
-            Some(d) if d.discriminator == CTOKEN_MINT_DISCRIMINATOR => &d.data,
+            Some(d) if d.discriminator == TOKEN_MINT_DISCRIMINATOR => &d.data,
             _ => continue,
         };
 

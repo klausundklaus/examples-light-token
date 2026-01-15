@@ -4,10 +4,10 @@
     "description": "Light Token Payments Toolkit Examples",
     "type": "module",
     "scripts": {
-        "send-and-receive": "ts-node-esm send-and-receive.ts",
-        "get-balance": "ts-node-esm get-balance.ts",
-        "get-history": "ts-node-esm get-history.ts",
-        "wrap": "ts-node-esm wrap.ts",
-        "unwrap": "ts-node-esm unwrap.ts"
+        "send-and-receive": "tsx send-and-receive.ts",
+        "get-balance": "tsx get-balance.ts",
+        "get-history": "tsx get-history.ts",
+        "wrap": "tsx wrap.ts",
+        "unwrap": "tsx unwrap.ts"
     }
 }

@@ -1,7 +1,7 @@
 use futures::StreamExt;
 use helius_laserstream::{subscribe, LaserstreamConfig};
 
-const CTOKEN_PROGRAM_ID: &str = "cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m";
+const LIGHT_TOKEN_PROGRAM_ID: &str = "cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -14,11 +14,11 @@ async fn main() -> anyhow::Result<()> {
 
     let request = helius_laserstream::grpc::SubscribeRequest {
         transactions: [(
-            "ctoken".to_string(),
+            "light_token".to_string(),
             helius_laserstream::grpc::SubscribeRequestFilterTransactions {
                 vote: Some(false),
                 failed: Some(false),
-                account_include: vec![CTOKEN_PROGRAM_ID.to_string()],
+                account_include: vec![LIGHT_TOKEN_PROGRAM_ID.to_string()],
                 ..Default::default()
             },
         )]

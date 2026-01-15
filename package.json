@@ -12,15 +12,15 @@
         "toolkit:payments": "npm run -w toolkits/payments-and-wallets"
     },
     "dependencies": {
-        "@lightprotocol/compressed-token": "0.22.1-alpha.7",
-        "@lightprotocol/stateless.js": "0.22.1-alpha.6",
+        "@lightprotocol/compressed-token": "^0.22.1-alpha.8",
+        "@lightprotocol/stateless.js": "^0.22.1-alpha.7",
         "@solana/spl-token": "^0.4.13",
         "@solana/web3.js": "1.98.4",
         "dotenv": "^16.5.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
-        "ts-node": "^10.9.2",
+        "tsx": "^4.7.0",
         "typescript": "^5.0.0"
     }
 }
