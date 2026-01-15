@@ -4,7 +4,7 @@
 
 - **[create-mint](actions/create-mint.ts)** - Create a light-token mint with metadata
 - **[create-ata](actions/create-ata.ts)** - Create an associated light-token account
-- **[load-ata](actions/load-ata.ts)** - Load cold token account to hot balance
+- **load-ata** - Load token accounts from light-token, compressed tokens, SPL/T22 to one unified balance.
 - **[mint-to](actions/mint-to.ts)** - Mint tokens to a light-account
 - **[transfer-interface](actions/transfer-interface.ts)** - Transfer between light-token, T22, and SPL accounts
 - **[delegate-approve](actions/delegate-approve.ts)** - Approve delegate
