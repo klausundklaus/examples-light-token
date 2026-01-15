@@ -5,15 +5,16 @@ import {
     createMintInterface,
     createAtaInterface,
     mintToInterface,
+    transferInterface,
     getAssociatedTokenAddressInterface,
 } from "@lightprotocol/compressed-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
 // localnet:
-// const RPC_URL = undefined;
+const RPC_URL = undefined;
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
         JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
@@ -22,17 +23,22 @@ const payer = Keypair.fromSecretKey(
 
 (async function () {
     // devnet:
-    const rpc = createRpc(RPC_URL);
+    // const rpc = createRpc(RPC_URL);
     // localnet:
-    // const rpc = createRpc();
+    const rpc = createRpc();
 
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
 
+    const sender = Keypair.generate();
+    await createAtaInterface(rpc, payer, mint, sender.publicKey);
+    const senderAta = getAssociatedTokenAddressInterface(mint, sender.publicKey);
+    await mintToInterface(rpc, payer, mint, senderAta, payer, 1_000_000_000);
+
     const recipient = Keypair.generate();
     await createAtaInterface(rpc, payer, mint, recipient.publicKey);
+    const recipientAta = getAssociatedTokenAddressInterface(mint, recipient.publicKey);
 
-    const destination = getAssociatedTokenAddressInterface(mint, recipient.publicKey);
-    const tx = await mintToInterface(rpc, payer, mint, destination, payer, 1_000_000_000);
+    const tx = await transferInterface(rpc, payer, senderAta, mint, recipientAta, sender, 500_000_000);
 
     console.log("Tx:", tx);
 })();

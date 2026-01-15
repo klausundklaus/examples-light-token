@@ -1,0 +1,85 @@
+name: TypeScript
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOLANA_CLI_VERSION: "2.1.21"
+  NODE_VERSION: "22"
+
+jobs:
+  typescript-tests:
+    name: TypeScript Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Solana CLI tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/solana/
+            ~/.local/share/solana/
+          key: solana-cli-${{ runner.os }}-${{ env.SOLANA_CLI_VERSION }}
+
+      - name: Install Solana CLI tools
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_CLI_VERSION }}/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Light CLI
+        run: npm install -g @lightprotocol/zk-compression-cli@alpha
+
+      - name: Install Rust (for Photon)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Cache Photon indexer
+        id: cache-photon
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/photon
+          key: photon-${{ runner.os }}-1a785036de52896b68d06413e3b0231122d6aa4a
+
+      - name: Install Photon indexer
+        if: steps.cache-photon.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/lightprotocol/photon.git --rev 1a785036de52896b68d06413e3b0231122d6aa4a --locked
+        env:
+          RUSTFLAGS: "-A dead-code"
+
+      - name: Generate keypair
+        run: solana-keygen new --no-bip39-passphrase
+
+      - name: Install dependencies
+        working-directory: typescript-client
+        run: npm install
+
+      - name: Start test validator
+        run: |
+          light test-validator &
+          sleep 15
+
+      - name: Run actions
+        working-directory: typescript-client
+        run: npm run test:actions
+
+      - name: Run instructions
+        working-directory: typescript-client
+        run: npm run test:instructions

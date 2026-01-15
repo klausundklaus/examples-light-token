@@ -18,13 +18,26 @@
 | `send-and-receive.ts` | Send/receive payments                | `getOrCreateAtaInterface`, `transferInterface` |
 | `get-balance.ts`      | Check token balance                  | `getAtaInterface`                              |
 | `get-history.ts`      | Transaction history                  | `getSignaturesForOwnerInterface`               |
-| `wrap.ts`             | On-ramp from CEX (SPL → light-token) | `wrap`                                         |
-| `unwrap.ts`           | Off-ramp to CEX (light-token → SPL)  | `unwrap`                                       |
+| `wrap.ts`             | SPL → light-token                    | `wrap`                                         |
+| `unwrap.ts`           | light-token → SPL                    | `unwrap`                                       |
 
 ## Get Started
 
+## Setup
+
 ```bash
-npm install -g @lightprotocol/zk-compression-cli@alpha
+npm install @lightprotocol/stateless.js@alpha \
+            @lightprotocol/compressed-token@alpha
+```
+
+For Localnet:
+```bash
+npm i -g @lightprotocol/zk-compression-cli@alpha
+```
+
+For Devnet:
+```bash
+cp ../../.env.example .env # ...and set API_KEY
 ```
 
 ```bash
@@ -40,3 +53,8 @@ pnpm run get-history
 pnpm run wrap
 pnpm run unwrap
 ```
+
+## Documentation
+
+Learn more [about to Light-Token here](https://www.zkcompression.com/light-token/welcome).
+

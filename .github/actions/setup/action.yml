@@ -1,0 +1,67 @@
+name: Setup Environment
+description: Setup Rust, Solana CLI, and Light CLI for testing
+
+inputs:
+  solana-cli-version:
+    description: "Solana CLI version"
+    required: false
+    default: "2.1.21"
+  rust-toolchain:
+    description: "Rust toolchain version"
+    required: false
+    default: "1.85.0"
+  light-cli-version:
+    description: "Light CLI version"
+    required: false
+    default: "alpha"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: ${{ inputs.rust-toolchain }}
+        cache: false
+
+    - name: Setup Node.js (for Light CLI)
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+
+    - name: Cache npm global packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: npm-${{ runner.os }}-light-cli-${{ inputs.light-cli-version }}
+
+    - name: Cache Solana CLI tools
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/solana/
+          ~/.local/share/solana/
+        key: solana-cli-${{ runner.os }}-${{ inputs.solana-cli-version }}
+
+    - name: Install Solana CLI tools
+      shell: bash
+      run: |
+        sh -c "$(curl -sSfL https://release.anza.xyz/v${{ inputs.solana-cli-version }}/install)"
+        echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+    - name: Install Light CLI
+      shell: bash
+      run: npm install -g @lightprotocol/zk-compression-cli@${{ inputs.light-cli-version }}
+
+    - name: Generate keypair
+      shell: bash
+      run: solana-keygen new --no-bip39-passphrase
+
+    - name: Display versions
+      shell: bash
+      run: |
+        rustc --version
+        cargo --version
+        solana --version
+        light --version
+

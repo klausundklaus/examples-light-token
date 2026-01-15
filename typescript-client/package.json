@@ -3,7 +3,20 @@
     "version": "1.0.0",
     "type": "module",
     "description": "Working examples for light-token operations on Solana devnet",
+    "dependencies": {
+        "@lightprotocol/compressed-token": "alpha",
+        "@lightprotocol/stateless.js": "alpha",
+        "@solana/web3.js": "^1.98.0",
+        "dotenv": "^16.0.0"
+    },
+    "devDependencies": {
+        "tsx": "^4.0.0"
+    },
     "scripts": {
+        "test:localnet": "./switch-network.sh localnet && npm run test:all",
+        "test:all": "npm run test:actions && npm run test:instructions",
+        "test:actions": "tsx actions/create-mint.ts && tsx actions/create-ata.ts && tsx actions/mint-to.ts && tsx actions/transfer-interface.ts",
+        "test:instructions": "tsx instructions/create-mint.ts && tsx instructions/create-ata.ts && tsx instructions/mint-to.ts && tsx instructions/transfer-interface.ts",
         "create-mint:action": "tsx actions/create-mint.ts",
         "create-mint:instruction": "tsx instructions/create-mint.ts",
         "mint-to:action": "tsx actions/mint-to.ts",

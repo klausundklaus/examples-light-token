@@ -1,25 +1,22 @@
 import "dotenv/config";
-import { Keypair, ComputeBudgetProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { createRpc, bn } from "@lightprotocol/stateless.js";
 import {
     createMint,
     mintTo,
     decompress,
-    createWrapInstruction,
+    wrap,
     getAssociatedTokenAddressInterface,
     createAtaInterfaceIdempotent,
-    getSplInterfaceInfos,
 } from "@lightprotocol/compressed-token";
 import { createAssociatedTokenAccount } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-const rpc = createRpc(RPC_URL);
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
 // localnet:
-// const rpc = createRpc();
-
+const RPC_URL = undefined;
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
         JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
@@ -27,6 +24,10 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
+    // devnet:
+    // const rpc = createRpc(RPC_URL);
+    // localnet:
+    const rpc = createRpc();
 
     // Setup: Get SPL tokens (needed to wrap)
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
@@ -39,32 +40,11 @@ const payer = Keypair.fromSecretKey(
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
     await decompress(rpc, payer, mint, bn(1000), payer, splAta);
 
-    // Create wrap instruction
+    // Wrap SPL tokens to rent-free token ATA
     const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
-    const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
-    const splInterfaceInfo = splInterfaceInfos.find(
-        (info) => info.isInitialized
-    );
+    const tx = await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, bn(500));
 
-    if (!splInterfaceInfo) throw new Error("No SPL interface found");
-
-    const ix = createWrapInstruction(
-        splAta,
-        lightTokenAta,
-        payer.publicKey,
-        mint,
-        bn(500),
-        splInterfaceInfo,
-        payer.publicKey
-    );
-
-    const tx = new Transaction().add(
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
-        ix
-    );
-    const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
-
-    console.log("Tx:", signature);
+    console.log("Tx:", tx);
 })();

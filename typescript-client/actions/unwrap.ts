@@ -1,14 +1,16 @@
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
 import { createRpc, bn } from "@lightprotocol/stateless.js";
-import { createMint, mintTo, approve } from "@lightprotocol/compressed-token";
+import { createMint, mintTo } from "@lightprotocol/compressed-token";
+import { unwrap } from "@lightprotocol/compressed-token/unified";
+import { createAssociatedTokenAccount } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
 // localnet:
-// const RPC_URL = undefined;
+const RPC_URL = undefined;
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
         JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
@@ -17,24 +19,22 @@ const payer = Keypair.fromSecretKey(
 
 (async function () {
     // devnet:
-    const rpc = createRpc(RPC_URL);
+    // const rpc = createRpc(RPC_URL);
     // localnet:
-    // const rpc = createRpc();
+    const rpc = createRpc();
 
-    // Setup: Get compressed tokens
+    // Setup: Get compressed tokens (cold storage)
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
 
-    // Approve delegation
-    const delegate = Keypair.generate();
-    const tx = await approve(
+    // Unwrap rent-free tokens to SPL ATA
+    const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
-        bn(500),
-        payer,
-        delegate.publicKey
+        payer.publicKey
     );
+    const tx = await unwrap(rpc, payer, splAta, payer, mint, bn(500));
 
     console.log("Tx:", tx);
 })();

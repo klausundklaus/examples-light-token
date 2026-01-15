@@ -4,15 +4,16 @@ import { createRpc, bn } from "@lightprotocol/stateless.js";
 import {
     createMint,
     mintTo,
-    mergeTokenAccounts,
+    loadAta,
+    getAssociatedTokenAddressInterface,
 } from "@lightprotocol/compressed-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
 // localnet:
-// const RPC_URL = undefined;
+const RPC_URL = undefined;
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
         JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
@@ -21,18 +22,17 @@ const payer = Keypair.fromSecretKey(
 
 (async function () {
     // devnet:
-    const rpc = createRpc(RPC_URL);
+    // const rpc = createRpc(RPC_URL);
     // localnet:
-    // const rpc = createRpc();
+    const rpc = createRpc();
 
-    // Setup: Create multiple compressed token accounts
+    // Setup: Get compressed tokens (cold storage)
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
-    for (let i = 0; i < 5; i++) {
-        await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(100));
-    }
+    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
 
-    // Merge multiple accounts into one
-    const tx = await mergeTokenAccounts(rpc, payer, mint, payer);
+    // Load compressed tokens to hot balance
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const tx = await loadAta(rpc, lightTokenAta, payer, mint, payer);
 
     console.log("Tx:", tx);
 })();
