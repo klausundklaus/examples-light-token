@@ -1,7 +1,0 @@
-{
-    "name": "quickstart",
-    "type": "module",
-    "scripts": {
-        "start": "cd .. && tsx quickstart/index.ts"
-    }
-}
