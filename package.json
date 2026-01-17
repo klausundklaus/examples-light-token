@@ -2,13 +2,10 @@
     "name": "examples-light-token",
     "private": true,
     "workspaces": [
-        "quickstart",
-        "cookbook",
+        "typescript-client",
         "toolkits/payments-and-wallets"
     ],
     "scripts": {
-        "quickstart": "npm run -w quickstart start",
-        "cookbook": "npm run -w cookbook",
         "toolkit:payments": "npm run -w toolkits/payments-and-wallets"
     },
     "dependencies": {
