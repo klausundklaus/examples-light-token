@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "programs/escrow",
-    "programs/spl-token-minter",
+    "programs/light-token-minter",
 ]
 
 [workspace.dependencies]

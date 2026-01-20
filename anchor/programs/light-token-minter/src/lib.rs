@@ -19,7 +19,7 @@ pub const MINT_SIGNER_SEED: &[u8] = b"mint_signer";
 
 #[light_program]
 #[program]
-pub mod spl_token_minter {
+pub mod light_token_minter {
     use super::*;
 
     pub fn create_mint<'info>(

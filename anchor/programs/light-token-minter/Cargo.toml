@@ -1,11 +1,11 @@
 [package]
-name = "spl-token-minter"
+name = "light-token-minter"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "spl_token_minter"
+name = "light_token_minter"
 
 [features]
 no-entrypoint = []

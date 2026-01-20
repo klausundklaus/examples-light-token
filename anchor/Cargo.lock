@@ -3003,6 +3003,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "light-token-minter"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "blake3",
+ "light-anchor-spl",
+ "light-client",
+ "light-compressible",
+ "light-hasher",
+ "light-program-test",
+ "light-sdk",
+ "light-sdk-macros",
+ "light-sdk-types",
+ "light-token",
+ "light-token-types",
+ "solana-account-info",
+ "solana-instruction",
+ "solana-keypair",
+ "solana-msg",
+ "solana-program",
+ "solana-program-error",
+ "solana-pubkey",
+ "solana-sdk",
+ "solana-signer",
+ "spl-pod 0.4.0",
+ "spl-token 7.0.0",
+ "spl-token-2022 6.0.0",
+ "tokio",
+]
+
+[[package]]
 name = "light-token-types"
 version = "0.3.0"
 source = "git+https://github.com/Lightprotocol/light-protocol?rev=0b77fa4c5e05f76b46f9696cf7dec02d0306eb60#0b77fa4c5e05f76b46f9696cf7dec02d0306eb60"
@@ -7398,37 +7429,6 @@ dependencies = [
  "spl-pod 0.5.1",
  "spl-type-length-value 0.8.0",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "spl-token-minter"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "blake3",
- "light-anchor-spl",
- "light-client",
- "light-compressible",
- "light-hasher",
- "light-program-test",
- "light-sdk",
- "light-sdk-macros",
- "light-sdk-types",
- "light-token",
- "light-token-types",
- "solana-account-info",
- "solana-instruction",
- "solana-keypair",
- "solana-msg",
- "solana-program",
- "solana-program-error",
- "solana-pubkey",
- "solana-sdk",
- "solana-signer",
- "spl-pod 0.4.0",
- "spl-token 7.0.0",
- "spl-token-2022 6.0.0",
- "tokio",
 ]
 
 [[package]]

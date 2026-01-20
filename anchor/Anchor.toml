@@ -6,7 +6,7 @@ skip-lint = false
 
 [programs.localnet]
 escrow = "FKJs6rp6TXJtxzLiPtdYhqa9ExRuBXG2zwh4fda6WATN"
-spl_token_minter = "3EPJBoxM8Evtv3Wk7R2mSWsrSzUD7WSKAaYugLgpCitV"
+light_token_minter = "3EPJBoxM8Evtv3Wk7R2mSWsrSzUD7WSKAaYugLgpCitV"
 
 [registry]
 url = "https://api.apr.dev"

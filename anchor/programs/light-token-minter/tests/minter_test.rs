@@ -21,8 +21,8 @@ use solana_signer::Signer;
 /// Test creating a Light mint using the #[light_account(init, mint)] macro.
 #[tokio::test]
 async fn test_create_light_mint() {
-    let program_id = spl_token_minter::ID;
-    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("spl_token_minter", program_id)]));
+    let program_id = light_token_minter::ID;
+    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
     let mut rpc = LightProgramTest::new(config).await.unwrap();
@@ -50,7 +50,7 @@ async fn test_create_light_mint() {
 
     // Derive mint signer PDA
     let (mint_signer_pda, mint_signer_bump) = Pubkey::find_program_address(
-        &[spl_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
+        &[light_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
         &program_id,
     );
 
@@ -72,7 +72,7 @@ async fn test_create_light_mint() {
     println!("Light Mint PDA: {:?}", cmint_pda);
 
     // Build create_mint instruction
-    let accounts = spl_token_minter::accounts::CreateMint {
+    let accounts = light_token_minter::accounts::CreateMint {
         fee_payer: payer.pubkey(),
         authority: authority.pubkey(),
         mint_signer: mint_signer_pda,
@@ -85,8 +85,8 @@ async fn test_create_light_mint() {
         system_program: solana_sdk::system_program::ID,
     };
 
-    let instruction_data = spl_token_minter::instruction::CreateMint {
-        params: spl_token_minter::CreateMintParams {
+    let instruction_data = light_token_minter::instruction::CreateMint {
+        params: light_token_minter::CreateMintParams {
             create_accounts_proof: proof_result.create_accounts_proof,
             decimals: 9,
             mint_signer_bump,
@@ -131,8 +131,8 @@ async fn test_create_light_mint() {
 /// Test basic mint signer PDA derivation without creating the mint.
 #[tokio::test]
 async fn test_mint_signer_derivation() {
-    let program_id = spl_token_minter::ID;
-    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("spl_token_minter", program_id)]));
+    let program_id = light_token_minter::ID;
+    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
     let mut rpc = LightProgramTest::new(config).await.unwrap();
@@ -140,14 +140,14 @@ async fn test_mint_signer_derivation() {
 
     // Derive mint signer PDA
     let (mint_signer_pda, bump) = Pubkey::find_program_address(
-        &[spl_token_minter::MINT_SIGNER_SEED, payer.pubkey().as_ref()],
+        &[light_token_minter::MINT_SIGNER_SEED, payer.pubkey().as_ref()],
         &program_id,
     );
 
     // Derive mint PDA from mint signer
     let (mint_pda, _) = find_mint_address(&mint_signer_pda);
 
-    println!("SPL Token Minter test setup completed");
+    println!("Light Token Minter test setup completed");
     println!("Program ID: {:?}", program_id);
     println!("Mint Signer PDA: {:?} (bump: {})", mint_signer_pda, bump);
     println!("Compressed Mint PDA: {:?}", mint_pda);
@@ -155,7 +155,7 @@ async fn test_mint_signer_derivation() {
 
     // Verify the PDA derivations are deterministic
     let (verify_signer, verify_bump) = Pubkey::find_program_address(
-        &[spl_token_minter::MINT_SIGNER_SEED, payer.pubkey().as_ref()],
+        &[light_token_minter::MINT_SIGNER_SEED, payer.pubkey().as_ref()],
         &program_id,
     );
     assert_eq!(mint_signer_pda, verify_signer);
@@ -165,8 +165,8 @@ async fn test_mint_signer_derivation() {
 /// Test the full flow: create Light mint, create token account, mint tokens.
 #[tokio::test]
 async fn test_mint_to() {
-    let program_id = spl_token_minter::ID;
-    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("spl_token_minter", program_id)]));
+    let program_id = light_token_minter::ID;
+    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
     let mut rpc = LightProgramTest::new(config).await.unwrap();
@@ -199,7 +199,7 @@ async fn test_mint_to() {
 
     // Derive mint signer PDA
     let (mint_signer_pda, mint_signer_bump) = Pubkey::find_program_address(
-        &[spl_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
+        &[light_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
         &program_id,
     );
 
@@ -219,7 +219,7 @@ async fn test_mint_to() {
     .unwrap();
 
     // Build create_mint instruction
-    let create_mint_accounts = spl_token_minter::accounts::CreateMint {
+    let create_mint_accounts = light_token_minter::accounts::CreateMint {
         fee_payer: payer.pubkey(),
         authority: authority.pubkey(),
         mint_signer: mint_signer_pda,
@@ -232,8 +232,8 @@ async fn test_mint_to() {
         system_program: solana_sdk::system_program::ID,
     };
 
-    let create_mint_data = spl_token_minter::instruction::CreateMint {
-        params: spl_token_minter::CreateMintParams {
+    let create_mint_data = light_token_minter::instruction::CreateMint {
+        params: light_token_minter::CreateMintParams {
             create_accounts_proof: proof_result.create_accounts_proof,
             decimals: 9,
             mint_signer_bump,
@@ -299,7 +299,7 @@ async fn test_mint_to() {
     // Mint tokens using the mint_to instruction
     let mint_amount = 1_000_000_000u64; // 1 token with 9 decimals
 
-    let mint_to_accounts = spl_token_minter::accounts::MintTo {
+    let mint_to_accounts = light_token_minter::accounts::MintTo {
         mint_authority: authority.pubkey(),
         mint: cmint_pda,
         destination: recipient_ata,
@@ -307,8 +307,8 @@ async fn test_mint_to() {
         system_program: solana_sdk::system_program::ID,
     };
 
-    let mint_to_data = spl_token_minter::instruction::MintTo {
-        params: spl_token_minter::MintTokenParams {
+    let mint_to_data = light_token_minter::instruction::MintTo {
+        params: light_token_minter::MintTokenParams {
             amount: mint_amount,
         },
     };
