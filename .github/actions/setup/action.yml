@@ -16,7 +16,7 @@ inputs:
   light-cli-version:
     description: "Light CLI version"
     required: false
-    default: "alpha"
+    default: "0.27.1-alpha.11"
 
 runs:
   using: composite
