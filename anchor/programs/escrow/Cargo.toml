@@ -1,0 +1,58 @@
+[package]
+name = "escrow"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "escrow"
+
+[features]
+no-entrypoint = []
+no-log-ix-name = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "light-sdk/idl-build"]
+test-sbf = []
+
+[dependencies]
+anchor-lang = { version = "=0.31.1", features = ["idl-build"] }
+# Pin blake3 version for solana-program compatibility
+blake3 = { workspace = true }
+
+light-sdk = { workspace = true, features = ["anchor", "anchor-discriminator", "idl-build", "cpi-context", "v2"] }
+light-sdk-macros = { workspace = true }
+light-sdk-types = { workspace = true, features = ["v2", "cpi-context"] }
+light-token = { workspace = true, features = ["anchor"] }
+light-token-types = { workspace = true, features = ["anchor"] }
+light-compressible = { workspace = true, features = ["anchor"] }
+# Required by LightAccount derive macro
+light-hasher = { workspace = true, features = ["solana"] }
+light-anchor-spl = { workspace = true, features = ["idl-build"] }
+solana-program = "2.2"
+solana-pubkey = "2.2"
+solana-account-info = "2.3"
+solana-program-error = "2.2"
+solana-msg = "2.2"
+
+[dev-dependencies]
+light-program-test = { workspace = true }
+light-client = { workspace = true, features = ["v2", "anchor"] }
+light-token-interface = { workspace = true }
+light-token-types = { workspace = true }
+anchor-spl = "0.31.1"
+tokio = { version = "1", features = ["full"] }
+solana-keypair = { version = "2.2" }
+solana-signer = { version = "2.2" }
+solana-instruction = { version = "2.2" }
+solana-sdk = { version = "2.3" }
+spl-token-2022 = "6.0.0"
+spl-pod = "0.4.0"
+
+[lints.rust.unexpected_cfgs]
+level = "allow"
+check-cfg = [
+    'cfg(target_os, values("solana"))',
+    'cfg(feature, values("frozen-abi", "no-entrypoint"))',
+]

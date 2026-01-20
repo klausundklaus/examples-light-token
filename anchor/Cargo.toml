@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+    "programs/escrow",
+    "programs/spl-token-minter",
+]
+
+[workspace.dependencies]
+# Pin blake3 version for solana-program compatibility
+blake3 = { version = "=1.8.2", default-features = false }
+
+# Light Protocol dependencies from git
+light-sdk = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-sdk-macros = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-sdk-types = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60", default-features = false }
+light-compressible = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-hasher = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-token = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-token-interface = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-token-types = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-program-test = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+light-client = { git = "https://github.com/Lightprotocol/light-protocol", rev = "0b77fa4c5e05f76b46f9696cf7dec02d0306eb60" }
+# Published on crates.io (not in light-protocol repo)
+light-anchor-spl = { version = "0.31.1", features = ["idl-build"] }
