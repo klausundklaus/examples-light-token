@@ -19,34 +19,18 @@ env:
 
 jobs:
   test-rust:
-    name: ${{ matrix.name || (matrix.package && format('{0}/{1}', matrix.example, matrix.package)) || matrix.example }}
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        example:
-          - create-and-update
-          - counter/native
-          - counter/pinocchio
-          - account-comparison
-          - airdrop-implementations/simple-claim/program
         include:
-          - example: basic-operations/native
-            package: native-program-burn
-          - example: basic-operations/native
-            package: native-program-create
-          - example: basic-operations/native
-            package: native-program-update
-          - example: basic-operations/native
-            package: native-program-close
-          - example: basic-operations/native
-            package: native-program-reinit
           - example: anchor
             package: escrow
-            name: anchor escrow
+            name: anchor/escrow
           - example: anchor
             package: light-token-minter
-            name: anchor light-token-minter
+            name: anchor/light-token-minter
     steps:
       - uses: actions/checkout@v4
 

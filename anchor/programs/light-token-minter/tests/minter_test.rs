@@ -135,7 +135,7 @@ async fn test_mint_signer_derivation() {
     let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
-    let mut rpc = LightProgramTest::new(config).await.unwrap();
+    let rpc = LightProgramTest::new(config).await.unwrap();
     let payer = rpc.get_payer().insecure_clone();
 
     // Derive mint signer PDA
