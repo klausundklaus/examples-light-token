@@ -10,8 +10,7 @@ use light_program_test::{
 };
 use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
 use light_token::instruction::{
-    derive_token_ata, find_mint_address, CreateAssociatedTokenAccount, COMPRESSIBLE_CONFIG_V1,
-    RENT_SPONSOR,
+    derive_token_ata, find_mint_address, COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR,
 };
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
@@ -274,52 +273,54 @@ async fn test_mint_to() {
         .await
         .unwrap();
 
-    // Create Light Token ATA for recipient
-    let (recipient_ata, _) = derive_token_ata(&recipient.pubkey(), &cmint_pda);
+    // Derive the ATA address (will be created by mint_to via the #[light_account(init, associated_token)] macro)
+    let (recipient_ata, ata_bump) = derive_token_ata(&recipient.pubkey(), &cmint_pda);
+    println!("Recipient ATA (to be created by mint_to): {:?}", recipient_ata);
 
-    let create_ata_ix = CreateAssociatedTokenAccount::new(payer.pubkey(), recipient.pubkey(), cmint_pda)
-        .instruction()
-        .unwrap();
+    // Get proof for creating the ATA
+    let mint_to_proof_result = get_create_accounts_proof(
+        &rpc,
+        &program_id,
+        vec![], // ATA creation via macro doesn't need special proof input
+    )
+    .await
+    .unwrap();
 
-    rpc.create_and_send_transaction(&[create_ata_ix], &payer.pubkey(), &[&payer])
-        .await
-        .expect("CreateAssociatedTokenAccount should succeed");
-
-    println!("Created Light Token ATA: {:?}", recipient_ata);
-
-    // Verify ATA was created
-    let ata_account = rpc
-        .get_account(recipient_ata)
-        .await
-        .unwrap()
-        .expect("ATA should exist on-chain");
-    assert!(!ata_account.data.is_empty(), "ATA should have data");
-    println!("ATA verified, size: {} bytes", ata_account.data.len());
-
-    // Mint tokens using the mint_to instruction
+    // Mint tokens using the mint_to instruction (which creates the ATA via macro)
     let mint_amount = 1_000_000_000u64; // 1 token with 9 decimals
 
     let mint_to_accounts = light_token_minter::accounts::MintTo {
+        fee_payer: payer.pubkey(),
         mint_authority: authority.pubkey(),
         mint: cmint_pda,
+        recipient: recipient.pubkey(),
         destination: recipient_ata,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
         system_program: solana_sdk::system_program::ID,
+        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
+        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_cpi_authority: light_token::constants::CPI_AUTHORITY_PDA.into(),
     };
 
     let mint_to_data = light_token_minter::instruction::MintTo {
         params: light_token_minter::MintTokenParams {
             amount: mint_amount,
+            create_accounts_proof: mint_to_proof_result.create_accounts_proof,
+            ata_bump,
         },
     };
 
     let mint_to_ix = Instruction {
         program_id,
-        accounts: mint_to_accounts.to_account_metas(None),
+        accounts: [
+            mint_to_accounts.to_account_metas(None),
+            mint_to_proof_result.remaining_accounts,
+        ]
+        .concat(),
         data: mint_to_data.data(),
     };
 
-    rpc.create_and_send_transaction(&[mint_to_ix], &authority.pubkey(), &[&authority])
+    rpc.create_and_send_transaction(&[mint_to_ix], &payer.pubkey(), &[&payer, &authority])
         .await
         .expect("MintTo should succeed");
 

@@ -60,13 +60,17 @@ pub struct MakeOffer<'info> {
     #[light_account(init)]
     pub offer: Account<'info, Offer>,
 
-    /// The vault that holds the offered tokens
+    /// The vault that holds the offered tokens - created by the light_account macro
     #[account(
         mut,
         seeds = [VAULT_SEED, offer.key().as_ref()],
         bump,
     )]
-    #[light_account(token, authority = [AUTH_SEED.as_bytes()])]
+    #[light_account(init, token,
+        authority = [AUTH_SEED.as_bytes()],
+        mint = token_mint_a,
+        owner = authority
+    )]
     pub vault: UncheckedAccount<'info>,
 
     pub token_program: Interface<'info, TokenInterface>,
@@ -82,30 +86,6 @@ pub struct MakeOffer<'info> {
 
     /// CHECK: light-token CPI authority
     pub light_token_cpi_authority: AccountInfo<'info>,
-}
-
-/// Create the vault token account using Light Protocol
-pub fn create_vault<'info>(
-    ctx: &Context<'_, '_, '_, 'info, MakeOffer<'info>>,
-    _params: &MakeOfferParams,
-) -> Result<()> {
-    let offer_key = ctx.accounts.offer.key();
-
-    CreateTokenAccountCpi {
-        payer: ctx.accounts.fee_payer.to_account_info(),
-        account: ctx.accounts.vault.to_account_info(),
-        mint: ctx.accounts.token_mint_a.to_account_info(),
-        owner: ctx.accounts.authority.key(),
-    }
-    .rent_free(
-        ctx.accounts.light_token_compressible_config.to_account_info(),
-        ctx.accounts.light_token_rent_sponsor.to_account_info(),
-        ctx.accounts.system_program.to_account_info(),
-        &crate::ID,
-    )
-    .invoke_signed(&[VAULT_SEED, offer_key.as_ref(), &[ctx.bumps.vault]])?;
-
-    Ok(())
 }
 
 /// Transfer tokens from maker to vault
