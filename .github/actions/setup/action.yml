@@ -17,6 +17,14 @@ inputs:
     description: "Light CLI version"
     required: false
     default: "0.27.1-alpha.11"
+  photon-version:
+    description: "Photon indexer version"
+    required: false
+    default: "0.51.2"
+  photon-commit:
+    description: "Photon indexer commit hash"
+    required: false
+    default: "ac7df6c388db847b7693a7a1cb766a7c9d7809b5"
 
 runs:
   using: composite
@@ -51,6 +59,21 @@ runs:
       run: |
         sh -c "$(curl -sSfL https://release.anza.xyz/v${{ inputs.solana-cli-version }}/install)"
         echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+    - name: Cache Photon indexer
+      id: cache-photon
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/photon
+        key: photon-${{ runner.os }}-${{ inputs.photon-version }}-${{ inputs.photon-commit }}
+
+    - name: Install Photon indexer
+      if: steps.cache-photon.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "Installing Photon indexer ${{ inputs.photon-version }} (commit ${{ inputs.photon-commit }})..."
+        RUSTFLAGS="-A dead-code" cargo install --git https://github.com/helius-labs/photon.git --rev ${{ inputs.photon-commit }} --locked --force
+        echo "Photon installed successfully"
 
     - name: Install Light CLI
       shell: bash
