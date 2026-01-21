@@ -18,7 +18,8 @@ pub struct MintTo<'info> {
     #[account(mut)]
     pub fee_payer: Signer<'info>,
 
-    /// The mint authority
+    /// The mint authority (must be writable since light-token MintTo marks it as writable in CPI)
+    #[account(mut)]
     pub mint_authority: Signer<'info>,
 
     /// CHECK: The Light mint account
