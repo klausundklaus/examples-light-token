@@ -2,9 +2,7 @@ use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use light_sdk::interface::CreateAccountsProof;
 use light_token::anchor::LightAccounts;
-use light_token::instruction::{
-    CreateTokenAccountCpi, COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR,
-};
+use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
 
 use crate::constants::{ANCHOR_DISCRIMINATOR, AUTH_SEED, OFFER_SEED, VAULT_SEED};
 use crate::state::Offer;
@@ -16,6 +14,8 @@ pub struct MakeOfferParams {
     pub id: u64,
     pub token_a_offered_amount: u64,
     pub token_b_wanted_amount: u64,
+    /// Bump seed for the vault PDA (derived from [VAULT_SEED, offer.key()])
+    pub vault_bump: u8,
 }
 
 #[derive(Accounts, LightAccounts)]
@@ -67,7 +67,7 @@ pub struct MakeOffer<'info> {
         bump,
     )]
     #[light_account(init, token,
-        authority = [AUTH_SEED.as_bytes()],
+        authority = [VAULT_SEED, self.offer.key(), &[params.vault_bump]],
         mint = token_mint_a,
         owner = authority
     )]

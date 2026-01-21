@@ -9,10 +9,11 @@ members = [
 # Pin blake3 version for solana-program compatibility
 blake3 = { version = "=1.8.2", default-features = false }
 
-# Light Protocol dependencies from crates.io
-light-sdk = "0.18.0"
-light-hasher = "5.0.0"
-light-token = "0.3.0"
-light-program-test = "0.18.0"
-light-client = "0.18.0"
+# Light Protocol dependencies from git
+light-sdk = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
+light-sdk-macros = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
+light-hasher = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
+light-token = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
+light-program-test = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
+light-client = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
 light-anchor-spl = { version = "0.31.1", features = ["idl-build"] }

@@ -282,7 +282,7 @@ async fn test_escrow_full_flow() {
     );
 
     // Derive vault PDA
-    let (vault_pda, _vault_bump) =
+    let (vault_pda, vault_bump) =
         Pubkey::find_program_address(&[escrow::VAULT_SEED, offer_pda.as_ref()], &program_id);
 
     // Derive authority PDA
@@ -325,6 +325,7 @@ async fn test_escrow_full_flow() {
             id: offer_id,
             token_a_offered_amount,
             token_b_wanted_amount,
+            vault_bump,
         },
     };
 
