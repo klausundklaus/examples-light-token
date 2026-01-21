@@ -1,0 +1,54 @@
+[package]
+name = "swap_example"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "swap_example"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "light-sdk/idl-build", "light-anchor-spl/idl-build"]
+test-sbf = []
+
+[dependencies]
+anchor-lang = { version = "=0.31.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.1", features = ["metadata", "idl-build"] }
+blake3 = { workspace = true }
+fixed = "=1.27.0"
+az = "=1.2.1"
+
+light-sdk = { workspace = true, features = ["anchor", "anchor-discriminator", "cpi-context", "v2"] }
+light-token = { workspace = true, features = ["anchor"] }
+light-hasher = { workspace = true, features = ["solana"] }
+light-anchor-spl = { workspace = true }
+solana-program = "2.2"
+solana-pubkey = "2.2"
+solana-account-info = "2.3"
+solana-program-error = "2.2"
+solana-msg = "2.2"
+
+[dev-dependencies]
+light-program-test = { workspace = true }
+light-client = { workspace = true, features = ["v2", "anchor"] }
+anchor-spl = "0.31.1"
+tokio = { version = "1", features = ["full"] }
+solana-keypair = { version = "2.2" }
+solana-signer = { version = "2.2" }
+solana-instruction = { version = "2.2" }
+solana-sdk = { version = "2.3" }
+spl-token-2022 = "6.0.0"
+spl-pod = "0.4.0"
+
+[lints.rust.unexpected_cfgs]
+level = "allow"
+check-cfg = [
+    'cfg(target_os, values("solana"))',
+    'cfg(feature, values("frozen-abi", "no-entrypoint"))',
+]
