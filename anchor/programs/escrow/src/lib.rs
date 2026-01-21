@@ -5,9 +5,7 @@ pub mod instructions;
 pub mod state;
 
 use anchor_lang::prelude::*;
-use light_sdk::derive_light_cpi_signer;
-use light_sdk_macros::light_program;
-use light_sdk_types::CpiSigner;
+use light_token::anchor::{derive_light_cpi_signer, light_program, CpiSigner};
 
 pub use constants::*;
 pub use instructions::*;

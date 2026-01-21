@@ -22,10 +22,7 @@ anchor-lang = { version = "=0.31.1", features = ["init-if-needed", "idl-build"] 
 blake3 = { workspace = true }
 
 light-sdk = { workspace = true, features = ["anchor", "anchor-discriminator", "idl-build", "cpi-context", "v2"] }
-light-sdk-macros = { workspace = true }
-light-sdk-types = { workspace = true, features = ["v2", "cpi-context"] }
 light-token = { workspace = true, features = ["anchor", "idl-build"] }
-light-compressible = { workspace = true, features = ["anchor"] }
 # Required by LightAccount derive macro
 light-hasher = { workspace = true, features = ["solana"] }
 light-anchor-spl = { workspace = true, features = ["idl-build"] }
@@ -38,7 +35,6 @@ solana-msg = "2.2"
 [dev-dependencies]
 light-program-test = { workspace = true }
 light-client = { workspace = true, features = ["v2", "anchor"] }
-light-token-types = { workspace = true, features = ["anchor"] }
 tokio = { version = "1", features = ["full"] }
 spl-token = "7.0.0"
 solana-keypair = { version = "2.2" }

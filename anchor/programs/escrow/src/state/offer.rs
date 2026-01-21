@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use light_sdk::{compressible::CompressionInfo, LightDiscriminator};
-use light_sdk_macros::LightAccount;
+use light_sdk::LightDiscriminator;
+use light_token::anchor::{CompressionInfo, LightAccount};
 
 /// The Offer account stores details about a token swap offer.
 #[derive(Default, Debug, InitSpace, LightAccount)]

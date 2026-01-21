@@ -20,8 +20,8 @@ use light_token::instruction::{
     CreateAssociatedTokenAccount, CreateMint, CreateMintParams, MintTo, COMPRESSIBLE_CONFIG_V1,
     RENT_SPONSOR,
 };
-use light_token_interface::LIGHT_TOKEN_PROGRAM_ID;
-use light_token_types::CPI_AUTHORITY_PDA;
+use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
+use light_token::constants::CPI_AUTHORITY_PDA;
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;

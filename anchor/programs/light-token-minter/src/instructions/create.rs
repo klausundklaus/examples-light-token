@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use light_compressible::CreateAccountsProof;
-use light_sdk_macros::LightAccounts;
+use light_sdk::interface::CreateAccountsProof;
+use light_token::anchor::LightAccounts;
 use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
 
 use crate::MINT_SIGNER_SEED;

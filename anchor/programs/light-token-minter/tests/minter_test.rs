@@ -8,7 +8,7 @@ use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
     ProgramTestConfig, Rpc,
 };
-use light_sdk_types::LIGHT_TOKEN_PROGRAM_ID;
+use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
 use light_token::instruction::{
     derive_token_ata, find_mint_address, CreateAssociatedTokenAccount, COMPRESSIBLE_CONFIG_V1,
     RENT_SPONSOR,
@@ -81,7 +81,7 @@ async fn test_create_light_mint() {
         light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
         rent_sponsor: RENT_SPONSOR,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
-        light_token_cpi_authority: light_token_types::CPI_AUTHORITY_PDA.into(),
+        light_token_cpi_authority: light_token::constants::CPI_AUTHORITY_PDA.into(),
         system_program: solana_sdk::system_program::ID,
     };
 
@@ -228,7 +228,7 @@ async fn test_mint_to() {
         light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
         rent_sponsor: RENT_SPONSOR,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
-        light_token_cpi_authority: light_token_types::CPI_AUTHORITY_PDA.into(),
+        light_token_cpi_authority: light_token::constants::CPI_AUTHORITY_PDA.into(),
         system_program: solana_sdk::system_program::ID,
     };
 

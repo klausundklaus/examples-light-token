@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_compressible::CreateAccountsProof;
-use light_sdk_macros::LightAccounts;
+use light_sdk::interface::CreateAccountsProof;
+use light_token::anchor::LightAccounts;
 use light_token::instruction::{
     CreateTokenAccountCpi, COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR,
 };
