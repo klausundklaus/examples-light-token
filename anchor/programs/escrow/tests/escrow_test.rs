@@ -316,7 +316,7 @@ async fn test_escrow_full_flow() {
         system_program: solana_sdk::system_program::ID,
         light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
         light_token_rent_sponsor: RENT_SPONSOR,
-        light_token_cpi_authority: Pubkey::new_from_array(CPI_AUTHORITY_PDA),
+        light_token_cpi_authority: CPI_AUTHORITY_PDA,
     };
 
     let make_offer_data = escrow::instruction::MakeOffer {
@@ -376,7 +376,7 @@ async fn test_escrow_full_flow() {
         vault: vault_pda,
         token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         system_program: solana_sdk::system_program::ID,
-        light_token_cpi_authority: Pubkey::new_from_array(CPI_AUTHORITY_PDA),
+        light_token_cpi_authority: CPI_AUTHORITY_PDA,
         light_token_rent_sponsor: RENT_SPONSOR,
     };
 
