@@ -69,6 +69,7 @@ pub fn mint_token<'info>(
         authority: ctx.accounts.mint_authority.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         max_top_up: None,
+        fee_payer: Some(ctx.accounts.fee_payer.to_account_info()),
     }
     .invoke()?;
 

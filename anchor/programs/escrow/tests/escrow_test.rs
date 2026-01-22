@@ -116,6 +116,7 @@ async fn mint_light_tokens<R: Rpc>(
     amount: u64,
 ) {
     let instruction = MintTo {
+        fee_payer: Some(payer.pubkey()),
         mint: *mint,
         destination: *destination,
         amount,

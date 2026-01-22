@@ -60,7 +60,8 @@ pub struct Refund<'info> {
     #[account(mut, address = RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
-    /// CHECK: light-token CPI authority
+    /// CHECK: light-token CPI authority - must be writable for Light token CPI
+    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint (token pool holding SPL tokens)
@@ -116,6 +117,7 @@ impl<'info> Refund<'info> {
             decimals,
             self.vault.to_account_info(),
             self.contributor_ata.to_account_info(),
+            self.mint_to_raise.to_account_info(),
             self.fundraiser.to_account_info(),
             self.contributor.to_account_info(),
             self.light_token_cpi_authority.to_account_info(),

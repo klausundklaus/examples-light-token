@@ -5,17 +5,30 @@ members = [
     "programs/fundraiser",
     "programs/light-token-minter",
     "programs/token-swap",
+    "programs/shared-test-utils",
 ]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+overflow-checks = true
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
 
 [workspace.dependencies]
 # Pin blake3 version for solana-program compatibility
 blake3 = { version = "=1.8.2", default-features = false }
 
 # Light Protocol dependencies from git
-light-sdk = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
-light-sdk-macros = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
-light-hasher = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
-light-token = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
-light-program-test = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
-light-client = { git = "https://github.com/Lightprotocol/light-protocol", rev = "5a6ad4b1322482604aeacfc162de41b03a221760" }
+light-sdk = { git = "https://github.com/Lightprotocol/light-protocol", rev = "931a942879ebaa71e5fb803da22ddce8aea910b9" }
+light-sdk-macros = { git = "https://github.com/Lightprotocol/light-protocol", rev = "931a942879ebaa71e5fb803da22ddce8aea910b9" }
+light-hasher = { git = "https://github.com/Lightprotocol/light-protocol", rev = "931a942879ebaa71e5fb803da22ddce8aea910b9" }
+light-token = { git = "https://github.com/Lightprotocol/light-protocol", rev = "931a942879ebaa71e5fb803da22ddce8aea910b9" }
+light-program-test = { git = "https://github.com/Lightprotocol/light-protocol", rev = "931a942879ebaa71e5fb803da22ddce8aea910b9" }
+light-client = { git = "https://github.com/Lightprotocol/light-protocol", rev = "931a942879ebaa71e5fb803da22ddce8aea910b9" }
 light-anchor-spl = { version = "0.31.1", features = ["idl-build"] }
+shared-test-utils = { path = "programs/shared-test-utils" }

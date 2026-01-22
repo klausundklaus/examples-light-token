@@ -1,9 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{Mint, Token, TokenAccount},
-};
-use light_anchor_spl::token_interface::TokenInterface;
+use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use fixed::types::I64F64;
 use light_token::instruction::RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
@@ -103,6 +99,7 @@ pub fn swap_exact_tokens_for_tokens(
             decimals_a,
             ctx.accounts.trader_account_a.to_account_info(),
             ctx.accounts.pool_account_a.to_account_info(),
+            ctx.accounts.mint_a.to_account_info(),
             ctx.accounts.trader.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
@@ -122,6 +119,7 @@ pub fn swap_exact_tokens_for_tokens(
             decimals_b,
             ctx.accounts.pool_account_b.to_account_info(),
             ctx.accounts.trader_account_b.to_account_info(),
+            ctx.accounts.mint_b.to_account_info(),
             ctx.accounts.pool_authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
@@ -142,6 +140,7 @@ pub fn swap_exact_tokens_for_tokens(
             decimals_b,
             ctx.accounts.trader_account_b.to_account_info(),
             ctx.accounts.pool_account_b.to_account_info(),
+            ctx.accounts.mint_b.to_account_info(),
             ctx.accounts.trader.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
@@ -161,6 +160,7 @@ pub fn swap_exact_tokens_for_tokens(
             decimals_a,
             ctx.accounts.pool_account_a.to_account_info(),
             ctx.accounts.trader_account_a.to_account_info(),
+            ctx.accounts.mint_a.to_account_info(),
             ctx.accounts.pool_authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
@@ -215,7 +215,7 @@ pub struct SwapExactTokensForTokens<'info> {
     )]
     pub pool: Account<'info, Pool>,
 
-    /// CHECK: Read only authority
+    /// CHECK: Pool authority PDA - signer for pool token transfers (readonly)
     #[account(
         seeds = [
             pool.amm.as_ref(),
@@ -228,11 +228,15 @@ pub struct SwapExactTokensForTokens<'info> {
     pub pool_authority: AccountInfo<'info>,
 
     /// The account doing the swap
+    /// Must be writable for compressible token rent top-ups
+    #[account(mut)]
     pub trader: Signer<'info>,
 
-    pub mint_a: Box<Account<'info, Mint>>,
+    #[account(mint::token_program = token_program)]
+    pub mint_a: Box<InterfaceAccount<'info, Mint>>,
 
-    pub mint_b: Box<Account<'info, Mint>>,
+    #[account(mint::token_program = token_program)]
+    pub mint_b: Box<InterfaceAccount<'info, Mint>>,
 
     /// CHECK: Pool token account A (Light Protocol token account)
     #[account(
@@ -250,29 +254,28 @@ pub struct SwapExactTokensForTokens<'info> {
     )]
     pub pool_account_b: UncheckedAccount<'info>,
 
+    /// Trader's token account for mint A (can be SPL, T22, or Light)
     #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = mint_a,
-        associated_token::authority = trader,
+        mut,
+        token::mint = mint_a,
+        token::authority = trader,
     )]
-    pub trader_account_a: Box<Account<'info, TokenAccount>>,
+    pub trader_account_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    /// Trader's token account for mint B (can be SPL, T22, or Light)
     #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = mint_b,
-        associated_token::authority = trader,
+        mut,
+        token::mint = mint_b,
+        token::authority = trader,
     )]
-    pub trader_account_b: Box<Account<'info, TokenAccount>>,
+    pub trader_account_b: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// The account paying for all rents
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// Solana ecosystem accounts
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    /// Token program (SPL, T22, or Light)
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 
     /// Light token program for CPI calls
@@ -282,7 +285,8 @@ pub struct SwapExactTokensForTokens<'info> {
     #[account(mut, address = RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
-    /// CHECK: light-token CPI authority
+    /// CHECK: light-token CPI authority - must be writable for Light token CPI
+    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint A (token pool holding SPL tokens)

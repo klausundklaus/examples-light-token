@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token};
-use light_anchor_spl::token_interface::TokenInterface;
+use light_anchor_spl::token_interface::{Mint, TokenInterface};
 use light_sdk::interface::CreateAccountsProof;
 use light_token::anchor::LightAccounts;
 use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
@@ -62,6 +61,7 @@ pub struct CreatePool<'info> {
     )]
     pub pool_authority: AccountInfo<'info>,
 
+    /// Liquidity mint - always SPL or T22 (not Light) since Anchor can't init Light mints
     #[account(
         init,
         payer = fee_payer,
@@ -74,12 +74,15 @@ pub struct CreatePool<'info> {
         bump,
         mint::decimals = 6,
         mint::authority = pool_authority,
+        mint::token_program = liquidity_token_program,
     )]
-    pub mint_liquidity: Box<Account<'info, Mint>>,
+    pub mint_liquidity: Box<InterfaceAccount<'info, Mint>>,
 
-    pub mint_a: Box<Account<'info, Mint>>,
+    #[account(mint::token_program = token_program)]
+    pub mint_a: Box<InterfaceAccount<'info, Mint>>,
 
-    pub mint_b: Box<Account<'info, Mint>>,
+    #[account(mint::token_program = token_program)]
+    pub mint_b: Box<InterfaceAccount<'info, Mint>>,
 
     /// Pool token account A - created by light_account macro
     #[account(
@@ -88,9 +91,10 @@ pub struct CreatePool<'info> {
         bump,
     )]
     #[light_account(init, token,
-        authority = [POOL_ACCOUNT_A_SEED, self.pool.key(), &[params.pool_account_a_bump]],
+        authority = [POOL_ACCOUNT_A_SEED, self.pool.key()],
         mint = mint_a,
-        owner = pool_authority
+        owner = pool_authority,
+        bump = params.pool_account_a_bump
     )]
     pub pool_account_a: UncheckedAccount<'info>,
 
@@ -101,9 +105,10 @@ pub struct CreatePool<'info> {
         bump,
     )]
     #[light_account(init, token,
-        authority = [POOL_ACCOUNT_B_SEED, self.pool.key(), &[params.pool_account_b_bump]],
+        authority = [POOL_ACCOUNT_B_SEED, self.pool.key()],
         mint = mint_b,
-        owner = pool_authority
+        owner = pool_authority,
+        bump = params.pool_account_b_bump
     )]
     pub pool_account_b: UncheckedAccount<'info>,
 
@@ -111,8 +116,11 @@ pub struct CreatePool<'info> {
     #[account(mut)]
     pub fee_payer: Signer<'info>,
 
-    /// Solana ecosystem accounts
-    pub token_program: Program<'info, Token>,
+    /// Token program for mint_a and mint_b (SPL, T22, or Light)
+    pub token_program: Interface<'info, TokenInterface>,
+    /// Token program for liquidity mint (must be SPL or T22, not Light - Anchor can't init Light mints)
+    pub liquidity_token_program: Interface<'info, TokenInterface>,
+    /// Light token program for CPI calls
     pub light_token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 

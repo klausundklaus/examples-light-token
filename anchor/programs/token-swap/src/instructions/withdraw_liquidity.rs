@@ -1,9 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token::{self, Burn, Mint, Token, TokenAccount},
-};
-use light_anchor_spl::token_interface::TokenInterface;
+use light_anchor_spl::token_interface::{self, Burn, Mint, TokenAccount, TokenInterface};
 use fixed::types::I64F64;
 use light_token::instruction::RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
@@ -60,6 +56,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64) -> Resul
         decimals_a,
         ctx.accounts.pool_account_a.to_account_info(),
         ctx.accounts.depositor_account_a.to_account_info(),
+        ctx.accounts.mint_a.to_account_info(),
         ctx.accounts.pool_authority.to_account_info(),
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
@@ -90,6 +87,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64) -> Resul
         decimals_b,
         ctx.accounts.pool_account_b.to_account_info(),
         ctx.accounts.depositor_account_b.to_account_info(),
+        ctx.accounts.mint_b.to_account_info(),
         ctx.accounts.pool_authority.to_account_info(),
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
@@ -98,11 +96,11 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64) -> Resul
         Some(spl_interface_b),
     )?;
 
-    // Burn the liquidity tokens (standard SPL token burn)
+    // Burn the liquidity tokens (SPL or T22 token burn - never Light)
     // It will fail if the amount is invalid
-    token::burn(
+    token_interface::burn(
         CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.liquidity_token_program.to_account_info(),
             Burn {
                 mint: ctx.accounts.mint_liquidity.to_account_info(),
                 from: ctx.accounts.depositor_account_liquidity.to_account_info(),
@@ -137,7 +135,7 @@ pub struct WithdrawLiquidity<'info> {
     )]
     pub pool: Account<'info, Pool>,
 
-    /// CHECK: Read only authority
+    /// CHECK: Pool authority PDA - signer for pool token transfers (readonly)
     #[account(
         seeds = [
             pool.amm.as_ref(),
@@ -152,6 +150,7 @@ pub struct WithdrawLiquidity<'info> {
     /// The account paying for all rents
     pub depositor: Signer<'info>,
 
+    /// Liquidity mint - always SPL or T22 (not Light)
     #[account(
         mut,
         seeds = [
@@ -161,14 +160,15 @@ pub struct WithdrawLiquidity<'info> {
             LIQUIDITY_SEED,
         ],
         bump,
+        mint::token_program = liquidity_token_program,
     )]
-    pub mint_liquidity: Box<Account<'info, Mint>>,
+    pub mint_liquidity: Box<InterfaceAccount<'info, Mint>>,
 
-    #[account(mut)]
-    pub mint_a: Box<Account<'info, Mint>>,
+    #[account(mut, mint::token_program = token_program)]
+    pub mint_a: Box<InterfaceAccount<'info, Mint>>,
 
-    #[account(mut)]
-    pub mint_b: Box<Account<'info, Mint>>,
+    #[account(mut, mint::token_program = token_program)]
+    pub mint_b: Box<InterfaceAccount<'info, Mint>>,
 
     /// CHECK: Pool token account A (Light Protocol token account)
     #[account(
@@ -186,46 +186,49 @@ pub struct WithdrawLiquidity<'info> {
     )]
     pub pool_account_b: UncheckedAccount<'info>,
 
+    /// Depositor's liquidity token account (can be SPL, T22, or Light)
     #[account(
         mut,
-        associated_token::mint = mint_liquidity,
-        associated_token::authority = depositor,
+        token::mint = mint_liquidity,
+        token::authority = depositor,
     )]
-    pub depositor_account_liquidity: Box<Account<'info, TokenAccount>>,
+    pub depositor_account_liquidity: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    /// Depositor's token account for mint A (can be SPL, T22, or Light)
     #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = mint_a,
-        associated_token::authority = depositor,
+        mut,
+        token::mint = mint_a,
+        token::authority = depositor,
     )]
-    pub depositor_account_a: Box<Account<'info, TokenAccount>>,
+    pub depositor_account_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    /// Depositor's token account for mint B (can be SPL, T22, or Light)
     #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = mint_b,
-        associated_token::authority = depositor,
+        mut,
+        token::mint = mint_b,
+        token::authority = depositor,
     )]
-    pub depositor_account_b: Box<Account<'info, TokenAccount>>,
+    pub depositor_account_b: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// The account paying for all rents
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// Solana ecosystem accounts
-    pub token_program: Program<'info, Token>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    /// Token program for mint_a and mint_b (SPL, T22, or Light)
+    pub token_program: Interface<'info, TokenInterface>,
+    /// Token program for liquidity mint (must be SPL or T22, not Light)
+    pub liquidity_token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 
-    /// Light token program for CPI calls (uses light-anchor-spl TokenInterface)
+    /// Light token program for CPI calls
     pub light_token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: Light token rent sponsor
     #[account(mut, address = RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
-    /// CHECK: light-token CPI authority
+    /// CHECK: light-token CPI authority - must be writable for Light token CPI
+    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint A (token pool holding SPL tokens)

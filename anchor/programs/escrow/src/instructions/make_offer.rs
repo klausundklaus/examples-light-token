@@ -67,9 +67,10 @@ pub struct MakeOffer<'info> {
         bump,
     )]
     #[light_account(init, token,
-        authority = [VAULT_SEED, self.offer.key(), &[params.vault_bump]],
+        authority = [VAULT_SEED, self.offer.key()],
         mint = token_mint_a,
-        owner = authority
+        owner = authority,
+        bump = params.vault_bump
     )]
     pub vault: UncheckedAccount<'info>,
 
