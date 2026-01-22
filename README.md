@@ -29,11 +29,7 @@ TypeScript examples for light-token-sdk.
   - [Action](typescript-client/actions/wrap.ts)
 - **unwrap** - Unwrap light-token to SPL/T22
   - [Action](typescript-client/actions/unwrap.ts)
-- **delegate-approve** - Approve delegate
-  - [Action](typescript-client/actions/delegate-approve.ts)
-- **delegate-revoke** - Revoke delegate
-  - [Action](typescript-client/actions/delegate-revoke.ts)
-
+ 
 ## Documentation
 
 Learn more [about to Light-Token here](https://www.zkcompression.com/light-token/welcome).
