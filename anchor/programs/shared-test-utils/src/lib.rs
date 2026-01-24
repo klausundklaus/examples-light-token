@@ -93,8 +93,7 @@ pub mod setup {
         program_name: &'static str,
         program_id: Pubkey,
     ) -> (LightProgramTest, Keypair) {
-        let mut config =
-            ProgramTestConfig::new_v2(true, Some(vec![(program_name, program_id)]));
+        let mut config = ProgramTestConfig::new_v2(true, Some(vec![(program_name, program_id)]));
         config = config.with_light_protocol_events();
 
         let rpc = LightProgramTest::new(config).await.unwrap();
@@ -209,8 +208,8 @@ pub mod light_tokens {
     use super::*;
     use anchor_lang::{InstructionData, ToAccountMetas};
     use light_token::instruction::{
-        derive_associated_token_account, derive_token_ata, find_mint_address,
-        CreateAssociatedTokenAccount, CompressibleParams, TokenDataVersion,
+        derive_associated_token_account, derive_token_ata, find_mint_address, CompressibleParams,
+        CreateAssociatedTokenAccount, TokenDataVersion,
     };
     use solana_instruction::Instruction;
 
@@ -257,7 +256,10 @@ pub mod light_tokens {
 
         // Derive mint signer PDA from authority
         let (mint_signer_pda, mint_signer_bump) = Pubkey::find_program_address(
-            &[light_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
+            &[
+                light_token_minter::MINT_SIGNER_SEED,
+                authority.pubkey().as_ref(),
+            ],
             &program_id,
         );
 

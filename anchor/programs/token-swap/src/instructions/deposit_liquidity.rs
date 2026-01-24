@@ -1,12 +1,14 @@
 use anchor_lang::prelude::*;
-use light_anchor_spl::token_interface::{Mint, MintTo, TokenAccount, TokenInterface};
 use fixed::types::I64F64;
+use light_anchor_spl::token_interface::{Mint, MintTo, TokenAccount, TokenInterface};
 use light_token::instruction::RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
 use light_token::utils::get_token_account_balance;
 
 use crate::{
-    constants::{AUTHORITY_SEED, LIQUIDITY_SEED, MINIMUM_LIQUIDITY, POOL_ACCOUNT_A_SEED, POOL_ACCOUNT_B_SEED},
+    constants::{
+        AUTHORITY_SEED, LIQUIDITY_SEED, MINIMUM_LIQUIDITY, POOL_ACCOUNT_A_SEED, POOL_ACCOUNT_B_SEED,
+    },
     errors::TutorialError,
     instructions::{transfer_tokens, SplInterfaceConfig},
     state::Pool,
@@ -85,10 +87,8 @@ pub fn deposit_liquidity(
     let decimals_b = ctx.accounts.mint_b.decimals;
 
     // Get SPL interface PDA bumps (derived from light-token program, not our program)
-    let (_, spl_interface_bump_a) =
-        find_spl_interface_pda(&ctx.accounts.mint_a.key(), false);
-    let (_, spl_interface_bump_b) =
-        find_spl_interface_pda(&ctx.accounts.mint_b.key(), false);
+    let (_, spl_interface_bump_a) = find_spl_interface_pda(&ctx.accounts.mint_a.key(), false);
+    let (_, spl_interface_bump_b) = find_spl_interface_pda(&ctx.accounts.mint_b.key(), false);
 
     // SPL interface config for SPL->Light transfers
     let spl_interface_a = SplInterfaceConfig {

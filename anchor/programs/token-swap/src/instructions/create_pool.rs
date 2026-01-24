@@ -90,11 +90,11 @@ pub struct CreatePool<'info> {
         seeds = [POOL_ACCOUNT_A_SEED, pool.key().as_ref()],
         bump,
     )]
-    #[light_account(init, token,
-        authority = [POOL_ACCOUNT_A_SEED, self.pool.key()],
-        mint = mint_a,
-        owner = pool_authority,
-        bump = params.pool_account_a_bump
+    #[light_account(init,
+        token::authority = [POOL_ACCOUNT_A_SEED, self.pool.key()],
+        token::mint = mint_a,
+        token::owner = pool_authority,
+        token::bump = params.pool_account_a_bump
     )]
     pub pool_account_a: UncheckedAccount<'info>,
 
@@ -104,11 +104,11 @@ pub struct CreatePool<'info> {
         seeds = [POOL_ACCOUNT_B_SEED, pool.key().as_ref()],
         bump,
     )]
-    #[light_account(init, token,
-        authority = [POOL_ACCOUNT_B_SEED, self.pool.key()],
-        mint = mint_b,
-        owner = pool_authority,
-        bump = params.pool_account_b_bump
+    #[light_account(init,
+        token::authority = [POOL_ACCOUNT_B_SEED, self.pool.key()],
+        token::mint = mint_b,
+        token::owner = pool_authority,
+        token::bump = params.pool_account_b_bump
     )]
     pub pool_account_b: UncheckedAccount<'info>,
 

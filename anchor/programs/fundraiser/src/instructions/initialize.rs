@@ -41,11 +41,11 @@ pub struct Initialize<'info> {
         seeds = [VAULT_SEED, fundraiser.key().as_ref()],
         bump,
     )]
-    #[light_account(init, token,
-        authority = [VAULT_SEED, self.fundraiser.key()],
-        mint = mint_to_raise,
-        owner = fundraiser,
-        bump = params.vault_bump
+    #[light_account(init,
+        token::authority = [VAULT_SEED, self.fundraiser.key()],
+        token::mint = mint_to_raise,
+        token::owner = fundraiser,
+        token::bump = params.vault_bump
     )]
     pub vault: UncheckedAccount<'info>,
 

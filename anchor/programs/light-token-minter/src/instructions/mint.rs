@@ -32,10 +32,10 @@ pub struct MintTo<'info> {
 
     /// CHECK: The destination token account (ATA) - created by light_account macro if needed
     #[account(mut)]
-    #[light_account(init, associated_token,
-        owner = recipient,
-        mint = mint,
-        bump = params.ata_bump
+    #[light_account(init,
+        associated_token::authority = recipient,
+        associated_token::mint = mint,
+        associated_token::bump = params.ata_bump
     )]
     pub destination: UncheckedAccount<'info>,
 

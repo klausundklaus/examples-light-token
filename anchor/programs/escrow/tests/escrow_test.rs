@@ -15,13 +15,13 @@ use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
     Indexer, ProgramTestConfig, Rpc,
 };
+use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
+use light_token::constants::CPI_AUTHORITY_PDA;
 use light_token::instruction::{
     derive_mint_compressed_address, derive_token_ata, find_mint_address,
     CreateAssociatedTokenAccount, CreateMint, CreateMintParams, MintTo, COMPRESSIBLE_CONFIG_V1,
     RENT_SPONSOR,
 };
-use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
-use light_token::constants::CPI_AUTHORITY_PDA;
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;
@@ -205,16 +205,18 @@ async fn test_escrow_full_flow() {
     let taker = Keypair::new();
 
     // Airdrop lamports to maker and taker
-    rpc.airdrop_lamports(&maker.pubkey(), 2_000_000_000).await.unwrap();
-    rpc.airdrop_lamports(&taker.pubkey(), 2_000_000_000).await.unwrap();
+    rpc.airdrop_lamports(&maker.pubkey(), 2_000_000_000)
+        .await
+        .unwrap();
+    rpc.airdrop_lamports(&taker.pubkey(), 2_000_000_000)
+        .await
+        .unwrap();
 
     // Create Light mints for token A and token B
     // Maker is mint authority for token A, taker is mint authority for token B
     println!("\nCreating Light mints...");
-    let (mint_a, _mint_seed_a) =
-        create_light_mint(&mut rpc, &payer, &payer.pubkey(), 9).await;
-    let (mint_b, _mint_seed_b) =
-        create_light_mint(&mut rpc, &payer, &payer.pubkey(), 9).await;
+    let (mint_a, _mint_seed_a) = create_light_mint(&mut rpc, &payer, &payer.pubkey(), 9).await;
+    let (mint_b, _mint_seed_b) = create_light_mint(&mut rpc, &payer, &payer.pubkey(), 9).await;
 
     println!("Created mint A: {:?}", mint_a);
     println!("Created mint B: {:?}", mint_b);

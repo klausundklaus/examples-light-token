@@ -8,14 +8,14 @@ declare_id!("Eoiuq1dXvHxh6dLx3wh9gj8kSAUpga11krTrbfF5XYsC");
 pub const LIGHT_CPI_SIGNER: CpiSigner =
     derive_light_cpi_signer!("Eoiuq1dXvHxh6dLx3wh9gj8kSAUpga11krTrbfF5XYsC");
 
-mod state;
-pub mod instructions;
-mod error;
 mod constants;
+mod error;
+pub mod instructions;
+mod state;
 
-pub use instructions::*;
-use error::*;
 pub use constants::*;
+use error::*;
+pub use instructions::*;
 
 #[light_program]
 #[program]

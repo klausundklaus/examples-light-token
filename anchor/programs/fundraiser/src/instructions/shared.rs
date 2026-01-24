@@ -45,7 +45,7 @@ pub fn transfer_tokens<'info>(
             decimals,
             authority,
             system_program,
-            max_top_up: Some(0), // Allow top-ups but with 0 limit
+            max_top_up: Some(0),    // Allow top-ups but with 0 limit
             fee_payer: Some(payer), // Payer handles any rent, makes authority readonly
         };
 

@@ -25,7 +25,7 @@ pub mod escrow {
         mut ctx: Context<'_, '_, '_, 'info, MakeOffer<'info>>,
         params: MakeOfferParams,
     ) -> Result<()> {
-        // Vault is created automatically by #[light_account(init, token, ...)] macro
+        // Vault is created automatically by #[light_account(init, token::...)] macro
         instructions::make_offer::send_offered_tokens_to_vault(&ctx, &params)?;
         instructions::make_offer::save_offer(&mut ctx, &params)
     }

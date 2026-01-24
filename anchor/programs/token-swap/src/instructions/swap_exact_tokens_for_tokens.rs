@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use fixed::types::I64F64;
+use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use light_token::instruction::RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
 use light_token::utils::get_token_account_balance;
@@ -180,10 +180,12 @@ pub fn swap_exact_tokens_for_tokens(
     // Verify the invariant still holds
     // Reload accounts because of the CPIs
     // We tolerate if the new invariant is higher because it means a rounding error for LPs
-    let new_pool_a_balance = get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
-    let new_pool_b_balance = get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+    let new_pool_a_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())
+            .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+    let new_pool_b_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
+            .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
 
     if invariant > new_pool_a_balance * new_pool_b_balance {
         return err!(TutorialError::InvariantViolated);

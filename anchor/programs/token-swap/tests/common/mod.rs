@@ -19,7 +19,7 @@ use shared_test_utils::{
     spl_tokens::{create_spl_ata, create_spl_mint, mint_spl_tokens},
     t22_tokens::{create_t22_ata, create_t22_mint, mint_t22_tokens},
     CreateAccountsProofResult, Indexer, LightProgramTest, MintType, ProgramTestConfig, Rpc,
-    TestRpc, CPI_AUTHORITY_PDA, COMPRESSIBLE_CONFIG_V1, LIGHT_TOKEN_MINTER_PROGRAM_ID,
+    TestRpc, COMPRESSIBLE_CONFIG_V1, CPI_AUTHORITY_PDA, LIGHT_TOKEN_MINTER_PROGRAM_ID,
     LIGHT_TOKEN_PROGRAM_ID, RENT_SPONSOR,
 };
 use solana_instruction::Instruction;
@@ -63,7 +63,10 @@ impl TokenConfig {
 
     /// Returns true if user accounts are Light token accounts
     pub fn uses_light_user_accounts(&self) -> bool {
-        matches!(self, TokenConfig::LightSpl | TokenConfig::LightT22 | TokenConfig::Light)
+        matches!(
+            self,
+            TokenConfig::LightSpl | TokenConfig::LightT22 | TokenConfig::Light
+        )
     }
 
     /// Returns true if mints are Light Protocol mints (not SPL/T22)
@@ -138,12 +141,10 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
         println!("\n=== Setting up Light mints ===");
 
         // Create Light mints
-        let light_mint_a = create_light_mint(
-            rpc, &payer, 9, "Token A", "TOKA", &compression_config,
-        ).await;
-        let light_mint_b = create_light_mint(
-            rpc, &payer, 9, "Token B", "TOKB", &compression_config,
-        ).await;
+        let light_mint_a =
+            create_light_mint(rpc, &payer, 9, "Token A", "TOKA", &compression_config).await;
+        let light_mint_b =
+            create_light_mint(rpc, &payer, 9, "Token B", "TOKB", &compression_config).await;
 
         let mint_a_pubkey = light_mint_a.mint;
         let mint_b_pubkey = light_mint_b.mint;
@@ -159,11 +160,23 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
         // Mint Light tokens directly to depositor
         println!("\n=== Minting Light tokens to depositor ===");
         let depositor_ata_a = mint_light_tokens(
-            rpc, &payer, &light_mint_a.authority, &mint_a_pubkey, &depositor.pubkey(), amount,
-        ).await;
+            rpc,
+            &payer,
+            &light_mint_a.authority,
+            &mint_a_pubkey,
+            &depositor.pubkey(),
+            amount,
+        )
+        .await;
         let depositor_ata_b = mint_light_tokens(
-            rpc, &payer, &light_mint_b.authority, &mint_b_pubkey, &depositor.pubkey(), amount,
-        ).await;
+            rpc,
+            &payer,
+            &light_mint_b.authority,
+            &mint_b_pubkey,
+            &depositor.pubkey(),
+            amount,
+        )
+        .await;
 
         // Derive AMM PDA
         let amm_id = Pubkey::new_unique();
@@ -171,17 +184,31 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
 
         // Derive pool PDAs using Light mint pubkeys
         let (pool_pda, _) = Pubkey::find_program_address(
-            &[amm_pda.as_ref(), mint_a_pubkey.as_ref(), mint_b_pubkey.as_ref()],
+            &[
+                amm_pda.as_ref(),
+                mint_a_pubkey.as_ref(),
+                mint_b_pubkey.as_ref(),
+            ],
             &program_id,
         );
 
         let (pool_authority, _) = Pubkey::find_program_address(
-            &[amm_pda.as_ref(), mint_a_pubkey.as_ref(), mint_b_pubkey.as_ref(), b"authority"],
+            &[
+                amm_pda.as_ref(),
+                mint_a_pubkey.as_ref(),
+                mint_b_pubkey.as_ref(),
+                b"authority",
+            ],
             &program_id,
         );
 
         let (mint_liquidity, _) = Pubkey::find_program_address(
-            &[amm_pda.as_ref(), mint_a_pubkey.as_ref(), mint_b_pubkey.as_ref(), b"liquidity"],
+            &[
+                amm_pda.as_ref(),
+                mint_a_pubkey.as_ref(),
+                mint_b_pubkey.as_ref(),
+                b"liquidity",
+            ],
             &program_id,
         );
 
@@ -274,8 +301,10 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
             mint_spl_tokens(rpc, &payer, &mint_b_pubkey, &temp_ata_b, &payer, amount).await;
 
             // Create Light ATAs
-            let light_ata_a = create_light_ata(rpc, &payer, &mint_a_pubkey, &depositor.pubkey()).await;
-            let light_ata_b = create_light_ata(rpc, &payer, &mint_b_pubkey, &depositor.pubkey()).await;
+            let light_ata_a =
+                create_light_ata(rpc, &payer, &mint_a_pubkey, &depositor.pubkey()).await;
+            let light_ata_b =
+                create_light_ata(rpc, &payer, &mint_b_pubkey, &depositor.pubkey()).await;
 
             // Transfer from SPL to Light (compress)
             transfer_spl_to_light(
@@ -319,8 +348,10 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
             mint_t22_tokens(rpc, &payer, &mint_b_pubkey, &temp_ata_b, &payer, amount).await;
 
             // Create Light ATAs
-            let light_ata_a = create_light_ata(rpc, &payer, &mint_a_pubkey, &depositor.pubkey()).await;
-            let light_ata_b = create_light_ata(rpc, &payer, &mint_b_pubkey, &depositor.pubkey()).await;
+            let light_ata_a =
+                create_light_ata(rpc, &payer, &mint_a_pubkey, &depositor.pubkey()).await;
+            let light_ata_b =
+                create_light_ata(rpc, &payer, &mint_b_pubkey, &depositor.pubkey()).await;
 
             // Transfer from T22 to Light (compress)
             transfer_spl_to_light(
@@ -363,17 +394,31 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
 
     // Derive pool PDAs
     let (pool_pda, _) = Pubkey::find_program_address(
-        &[amm_pda.as_ref(), mint_a_pubkey.as_ref(), mint_b_pubkey.as_ref()],
+        &[
+            amm_pda.as_ref(),
+            mint_a_pubkey.as_ref(),
+            mint_b_pubkey.as_ref(),
+        ],
         &program_id,
     );
 
     let (pool_authority, _) = Pubkey::find_program_address(
-        &[amm_pda.as_ref(), mint_a_pubkey.as_ref(), mint_b_pubkey.as_ref(), b"authority"],
+        &[
+            amm_pda.as_ref(),
+            mint_a_pubkey.as_ref(),
+            mint_b_pubkey.as_ref(),
+            b"authority",
+        ],
         &program_id,
     );
 
     let (mint_liquidity, _) = Pubkey::find_program_address(
-        &[amm_pda.as_ref(), mint_a_pubkey.as_ref(), mint_b_pubkey.as_ref(), b"liquidity"],
+        &[
+            amm_pda.as_ref(),
+            mint_a_pubkey.as_ref(),
+            mint_b_pubkey.as_ref(),
+            b"liquidity",
+        ],
         &program_id,
     );
 
@@ -526,11 +571,23 @@ pub async fn deposit_liquidity<R: Rpc>(
     match ctx.token_config {
         TokenConfig::Spl | TokenConfig::LightSpl | TokenConfig::Light => {
             // SPL liquidity mint
-            create_spl_ata(rpc, &ctx.payer, &ctx.mint_liquidity, &ctx.depositor.pubkey()).await;
+            create_spl_ata(
+                rpc,
+                &ctx.payer,
+                &ctx.mint_liquidity,
+                &ctx.depositor.pubkey(),
+            )
+            .await;
         }
         TokenConfig::Token2022 | TokenConfig::LightT22 => {
             // T22 liquidity mint
-            create_t22_ata(rpc, &ctx.payer, &ctx.mint_liquidity, &ctx.depositor.pubkey()).await;
+            create_t22_ata(
+                rpc,
+                &ctx.payer,
+                &ctx.mint_liquidity,
+                &ctx.depositor.pubkey(),
+            )
+            .await;
         }
     }
 
@@ -573,10 +630,7 @@ pub async fn deposit_liquidity<R: Rpc>(
     .await
     .expect("deposit_liquidity should succeed");
 
-    println!(
-        "Deposited {} token A and {} token B",
-        amount_a, amount_b
-    );
+    println!("Deposited {} token A and {} token B", amount_a, amount_b);
 
     depositor_liquidity_ata
 }
@@ -742,8 +796,10 @@ pub async fn create_trader<R: Rpc + Indexer>(
         TokenConfig::LightSpl => {
             // For Light user accounts with SPL mint:
             // 1. Create temp SPL ATAs, mint, then transfer to Light ATAs
-            let temp_ata_a = create_spl_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
-            let _temp_ata_b = create_spl_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
+            let temp_ata_a =
+                create_spl_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
+            let _temp_ata_b =
+                create_spl_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
 
             // Mint initial token A to trader temp ATA
             mint_spl_tokens(
@@ -757,8 +813,10 @@ pub async fn create_trader<R: Rpc + Indexer>(
             .await;
 
             // Create Light ATAs
-            let light_ata_a = create_light_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
-            let light_ata_b = create_light_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
+            let light_ata_a =
+                create_light_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
+            let light_ata_b =
+                create_light_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
 
             // Transfer from SPL to Light (compress)
             transfer_spl_to_light(
@@ -780,8 +838,10 @@ pub async fn create_trader<R: Rpc + Indexer>(
         }
         TokenConfig::LightT22 => {
             // For Light user accounts with T22 mint:
-            let temp_ata_a = create_t22_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
-            let _temp_ata_b = create_t22_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
+            let temp_ata_a =
+                create_t22_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
+            let _temp_ata_b =
+                create_t22_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
 
             // Mint initial token A to trader temp ATA
             mint_t22_tokens(
@@ -795,8 +855,10 @@ pub async fn create_trader<R: Rpc + Indexer>(
             .await;
 
             // Create Light ATAs
-            let light_ata_a = create_light_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
-            let light_ata_b = create_light_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
+            let light_ata_a =
+                create_light_ata(rpc, &ctx.payer, &ctx.mint_a_pubkey, &trader.pubkey()).await;
+            let light_ata_b =
+                create_light_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
 
             // Transfer from T22 to Light (compress)
             transfer_spl_to_light(
@@ -819,7 +881,9 @@ pub async fn create_trader<R: Rpc + Indexer>(
         TokenConfig::Light => {
             // For pure Light mints:
             // Mint directly to trader's Light ATAs using the Light mint authority
-            let mint_authority_a = ctx.light_mint_authority_a.as_ref()
+            let mint_authority_a = ctx
+                .light_mint_authority_a
+                .as_ref()
                 .expect("Light config should have mint authority A");
 
             // Mint token A to trader
@@ -834,7 +898,8 @@ pub async fn create_trader<R: Rpc + Indexer>(
             .await;
 
             // Create Light ATA for token B (no minting needed initially)
-            let light_ata_b = create_light_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
+            let light_ata_b =
+                create_light_ata(rpc, &ctx.payer, &ctx.mint_b_pubkey, &trader.pubkey()).await;
 
             (light_ata_a, light_ata_b)
         }
@@ -918,7 +983,17 @@ pub async fn run_amm_full_flow<R: Rpc + Indexer>(rpc: &mut R, ctx: &AmmTestConte
 
     // Swap A -> B
     let swap_input = 10_000_000u64; // 0.01 tokens
-    swap(rpc, ctx, &trader, trader_ata_a, trader_ata_b, true, swap_input, 1).await;
+    swap(
+        rpc,
+        ctx,
+        &trader,
+        trader_ata_a,
+        trader_ata_b,
+        true,
+        swap_input,
+        1,
+    )
+    .await;
 
     // Verify trader got some token B
     let trader_b_balance = get_token_balance(rpc, trader_ata_b).await;
@@ -927,7 +1002,17 @@ pub async fn run_amm_full_flow<R: Rpc + Indexer>(rpc: &mut R, ctx: &AmmTestConte
 
     // Swap B -> A (swap half back)
     let swap_b_input = trader_b_balance / 2;
-    swap(rpc, ctx, &trader, trader_ata_a, trader_ata_b, false, swap_b_input, 1).await;
+    swap(
+        rpc,
+        ctx,
+        &trader,
+        trader_ata_a,
+        trader_ata_b,
+        false,
+        swap_b_input,
+        1,
+    )
+    .await;
 
     // Withdraw half of LP tokens
     let lp_balance = get_token_balance(rpc, depositor_liquidity_ata).await;

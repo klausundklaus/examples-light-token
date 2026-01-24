@@ -21,7 +21,8 @@ use solana_signer::Signer;
 #[tokio::test]
 async fn test_create_light_mint() {
     let program_id = light_token_minter::ID;
-    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
+    let mut config =
+        ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
     let mut rpc = LightProgramTest::new(config).await.unwrap();
@@ -49,7 +50,10 @@ async fn test_create_light_mint() {
 
     // Derive mint signer PDA
     let (mint_signer_pda, mint_signer_bump) = Pubkey::find_program_address(
-        &[light_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
+        &[
+            light_token_minter::MINT_SIGNER_SEED,
+            authority.pubkey().as_ref(),
+        ],
         &program_id,
     );
 
@@ -67,7 +71,10 @@ async fn test_create_light_mint() {
 
     println!("Light Mint test setup completed");
     println!("Program ID: {:?}", program_id);
-    println!("Mint Signer PDA: {:?} (bump: {})", mint_signer_pda, mint_signer_bump);
+    println!(
+        "Mint Signer PDA: {:?} (bump: {})",
+        mint_signer_pda, mint_signer_bump
+    );
     println!("Light Mint PDA: {:?}", cmint_pda);
 
     // Build create_mint instruction
@@ -117,10 +124,16 @@ async fn test_create_light_mint() {
         .expect("Mint should exist on-chain");
 
     // Verify the account has data (mint was created successfully)
-    assert!(!cmint_account.data.is_empty(), "Mint account should have data");
+    assert!(
+        !cmint_account.data.is_empty(),
+        "Mint account should have data"
+    );
 
     // The account should have significant size for a Light mint
-    assert!(cmint_account.data.len() > 50, "Mint account should have sufficient data for a Light mint");
+    assert!(
+        cmint_account.data.len() > 50,
+        "Mint account should have sufficient data for a Light mint"
+    );
 
     println!("Light Mint created and verified successfully!");
     println!("Mint account size: {} bytes", cmint_account.data.len());
@@ -131,7 +144,8 @@ async fn test_create_light_mint() {
 #[tokio::test]
 async fn test_mint_signer_derivation() {
     let program_id = light_token_minter::ID;
-    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
+    let mut config =
+        ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
     let rpc = LightProgramTest::new(config).await.unwrap();
@@ -139,7 +153,10 @@ async fn test_mint_signer_derivation() {
 
     // Derive mint signer PDA
     let (mint_signer_pda, bump) = Pubkey::find_program_address(
-        &[light_token_minter::MINT_SIGNER_SEED, payer.pubkey().as_ref()],
+        &[
+            light_token_minter::MINT_SIGNER_SEED,
+            payer.pubkey().as_ref(),
+        ],
         &program_id,
     );
 
@@ -154,7 +171,10 @@ async fn test_mint_signer_derivation() {
 
     // Verify the PDA derivations are deterministic
     let (verify_signer, verify_bump) = Pubkey::find_program_address(
-        &[light_token_minter::MINT_SIGNER_SEED, payer.pubkey().as_ref()],
+        &[
+            light_token_minter::MINT_SIGNER_SEED,
+            payer.pubkey().as_ref(),
+        ],
         &program_id,
     );
     assert_eq!(mint_signer_pda, verify_signer);
@@ -165,7 +185,8 @@ async fn test_mint_signer_derivation() {
 #[tokio::test]
 async fn test_mint_to() {
     let program_id = light_token_minter::ID;
-    let mut config = ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
+    let mut config =
+        ProgramTestConfig::new_v2(true, Some(vec![("light_token_minter", program_id)]));
     config = config.with_light_protocol_events();
 
     let mut rpc = LightProgramTest::new(config).await.unwrap();
@@ -198,7 +219,10 @@ async fn test_mint_to() {
 
     // Derive mint signer PDA
     let (mint_signer_pda, mint_signer_bump) = Pubkey::find_program_address(
-        &[light_token_minter::MINT_SIGNER_SEED, authority.pubkey().as_ref()],
+        &[
+            light_token_minter::MINT_SIGNER_SEED,
+            authority.pubkey().as_ref(),
+        ],
         &program_id,
     );
 
@@ -264,7 +288,10 @@ async fn test_mint_to() {
         .await
         .unwrap()
         .expect("Mint should exist on-chain");
-    assert!(!cmint_account.data.is_empty(), "Mint account should have data");
+    assert!(
+        !cmint_account.data.is_empty(),
+        "Mint account should have data"
+    );
     println!("Mint verified, size: {} bytes", cmint_account.data.len());
 
     // Create a recipient
@@ -275,7 +302,10 @@ async fn test_mint_to() {
 
     // Derive the ATA address (will be created by mint_to via the #[light_account(init, associated_token)] macro)
     let (recipient_ata, ata_bump) = derive_token_ata(&recipient.pubkey(), &cmint_pda);
-    println!("Recipient ATA (to be created by mint_to): {:?}", recipient_ata);
+    println!(
+        "Recipient ATA (to be created by mint_to): {:?}",
+        recipient_ata
+    );
 
     // Get proof for creating the ATA
     let mint_to_proof_result = get_create_accounts_proof(
@@ -337,7 +367,8 @@ async fn test_mint_to() {
     use spl_token_2022::pod::PodAccount;
     if ata_account_after.data.len() >= 165 {
         let token_state =
-            spl_pod::bytemuck::pod_from_bytes::<PodAccount>(&ata_account_after.data[..165]).unwrap();
+            spl_pod::bytemuck::pod_from_bytes::<PodAccount>(&ata_account_after.data[..165])
+                .unwrap();
         let balance = u64::from(token_state.amount);
         println!("Final balance: {} (expected {})", balance, mint_amount);
         assert_eq!(

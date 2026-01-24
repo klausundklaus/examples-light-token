@@ -5,8 +5,8 @@ use light_token::anchor::LightAccounts;
 use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
 
 use crate::constants::{ANCHOR_DISCRIMINATOR, AUTH_SEED, OFFER_SEED, VAULT_SEED};
-use crate::state::Offer;
 use crate::instructions::transfer_tokens;
+use crate::state::Offer;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct MakeOfferParams {
@@ -66,11 +66,11 @@ pub struct MakeOffer<'info> {
         seeds = [VAULT_SEED, offer.key().as_ref()],
         bump,
     )]
-    #[light_account(init, token,
-        authority = [VAULT_SEED, self.offer.key()],
-        mint = token_mint_a,
-        owner = authority,
-        bump = params.vault_bump
+    #[light_account(init,
+        token::authority = [VAULT_SEED, self.offer.key()],
+        token::mint = token_mint_a,
+        token::owner = authority,
+        token::bump = params.vault_bump
     )]
     pub vault: UncheckedAccount<'info>,
 
@@ -131,4 +131,3 @@ pub fn save_offer<'info>(
     );
     Ok(())
 }
-

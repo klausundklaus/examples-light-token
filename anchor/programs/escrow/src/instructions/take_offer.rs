@@ -4,8 +4,8 @@ use light_token::instruction::{CloseAccountCpi, RENT_SPONSOR};
 use light_token::utils::get_token_account_balance;
 
 use crate::constants::{AUTH_SEED, OFFER_SEED, VAULT_SEED};
-use crate::state::Offer;
 use crate::instructions::transfer_tokens;
+use crate::state::Offer;
 
 #[derive(Accounts)]
 pub struct TakeOffer<'info> {

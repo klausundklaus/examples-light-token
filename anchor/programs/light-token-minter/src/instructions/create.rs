@@ -36,16 +36,16 @@ pub struct CreateMint<'info> {
 
     /// CHECK: Initialized by light_account macro
     #[account(mut)]
-    #[light_account(init, mint,
-        mint_signer = mint_signer,
-        authority = authority,
-        decimals = params.decimals,
-        mint_seeds = &[MINT_SIGNER_SEED, self.authority.to_account_info().key.as_ref()],
-        mint_bump = params.mint_signer_bump,
-        name = params.token_name.clone().into_bytes(),
-        symbol = params.token_symbol.clone().into_bytes(),
-        uri = params.token_uri.clone().into_bytes(),
-        update_authority = authority
+    #[light_account(init,
+        mint::signer = mint_signer,
+        mint::authority = authority,
+        mint::decimals = params.decimals,
+        mint::seeds = &[MINT_SIGNER_SEED, self.authority.to_account_info().key.as_ref()],
+        mint::bump = params.mint_signer_bump,
+        mint::name = params.token_name.clone().into_bytes(),
+        mint::symbol = params.token_symbol.clone().into_bytes(),
+        mint::uri = params.token_uri.clone().into_bytes(),
+        mint::update_authority = authority
     )]
     pub cmint: UncheckedAccount<'info>,
 

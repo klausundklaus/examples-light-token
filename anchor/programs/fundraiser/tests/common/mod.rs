@@ -17,7 +17,7 @@ use shared_test_utils::{
     spl_tokens::{create_spl_ata, create_spl_mint, mint_spl_tokens},
     t22_tokens::{create_t22_ata, create_t22_mint, mint_t22_tokens},
     CreateAccountsProofResult, Indexer, LightProgramTest, MintType, ProgramTestConfig, Rpc,
-    TestRpc, CPI_AUTHORITY_PDA, COMPRESSIBLE_CONFIG_V1, LIGHT_TOKEN_MINTER_PROGRAM_ID,
+    TestRpc, COMPRESSIBLE_CONFIG_V1, CPI_AUTHORITY_PDA, LIGHT_TOKEN_MINTER_PROGRAM_ID,
     LIGHT_TOKEN_PROGRAM_ID, RENT_SPONSOR,
 };
 use solana_instruction::Instruction;
@@ -130,8 +130,14 @@ pub async fn setup_fundraiser_test<R: Rpc + TestRpc + Indexer>(
 
         // Create Light mint
         let light_mint = create_light_mint(
-            rpc, &payer, 9, "Fundraiser Token", "FUND", &compression_config,
-        ).await;
+            rpc,
+            &payer,
+            9,
+            "Fundraiser Token",
+            "FUND",
+            &compression_config,
+        )
+        .await;
 
         let mint_pubkey = light_mint.mint;
         println!("Light Mint: {:?}", mint_pubkey);
@@ -143,8 +149,10 @@ pub async fn setup_fundraiser_test<R: Rpc + TestRpc + Indexer>(
         let (fundraiser_pda, _) =
             Pubkey::find_program_address(&[b"fundraiser", maker.pubkey().as_ref()], &program_id);
 
-        let (vault_pda, vault_bump) =
-            Pubkey::find_program_address(&[fundraiser::VAULT_SEED, fundraiser_pda.as_ref()], &program_id);
+        let (vault_pda, vault_bump) = Pubkey::find_program_address(
+            &[fundraiser::VAULT_SEED, fundraiser_pda.as_ref()],
+            &program_id,
+        );
 
         println!("Fundraiser PDA: {:?}", fundraiser_pda);
         println!("Vault PDA: {:?}", vault_pda);
@@ -195,8 +203,10 @@ pub async fn setup_fundraiser_test<R: Rpc + TestRpc + Indexer>(
     let (fundraiser_pda, _) =
         Pubkey::find_program_address(&[b"fundraiser", maker.pubkey().as_ref()], &program_id);
 
-    let (vault_pda, vault_bump) =
-        Pubkey::find_program_address(&[fundraiser::VAULT_SEED, fundraiser_pda.as_ref()], &program_id);
+    let (vault_pda, vault_bump) = Pubkey::find_program_address(
+        &[fundraiser::VAULT_SEED, fundraiser_pda.as_ref()],
+        &program_id,
+    );
 
     println!("Fundraiser PDA: {:?}", fundraiser_pda);
     println!("Vault PDA: {:?}", vault_pda);
@@ -402,7 +412,9 @@ pub async fn create_contributor<R: Rpc + Indexer>(
             // Mint directly to contributor's Light ATA
             println!("Creating Light contributor account (Light mint)");
 
-            let mint_authority = ctx.light_mint_authority.as_ref()
+            let mint_authority = ctx
+                .light_mint_authority
+                .as_ref()
                 .expect("Light config should have mint authority");
 
             // Mint tokens directly to contributor's Light ATA
@@ -476,10 +488,7 @@ pub async fn contribute<R: Rpc>(
     .await
     .expect("contribute should succeed");
 
-    println!(
-        "Contributed {} tokens",
-        amount / 1_000_000_000
-    );
+    println!("Contributed {} tokens", amount / 1_000_000_000);
 }
 
 /// Check contributions and claim funds (maker claims)
@@ -595,8 +604,13 @@ pub async fn run_fundraiser_full_flow<R: Rpc + Indexer>(rpc: &mut R, ctx: &Fundr
     }
 
     // Verify vault has reached target
-    verify_light_token_balance(rpc, ctx.vault_pda, ctx.amount_to_raise, "vault (target reached)")
-        .await;
+    verify_light_token_balance(
+        rpc,
+        ctx.vault_pda,
+        ctx.amount_to_raise,
+        "vault (target reached)",
+    )
+    .await;
 
     // Maker claims funds
     let maker_ata = check_contributions(rpc, ctx).await;
@@ -610,17 +624,11 @@ pub async fn run_fundraiser_full_flow<R: Rpc + Indexer>(rpc: &mut R, ctx: &Fundr
         maker_balance, ctx.amount_to_raise,
         "Maker should have received all raised funds"
     );
-    println!(
-        "Maker received {} tokens",
-        maker_balance / 1_000_000_000
-    );
+    println!("Maker received {} tokens", maker_balance / 1_000_000_000);
 
     // Verify fundraiser account was closed
     let fundraiser_account = rpc.get_account(ctx.fundraiser_pda).await.unwrap();
-    assert!(
-        fundraiser_account.is_none(),
-        "Fundraiser should be closed"
-    );
+    assert!(fundraiser_account.is_none(), "Fundraiser should be closed");
 
     println!("\n=== Fundraiser full flow test completed successfully! ===");
 }
