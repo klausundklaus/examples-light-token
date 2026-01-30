@@ -10,16 +10,19 @@ import { createAssociatedTokenAccount } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
+const rpc = createRpc();
+
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
-    const rpc = createRpc(RPC_URL);
-
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
     await getOrCreateAtaInterface(rpc, payer, mint, payer);
@@ -28,7 +31,7 @@ const payer = Keypair.fromSecretKey(
         rpc,
         payer,
         mint,
-        payer.publicKey
+        payer.publicKey,
     );
 
     const tx = await unwrap(rpc, payer, splAta, payer, mint, bn(500));

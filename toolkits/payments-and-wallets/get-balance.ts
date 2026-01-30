@@ -11,16 +11,19 @@ import {
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
+const rpc = createRpc();
+
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
-    const rpc = createRpc(RPC_URL);
-
     // 1. Create mint
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
 
@@ -29,7 +32,7 @@ const payer = Keypair.fromSecretKey(
         rpc,
         payer,
         mint,
-        payer
+        payer,
     );
 
     // 3. Mint to payer's ATA
@@ -41,7 +44,7 @@ const payer = Keypair.fromSecretKey(
         rpc,
         payer,
         mint,
-        recipient
+        recipient,
     );
 
     // 5. Transfer from payer to recipient
@@ -52,7 +55,7 @@ const payer = Keypair.fromSecretKey(
         mint,
         recipientAta.address,
         payer,
-        bn(100)
+        bn(100),
     );
 
     // 6. Get recipient's balance after transfer
@@ -60,7 +63,7 @@ const payer = Keypair.fromSecretKey(
         rpc,
         recipientAta.address,
         recipient.publicKey,
-        mint
+        mint,
     );
     console.log("Recipient's balance:", account.amount);
 })();
