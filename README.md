@@ -8,31 +8,48 @@ Light token is a high-performance token standard that reduces the cost of mint a
 
 ## Toolkits
 
-* **[Payments and Wallets](toolkits/payments-and-wallets/)** - All you need for wallet integrations and payment flows. Minimal API differences to SPL.
-* **[Streaming Tokens](toolkits/streaming-tokens/)** - Stream mint events using Laserstream
+|  | Description |
+|---------|-------------|
+| [Payments and Wallets](toolkits/payments-and-wallets/) | All you need for wallet integrations and payment flows. Minimal API differences to SPL. |
+| [Streaming Tokens](toolkits/streaming-tokens/) | Stream mint events using Laserstream |
 
 ## Client Examples
 
-| Example | Action | Instruction | Description |
+### TypeScript
+
+|  |  |  | Description |
 |---------|--------|-------------|-------------|
-| **create-mint** | [.ts](typescript-client/actions/create-mint.ts) [.rs](rust-client/actions/create_mint.rs) | [.ts](typescript-client/instructions/create-mint.ts) [.rs](rust-client/instructions/create_mint.rs) | Create a light-token mint with metadata |
-| **create-ata** | [.ts](typescript-client/actions/create-ata.ts) [.rs](rust-client/actions/create_ata.rs) | [.ts](typescript-client/instructions/create-ata.ts) [.rs](rust-client/instructions/create_ata.rs) | Create an associated light-token account |
-| **create-token-account** | — | [.rs](rust-client/instructions/create_token_account.rs) | Create a light-token account with custom owner |
-| **load-ata** | [.ts](typescript-client/actions/load-ata.ts) | [.ts](typescript-client/instructions/load-ata.ts) | Load token accounts from light-token, compressed tokens, SPL/T22 to one unified balance |
-| **mint-to** | [.ts](typescript-client/actions/mint-to.ts) [.rs](rust-client/actions/mint_to.rs) | [.ts](typescript-client/instructions/mint-to.ts) [.rs](rust-client/instructions/mint_to.rs) | Mint tokens to a light-account |
-| **mint-to-checked** | — | [.rs](rust-client/instructions/mint_to_checked.rs) | Mint tokens with decimal validation |
-| **transfer-interface** | [.ts](typescript-client/actions/transfer-interface.ts) [.rs](rust-client/actions/transfer_interface.rs) | [.ts](typescript-client/instructions/transfer-interface.ts) [.rs](rust-client/instructions/transfer_interface.rs) | Transfer between light-token, T22, and SPL accounts |
-| **transfer-checked** | [.rs](rust-client/actions/transfer_checked.rs) | [.rs](rust-client/instructions/transfer_checked.rs) | Transfer with decimal validation |
-| **spl-to-light-transfer** | — | [.rs](rust-client/instructions/spl_to_light_transfer.rs) | Transfer from SPL to Light via TransferInterface |
-| **wrap** | [.ts](typescript-client/actions/wrap.ts) [.rs](rust-client/actions/wrap.rs) | [.ts](typescript-client/instructions/wrap.ts) | Wrap SPL/T22 to light-token |
-| **unwrap** | [.ts](typescript-client/actions/unwrap.ts) [.rs](rust-client/actions/unwrap.rs) | [.ts](typescript-client/instructions/unwrap.ts) | Unwrap light-token to SPL/T22 |
-| **burn** | — | [.rs](rust-client/instructions/burn.rs) | Burn tokens |
-| **burn-checked** | — | [.rs](rust-client/instructions/burn_checked.rs) | Burn tokens with decimal validation |
-| **approve** | [.ts](typescript-client/actions/delegate-approve.ts) [.rs](rust-client/actions/approve.rs) | [.rs](rust-client/instructions/approve.rs) | Approve delegate |
-| **revoke** | [.ts](typescript-client/actions/delegate-revoke.ts) [.rs](rust-client/actions/revoke.rs) | [.rs](rust-client/instructions/revoke.rs) | Revoke delegate |
-| **freeze** | — | [.rs](rust-client/instructions/freeze.rs) | Freeze a token account |
-| **thaw** | — | [.rs](rust-client/instructions/thaw.rs) | Thaw a frozen token account |
-| **close** | — | [.rs](rust-client/instructions/close.rs) | Close a token account |
+| create-mint | [Action](typescript-client/actions/create-mint.ts) | [Instruction](typescript-client/instructions/create-mint.ts) | Create a light-token mint with metadata |
+| create-ata | [Action](typescript-client/actions/create-ata.ts) | [Instruction](typescript-client/instructions/create-ata.ts) | Create an associated light-token account |
+| load-ata | [Action](typescript-client/actions/load-ata.ts) | [Instruction](typescript-client/instructions/load-ata.ts) | Load token accounts from light-token, compressed tokens, SPL/T22 to one unified balance |
+| mint-to | [Action](typescript-client/actions/mint-to.ts) | [Instruction](typescript-client/instructions/mint-to.ts) | Mint tokens to a light-account |
+| transfer-interface | [Action](typescript-client/actions/transfer-interface.ts) | [Instruction](typescript-client/instructions/transfer-interface.ts) | Transfer between light-token, T22, and SPL accounts |
+| wrap | [Action](typescript-client/actions/wrap.ts) | [Instruction](typescript-client/instructions/wrap.ts) | Wrap SPL/T22 to light-token |
+| unwrap | [Action](typescript-client/actions/unwrap.ts) | [Instruction](typescript-client/instructions/unwrap.ts) | Unwrap light-token to SPL/T22 |
+| delegate-approve | [Action](typescript-client/actions/delegate-approve.ts) | | Approve delegate |
+| delegate-revoke | [Action](typescript-client/actions/delegate-revoke.ts) | | Revoke delegate |
+
+### Rust
+
+|  |  |  | Description |
+|---------|--------|-------------|-------------|
+| create-mint | [Action](rust-client/actions/create_mint.rs) | [Instruction](rust-client/instructions/create_mint.rs) | Create a light-token mint with metadata |
+| create-ata | [Action](rust-client/actions/create_ata.rs) | [Instruction](rust-client/instructions/create_ata.rs) | Create an associated light-token account |
+| create-token-account | | [Instruction](rust-client/instructions/create_token_account.rs) | Create a light-token account with custom owner |
+| mint-to | [Action](rust-client/actions/mint_to.rs) | [Instruction](rust-client/instructions/mint_to.rs) | Mint tokens to a light-account |
+| mint-to-checked | | [Instruction](rust-client/instructions/mint_to_checked.rs) | Mint tokens with decimal validation |
+| transfer-interface | [Action](rust-client/actions/transfer_interface.rs) | [Instruction](rust-client/instructions/transfer_interface.rs) | Transfer between light-token, T22, and SPL accounts |
+| transfer-checked | [Action](rust-client/actions/transfer_checked.rs) | [Instruction](rust-client/instructions/transfer_checked.rs) | Transfer with decimal validation |
+| spl-to-light-transfer | | [Instruction](rust-client/instructions/spl_to_light_transfer.rs) | Transfer from SPL to Light via TransferInterface |
+| wrap | [Action](rust-client/actions/wrap.rs) | | Wrap SPL/T22 to light-token |
+| unwrap | [Action](rust-client/actions/unwrap.rs) | | Unwrap light-token to SPL/T22 |
+| burn | | [Instruction](rust-client/instructions/burn.rs) | Burn tokens |
+| burn-checked | | [Instruction](rust-client/instructions/burn_checked.rs) | Burn tokens with decimal validation |
+| approve | [Action](rust-client/actions/approve.rs) | [Instruction](rust-client/instructions/approve.rs) | Approve delegate |
+| revoke | [Action](rust-client/actions/revoke.rs) | [Instruction](rust-client/instructions/revoke.rs) | Revoke delegate |
+| freeze | | [Instruction](rust-client/instructions/freeze.rs) | Freeze a token account |
+| thaw | | [Instruction](rust-client/instructions/thaw.rs) | Thaw a frozen token account |
+| close | | [Instruction](rust-client/instructions/close.rs) | Close a token account |
 
 ## Program Examples
 
@@ -41,7 +58,7 @@ Light token is a high-performance token standard that reduces the cost of mint a
 The instructions use pure CPI calls which you can combine with existing and / or light macros.
 For existing programs, you can replace spl_token with light_token instructions as you need. The API is a superset of SPL-token so switching is straightforward.
 
-| Example | Description |
+|  | Description |
 |---------|-------------|
 | [approve](programs/anchor/basic-instructions/approve/src/lib.rs) | Approve delegate via CPI |
 | [burn](programs/anchor/basic-instructions/burn/src/lib.rs) | Burn tokens via CPI |
@@ -58,7 +75,7 @@ For existing programs, you can replace spl_token with light_token instructions a
 
 ### Macros
 
-| Example | Description |
+|  | Description |
 |---------|-------------|
 | [counter](programs/anchor/basic-macros/counter) | Create PDA with sponsored rent-exemption |
 | [create-associated-token-account](programs/anchor/basic-macros/create-ata) | Create associated light-token account |
@@ -67,7 +84,7 @@ For existing programs, you can replace spl_token with light_token instructions a
 
 ### Examples
 
-| Example | Description |
+|  | Description |
 |---------|-------------|
 | [create-and-transfer](programs/anchor/create-and-transfer) | Create account via macro and transfer via CPI |
 
