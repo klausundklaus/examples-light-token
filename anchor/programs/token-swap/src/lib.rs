@@ -2,7 +2,8 @@
 #![allow(deprecated)]
 
 use anchor_lang::prelude::*;
-use light_token::anchor::{derive_light_cpi_signer, light_program, CpiSigner};
+use light_sdk::{derive_light_cpi_signer, derive_light_rent_sponsor_pda, CpiSigner};
+use light_token::anchor::light_program;
 
 mod constants;
 mod errors;
@@ -10,7 +11,7 @@ mod instructions;
 mod state;
 
 // Re-export constants needed by #[light_program] macro
-pub use constants::{POOL_ACCOUNT_A_SEED, POOL_ACCOUNT_B_SEED};
+pub use constants::{AUTHORITY_SEED, POOL_ACCOUNT_A_SEED, POOL_ACCOUNT_B_SEED};
 // Re-export params structs for tests
 pub use instructions::CreatePoolParams;
 
@@ -19,6 +20,14 @@ declare_id!("AsGVFxWqEn8icRBFQApxJe68x3r9zvfSbmiEzYFATGYn");
 
 pub const LIGHT_CPI_SIGNER: CpiSigner =
     derive_light_cpi_signer!("AsGVFxWqEn8icRBFQApxJe68x3r9zvfSbmiEzYFATGYn");
+
+pub const PROGRAM_RENT_SPONSOR_DATA: ([u8; 32], u8) =
+    derive_light_rent_sponsor_pda!("AsGVFxWqEn8icRBFQApxJe68x3r9zvfSbmiEzYFATGYn");
+
+#[inline]
+pub fn program_rent_sponsor() -> Pubkey {
+    Pubkey::from(PROGRAM_RENT_SPONSOR_DATA.0)
+}
 
 #[light_program]
 #[program]

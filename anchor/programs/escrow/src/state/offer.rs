@@ -7,7 +7,7 @@ use light_token::anchor::{CompressionInfo, LightAccount};
 #[account]
 pub struct Offer {
     /// Compression info for Light Protocol integration.
-    pub compression_info: Option<CompressionInfo>,
+    pub compression_info: CompressionInfo,
     /// Unique identifier for the offer.
     pub id: u64,
     /// The maker (creator) of this offer.

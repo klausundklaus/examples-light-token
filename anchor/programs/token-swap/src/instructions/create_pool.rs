@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenInterface};
 use light_sdk::interface::CreateAccountsProof;
 use light_token::anchor::LightAccounts;
-use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 
 use crate::{
     constants::{AUTHORITY_SEED, LIQUIDITY_SEED, POOL_ACCOUNT_A_SEED, POOL_ACCOUNT_B_SEED},
@@ -49,14 +49,9 @@ pub struct CreatePool<'info> {
     )]
     pub pool: Box<Account<'info, Pool>>,
 
-    /// CHECK: Read only authority
+    /// CHECK: Read only authority for SPL operations and Light token ownership
     #[account(
-        seeds = [
-            amm.key().as_ref(),
-            mint_a.key().as_ref(),
-            mint_b.key().as_ref(),
-            AUTHORITY_SEED,
-        ],
+        seeds = [AUTHORITY_SEED],
         bump,
     )]
     pub pool_authority: AccountInfo<'info>,
@@ -91,10 +86,11 @@ pub struct CreatePool<'info> {
         bump,
     )]
     #[light_account(init,
-        token::authority = [POOL_ACCOUNT_A_SEED, self.pool.key()],
+        token::seeds = [POOL_ACCOUNT_A_SEED, self.pool.key()],
         token::mint = mint_a,
         token::owner = pool_authority,
-        token::bump = params.pool_account_a_bump
+        token::bump = params.pool_account_a_bump,
+        token::owner_seeds = [AUTHORITY_SEED]
     )]
     pub pool_account_a: UncheckedAccount<'info>,
 
@@ -105,10 +101,11 @@ pub struct CreatePool<'info> {
         bump,
     )]
     #[light_account(init,
-        token::authority = [POOL_ACCOUNT_B_SEED, self.pool.key()],
+        token::seeds = [POOL_ACCOUNT_B_SEED, self.pool.key()],
         token::mint = mint_b,
         token::owner = pool_authority,
-        token::bump = params.pool_account_b_bump
+        token::bump = params.pool_account_b_bump,
+        token::owner_seeds = [AUTHORITY_SEED]
     )]
     pub pool_account_b: UncheckedAccount<'info>,
 
@@ -120,17 +117,25 @@ pub struct CreatePool<'info> {
     pub token_program: Interface<'info, TokenInterface>,
     /// Token program for liquidity mint (must be SPL or T22, not Light - Anchor can't init Light mints)
     pub liquidity_token_program: Interface<'info, TokenInterface>,
-    /// Light token program for CPI calls
-    pub light_token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 
-    /// Light token compressible config account
-    #[account(address = COMPRESSIBLE_CONFIG_V1)]
-    pub light_token_compressible_config: AccountInfo<'info>,
+    /// CHECK: Compression config
+    pub compression_config: AccountInfo<'info>,
+
+    /// CHECK: PDA rent sponsor for reimbursement
+    #[account(mut)]
+    pub pda_rent_sponsor: AccountInfo<'info>,
+
+    /// Light token config account
+    #[account(address = LIGHT_TOKEN_CONFIG)]
+    pub light_token_config: AccountInfo<'info>,
 
     /// Light token rent sponsor account
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
+
+    /// Light token program for CPI
+    pub light_token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: light-token CPI authority
     pub light_token_cpi_authority: AccountInfo<'info>,

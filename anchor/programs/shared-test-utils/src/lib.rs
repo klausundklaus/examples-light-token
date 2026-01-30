@@ -25,7 +25,7 @@ pub use light_program_test::{
 };
 pub use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
 pub use light_token::constants::CPI_AUTHORITY_PDA;
-pub use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+pub use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 
 // Re-export light-token-minter program ID for tests that need to create Light mints
 pub use light_token_minter::ID as LIGHT_TOKEN_MINTER_PROGRAM_ID;
@@ -66,6 +66,7 @@ pub mod setup {
         rpc: &mut R,
         payer: &Keypair,
         program_id: &Pubkey,
+        rent_sponsor: Pubkey,
     ) -> Pubkey {
         // Setup program data for rent-free config
         let program_data_pda = setup_mock_program_data(rpc, payer, program_id);
@@ -75,7 +76,7 @@ pub mod setup {
             program_id,
             &payer.pubkey(),
             &program_data_pda,
-            RENT_SPONSOR,
+            rent_sponsor,
             payer.pubkey(),
         )
         .build();
@@ -282,8 +283,8 @@ pub mod light_tokens {
             mint_signer: mint_signer_pda,
             cmint: mint_pda,
             compression_config: *compression_config,
-            light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-            rent_sponsor: RENT_SPONSOR,
+            light_token_config: LIGHT_TOKEN_CONFIG,
+            light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
             light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
             light_token_cpi_authority: CPI_AUTHORITY_PDA,
             system_program: solana_sdk::system_program::ID,
@@ -369,8 +370,8 @@ pub mod light_tokens {
             destination: destination_ata,
             light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
             system_program: solana_sdk::system_program::ID,
-            light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-            light_token_rent_sponsor: RENT_SPONSOR,
+            light_token_config: LIGHT_TOKEN_CONFIG,
+            light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
             light_token_cpi_authority: CPI_AUTHORITY_PDA,
         };
 
@@ -422,8 +423,8 @@ pub mod light_tokens {
         owner: &Pubkey,
     ) -> Pubkey {
         let compressible_params = CompressibleParams {
-            compressible_config: COMPRESSIBLE_CONFIG_V1,
-            rent_sponsor: RENT_SPONSOR,
+            compressible_config: LIGHT_TOKEN_CONFIG,
+            rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
             pre_pay_num_epochs: 2,
             lamports_per_write: Some(1000),
             compress_to_account_pubkey: None,

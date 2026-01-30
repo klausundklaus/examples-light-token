@@ -17,8 +17,8 @@ use shared_test_utils::{
     spl_tokens::{create_spl_ata, create_spl_mint, mint_spl_tokens},
     t22_tokens::{create_t22_ata, create_t22_mint, mint_t22_tokens},
     CreateAccountsProofResult, Indexer, LightProgramTest, MintType, ProgramTestConfig, Rpc,
-    TestRpc, COMPRESSIBLE_CONFIG_V1, CPI_AUTHORITY_PDA, LIGHT_TOKEN_MINTER_PROGRAM_ID,
-    LIGHT_TOKEN_PROGRAM_ID, RENT_SPONSOR,
+    TestRpc, CPI_AUTHORITY_PDA, LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_MINTER_PROGRAM_ID,
+    LIGHT_TOKEN_PROGRAM_ID, LIGHT_TOKEN_RENT_SPONSOR,
 };
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
@@ -111,7 +111,13 @@ pub async fn setup_fundraiser_test<R: Rpc + TestRpc + Indexer>(
     let payer = rpc.get_payer().insecure_clone();
 
     // Initialize rent-free config (returns the config PDA)
-    let compression_config = initialize_rent_free_config(rpc, &payer, &program_id).await;
+    let rent_sponsor = fundraiser::program_rent_sponsor();
+    let compression_config = initialize_rent_free_config(rpc, &payer, &program_id, rent_sponsor).await;
+
+    // Fund rent sponsor PDA
+    rpc.airdrop_lamports(&rent_sponsor, 1_000_000_000)
+        .await
+        .unwrap();
 
     // Create maker
     let maker = Keypair::new();
@@ -240,16 +246,22 @@ pub async fn initialize_fundraiser<R: Rpc + Indexer>(
 
     let token_program = ctx.token_config.token_program_id();
 
+    // Derive authority PDA
+    let (authority_pda, _) = Pubkey::find_program_address(&[fundraiser::AUTH_SEED], &ctx.program_id);
+
     let initialize_accounts = fundraiser::accounts::Initialize {
         fee_payer: ctx.maker.pubkey(),
+        authority: authority_pda,
         mint_to_raise: ctx.mint_pubkey,
         fundraiser: ctx.fundraiser_pda,
         vault: ctx.vault_pda,
         token_program,
         system_program: solana_sdk::system_program::ID,
+        compression_config: ctx.compression_config.expect("compression_config required"),
+        pda_rent_sponsor: fundraiser::program_rent_sponsor(),
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
     };
 
@@ -467,7 +479,7 @@ pub async fn contribute<R: Rpc>(
         token_program,
         system_program: solana_sdk::system_program::ID,
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
         spl_interface_pda: ctx.spl_interface_pda,
     };
@@ -511,8 +523,11 @@ pub async fn check_contributions<R: Rpc>(rpc: &mut R, ctx: &FundraiserTestContex
         }
     };
 
+    let (authority_pda, _) = Pubkey::find_program_address(&[fundraiser::AUTH_SEED], &ctx.program_id);
+
     let check_contributions_accounts = fundraiser::accounts::CheckContributions {
         fee_payer: ctx.maker.pubkey(),
+        authority: authority_pda,
         mint_to_raise: ctx.mint_pubkey,
         fundraiser: ctx.fundraiser_pda,
         vault: ctx.vault_pda,
@@ -520,7 +535,7 @@ pub async fn check_contributions<R: Rpc>(rpc: &mut R, ctx: &FundraiserTestContex
         token_program,
         system_program: solana_sdk::system_program::ID,
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
         spl_interface_pda: ctx.spl_interface_pda,
     };

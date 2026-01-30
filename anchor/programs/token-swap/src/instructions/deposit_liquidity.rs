@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use fixed::types::I64F64;
 use light_anchor_spl::token_interface::{Mint, MintTo, TokenAccount, TokenInterface};
-use light_token::instruction::RENT_SPONSOR;
+use light_token::instruction::LIGHT_TOKEN_RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
 use light_token::utils::get_token_account_balance;
 
@@ -136,9 +136,6 @@ pub fn deposit_liquidity(
     // Mint the liquidity to user (SPL or T22 token mint - never Light)
     let authority_bump = ctx.bumps.pool_authority;
     let authority_seeds = &[
-        &ctx.accounts.pool.amm.to_bytes(),
-        &ctx.accounts.mint_a.key().to_bytes(),
-        &ctx.accounts.mint_b.key().to_bytes(),
         AUTHORITY_SEED,
         &[authority_bump],
     ];
@@ -173,14 +170,9 @@ pub struct DepositLiquidity<'info> {
     )]
     pub pool: Box<Account<'info, Pool>>,
 
-    /// CHECK: Read only authority
+    /// CHECK: Read only authority for SPL operations and Light token ownership
     #[account(
-        seeds = [
-            pool.amm.as_ref(),
-            mint_a.key().as_ref(),
-            mint_b.key().as_ref(),
-            AUTHORITY_SEED,
-        ],
+        seeds = [AUTHORITY_SEED],
         bump,
     )]
     pub pool_authority: AccountInfo<'info>,
@@ -264,7 +256,7 @@ pub struct DepositLiquidity<'info> {
     pub light_token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: Light token rent sponsor
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: light-token CPI authority - must be writable for Light token CPI

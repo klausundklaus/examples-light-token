@@ -19,8 +19,8 @@ use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
 use light_token::constants::CPI_AUTHORITY_PDA;
 use light_token::instruction::{
     derive_mint_compressed_address, derive_token_ata, find_mint_address,
-    CreateAssociatedTokenAccount, CreateMint, CreateMintParams, MintTo, COMPRESSIBLE_CONFIG_V1,
-    RENT_SPONSOR,
+    CreateAssociatedTokenAccount, CreateMint, CreateMintParams, MintTo, LIGHT_TOKEN_CONFIG,
+    LIGHT_TOKEN_RENT_SPONSOR,
 };
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
@@ -185,11 +185,12 @@ async fn test_escrow_full_flow() {
     let program_data_pda = setup_mock_program_data(&mut rpc, &payer, &program_id);
 
     // Initialize rent-free config
+    let rent_sponsor = escrow::program_rent_sponsor();
     let (init_config_ix, config_pda) = InitializeRentFreeConfig::new(
         &program_id,
         &payer.pubkey(),
         &program_data_pda,
-        RENT_SPONSOR,
+        rent_sponsor,
         payer.pubkey(),
     )
     .build();
@@ -197,6 +198,11 @@ async fn test_escrow_full_flow() {
     rpc.create_and_send_transaction(&[init_config_ix], &payer.pubkey(), &[&payer])
         .await
         .expect("Initialize config should succeed");
+
+    // Fund the rent sponsor PDA so it can pay for rent reimbursements
+    rpc.airdrop_lamports(&rent_sponsor, 1_000_000_000)
+        .await
+        .expect("Airdrop to rent sponsor should succeed");
 
     println!("Rent-free config initialized at: {:?}", config_pda);
 
@@ -317,8 +323,9 @@ async fn test_escrow_full_flow() {
         vault: vault_pda,
         token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         system_program: solana_sdk::system_program::ID,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        light_token_rent_sponsor: RENT_SPONSOR,
+        pda_rent_sponsor: rent_sponsor,
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
     };
 
@@ -381,7 +388,7 @@ async fn test_escrow_full_flow() {
         token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         system_program: solana_sdk::system_program::ID,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
     };
 
     let take_offer_data = escrow::instruction::TakeOffer {};
@@ -447,11 +454,12 @@ async fn test_escrow_setup() {
     let program_data_pda = setup_mock_program_data(&mut rpc, &payer, &program_id);
 
     // Initialize rent-free config
+    let rent_sponsor = escrow::program_rent_sponsor();
     let (init_config_ix, config_pda) = InitializeRentFreeConfig::new(
         &program_id,
         &payer.pubkey(),
         &program_data_pda,
-        RENT_SPONSOR,
+        rent_sponsor,
         payer.pubkey(),
     )
     .build();
@@ -459,6 +467,11 @@ async fn test_escrow_setup() {
     rpc.create_and_send_transaction(&[init_config_ix], &payer.pubkey(), &[&payer])
         .await
         .expect("Initialize config should succeed");
+
+    // Fund the rent sponsor PDA
+    rpc.airdrop_lamports(&rent_sponsor, 1_000_000_000)
+        .await
+        .expect("Airdrop to rent sponsor should succeed");
 
     // Verify PDA derivations
     let offer_id = 1u64;

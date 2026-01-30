@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 use light_sdk::interface::CreateAccountsProof;
 use light_token::anchor::LightAccounts;
-use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 
 use crate::constants::{ANCHOR_DISCRIMINATOR, AUTH_SEED, OFFER_SEED, VAULT_SEED};
 use crate::instructions::transfer_tokens;
@@ -67,22 +67,27 @@ pub struct MakeOffer<'info> {
         bump,
     )]
     #[light_account(init,
-        token::authority = [VAULT_SEED, self.offer.key()],
+        token::seeds = [VAULT_SEED, self.offer.key()],
         token::mint = token_mint_a,
         token::owner = authority,
-        token::bump = params.vault_bump
+        token::bump = params.vault_bump,
+        token::owner_seeds = [AUTH_SEED.as_bytes()]
     )]
     pub vault: UncheckedAccount<'info>,
 
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 
-    /// Light token compressible config account
-    #[account(address = COMPRESSIBLE_CONFIG_V1)]
-    pub light_token_compressible_config: AccountInfo<'info>,
+    /// CHECK: PDA rent sponsor for reimbursement
+    #[account(mut)]
+    pub pda_rent_sponsor: AccountInfo<'info>,
+
+    /// Light token config account
+    #[account(address = LIGHT_TOKEN_CONFIG)]
+    pub light_token_config: AccountInfo<'info>,
 
     /// Light token rent sponsor account
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: light-token CPI authority

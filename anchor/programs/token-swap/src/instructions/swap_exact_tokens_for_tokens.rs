@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use fixed::types::I64F64;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_token::instruction::RENT_SPONSOR;
+use light_token::instruction::LIGHT_TOKEN_RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
 use light_token::utils::get_token_account_balance;
 
@@ -67,14 +67,9 @@ pub fn swap_exact_tokens_for_tokens(
     // Compute the invariant before the trade
     let invariant = pool_a_balance * pool_b_balance;
 
-    // Transfer tokens to the pool
+    // Build authority seeds for pool->trader transfers
     let authority_bump = ctx.bumps.pool_authority;
-    let mint_a_key = ctx.accounts.mint_a.key();
-    let mint_b_key = ctx.accounts.mint_b.key();
     let authority_seeds: &[&[u8]] = &[
-        ctx.accounts.pool.amm.as_ref(),
-        mint_a_key.as_ref(),
-        mint_b_key.as_ref(),
         AUTHORITY_SEED,
         &[authority_bump],
     ];
@@ -217,14 +212,9 @@ pub struct SwapExactTokensForTokens<'info> {
     )]
     pub pool: Account<'info, Pool>,
 
-    /// CHECK: Pool authority PDA - signer for pool token transfers (readonly)
+    /// CHECK: Pool authority PDA - signer for SPL liquidity and Light token operations
     #[account(
-        seeds = [
-            pool.amm.as_ref(),
-            mint_a.key().as_ref(),
-            mint_b.key().as_ref(),
-            AUTHORITY_SEED,
-        ],
+        seeds = [AUTHORITY_SEED],
         bump,
     )]
     pub pool_authority: AccountInfo<'info>,
@@ -284,7 +274,7 @@ pub struct SwapExactTokensForTokens<'info> {
     pub light_token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: Light token rent sponsor
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: light-token CPI authority - must be writable for Light token CPI

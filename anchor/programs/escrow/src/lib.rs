@@ -5,7 +5,8 @@ pub mod instructions;
 pub mod state;
 
 use anchor_lang::prelude::*;
-use light_token::anchor::{derive_light_cpi_signer, light_program, CpiSigner};
+use light_sdk::{derive_light_cpi_signer, derive_light_rent_sponsor_pda, CpiSigner};
+use light_token::anchor::light_program;
 
 pub use constants::*;
 pub use instructions::*;
@@ -15,6 +16,14 @@ declare_id!("FKJs6rp6TXJtxzLiPtdYhqa9ExRuBXG2zwh4fda6WATN");
 
 pub const LIGHT_CPI_SIGNER: CpiSigner =
     derive_light_cpi_signer!("FKJs6rp6TXJtxzLiPtdYhqa9ExRuBXG2zwh4fda6WATN");
+
+pub const PROGRAM_RENT_SPONSOR_DATA: ([u8; 32], u8) =
+    derive_light_rent_sponsor_pda!("FKJs6rp6TXJtxzLiPtdYhqa9ExRuBXG2zwh4fda6WATN");
+
+#[inline]
+pub fn program_rent_sponsor() -> Pubkey {
+    Pubkey::from(PROGRAM_RENT_SPONSOR_DATA.0)
+}
 
 #[light_program]
 #[program]

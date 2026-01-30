@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_token::instruction::RENT_SPONSOR;
+use light_token::instruction::LIGHT_TOKEN_RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
 use light_token::utils::get_token_account_balance;
 
-use crate::constants::VAULT_SEED;
+use crate::constants::{AUTH_SEED, VAULT_SEED};
 use crate::instructions::{transfer_tokens, SplInterfaceConfig};
 use crate::state::Fundraiser;
 use crate::FundraiserError;
@@ -14,6 +14,13 @@ pub struct CheckContributions<'info> {
     /// The maker who checks and claims the fundraiser (also the fee payer for Light Protocol)
     #[account(mut)]
     pub fee_payer: Signer<'info>,
+
+    /// CHECK: Authority PDA for the vault
+    #[account(
+        seeds = [AUTH_SEED],
+        bump,
+    )]
+    pub authority: UncheckedAccount<'info>,
 
     #[account(mint::token_program = token_program)]
     pub mint_to_raise: InterfaceAccount<'info, Mint>,
@@ -51,7 +58,7 @@ pub struct CheckContributions<'info> {
     pub light_token_program: Interface<'info, TokenInterface>,
 
     /// Light token rent sponsor account
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: light-token CPI authority - must be writable for Light token CPI
@@ -65,7 +72,7 @@ pub struct CheckContributions<'info> {
 }
 
 impl<'info> CheckContributions<'info> {
-    pub fn check_contributions(&self, _bumps: &CheckContributionsBumps) -> Result<()> {
+    pub fn check_contributions(&self, bumps: &CheckContributionsBumps) -> Result<()> {
         // Get the vault balance
         let vault_balance = get_token_account_balance(&self.vault.to_account_info())
             .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
@@ -76,11 +83,10 @@ impl<'info> CheckContributions<'info> {
             FundraiserError::TargetNotMet
         );
 
-        // Build signer seeds for the fundraiser PDA (which is the vault's owner)
-        let fundraiser_seeds: &[&[u8]] = &[
-            b"fundraiser".as_ref(),
-            self.fee_payer.to_account_info().key.as_ref(),
-            &[self.fundraiser.bump],
+        // Build signer seeds for the authority PDA (which is the vault's owner)
+        let authority_seeds: &[&[u8]] = &[
+            AUTH_SEED,
+            &[bumps.authority],
         ];
 
         // Get SPL interface PDA bump
@@ -103,11 +109,11 @@ impl<'info> CheckContributions<'info> {
             self.vault.to_account_info(),
             self.maker_ata.to_account_info(),
             self.mint_to_raise.to_account_info(),
-            self.fundraiser.to_account_info(),
+            self.authority.to_account_info(),
             self.fee_payer.to_account_info(),
             self.light_token_cpi_authority.to_account_info(),
             self.system_program.to_account_info(),
-            Some(fundraiser_seeds),
+            Some(authority_seeds),
             Some(spl_interface),
         )?;
 

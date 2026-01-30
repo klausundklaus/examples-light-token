@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_token::instruction::RENT_SPONSOR;
+use light_token::instruction::LIGHT_TOKEN_RENT_SPONSOR;
 use light_token::spl_interface::find_spl_interface_pda;
 
 use crate::constants::{ANCHOR_DISCRIMINATOR, VAULT_SEED};
@@ -55,7 +55,7 @@ pub struct Contribute<'info> {
     pub light_token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: Light token rent sponsor
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: light-token CPI authority - must be writable for Light token CPI

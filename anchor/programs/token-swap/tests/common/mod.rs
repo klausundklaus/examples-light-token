@@ -19,8 +19,8 @@ use shared_test_utils::{
     spl_tokens::{create_spl_ata, create_spl_mint, mint_spl_tokens},
     t22_tokens::{create_t22_ata, create_t22_mint, mint_t22_tokens},
     CreateAccountsProofResult, Indexer, LightProgramTest, MintType, ProgramTestConfig, Rpc,
-    TestRpc, COMPRESSIBLE_CONFIG_V1, CPI_AUTHORITY_PDA, LIGHT_TOKEN_MINTER_PROGRAM_ID,
-    LIGHT_TOKEN_PROGRAM_ID, RENT_SPONSOR,
+    TestRpc, CPI_AUTHORITY_PDA, LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_MINTER_PROGRAM_ID,
+    LIGHT_TOKEN_PROGRAM_ID, LIGHT_TOKEN_RENT_SPONSOR,
 };
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
@@ -97,6 +97,8 @@ pub struct AmmTestContext {
     pub depositor_ata_a: Pubkey,
     pub depositor_ata_b: Pubkey,
     pub token_config: TokenConfig,
+    /// Compression config PDA
+    pub compression_config: Pubkey,
     /// Authority keypair for Light mint A (if Light config)
     pub light_mint_authority_a: Option<Keypair>,
 }
@@ -124,7 +126,13 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
     let payer = rpc.get_payer().insecure_clone();
 
     // Initialize rent-free config (returns the config PDA)
-    let compression_config = initialize_rent_free_config(rpc, &payer, &program_id).await;
+    let rent_sponsor = swap_example::program_rent_sponsor();
+    let compression_config = initialize_rent_free_config(rpc, &payer, &program_id, rent_sponsor).await;
+
+    // Fund the program rent sponsor PDA
+    rpc.airdrop_lamports(&rent_sponsor, 1_000_000_000)
+        .await
+        .unwrap();
 
     // Create depositor
     let depositor = Keypair::new();
@@ -193,12 +201,7 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
         );
 
         let (pool_authority, _) = Pubkey::find_program_address(
-            &[
-                amm_pda.as_ref(),
-                mint_a_pubkey.as_ref(),
-                mint_b_pubkey.as_ref(),
-                b"authority",
-            ],
+            &[b"authority"],
             &program_id,
         );
 
@@ -238,6 +241,7 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
             depositor_ata_a,
             depositor_ata_b,
             token_config: config,
+            compression_config,
             light_mint_authority_a: Some(light_mint_a.authority),
         };
     }
@@ -403,12 +407,7 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
     );
 
     let (pool_authority, _) = Pubkey::find_program_address(
-        &[
-            amm_pda.as_ref(),
-            mint_a_pubkey.as_ref(),
-            mint_b_pubkey.as_ref(),
-            b"authority",
-        ],
+        &[b"authority"],
         &program_id,
     );
 
@@ -448,6 +447,7 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
         depositor_ata_a,
         depositor_ata_b,
         token_config: config,
+        compression_config,
         light_mint_authority_a: None,
     }
 }
@@ -498,6 +498,8 @@ pub async fn create_pool<R: Rpc + Indexer>(
         TokenConfig::Spl => token::ID,
     };
 
+    let pda_rent_sponsor = swap_example::program_rent_sponsor();
+
     let create_pool_accounts = swap_example::accounts::CreatePool {
         amm: ctx.amm_pda,
         pool: ctx.pool_pda,
@@ -510,10 +512,12 @@ pub async fn create_pool<R: Rpc + Indexer>(
         fee_payer: ctx.payer.pubkey(),
         token_program: ctx.token_config.token_program_id(),
         liquidity_token_program,
-        light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         system_program: solana_sdk::system_program::ID,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        light_token_rent_sponsor: RENT_SPONSOR,
+        compression_config: ctx.compression_config,
+        pda_rent_sponsor,
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
+        light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
     };
 
@@ -608,7 +612,7 @@ pub async fn deposit_liquidity<R: Rpc>(
         liquidity_token_program,
         system_program: solana_sdk::system_program::ID,
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
         spl_interface_pda_a: ctx.spl_interface_pda_a,
         spl_interface_pda_b: ctx.spl_interface_pda_b,
@@ -666,7 +670,7 @@ pub async fn swap<R: Rpc>(
         token_program,
         system_program: solana_sdk::system_program::ID,
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
         spl_interface_pda_a: ctx.spl_interface_pda_a,
         spl_interface_pda_b: ctx.spl_interface_pda_b,
@@ -726,7 +730,7 @@ pub async fn withdraw_liquidity<R: Rpc>(
         liquidity_token_program,
         system_program: solana_sdk::system_program::ID,
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
         spl_interface_pda_a: ctx.spl_interface_pda_a,
         spl_interface_pda_b: ctx.spl_interface_pda_b,
@@ -943,7 +947,7 @@ pub async fn run_amm_full_flow<R: Rpc + Indexer>(rpc: &mut R, ctx: &AmmTestConte
     // Create Pool
     create_pool(rpc, ctx, proof_result).await;
 
-    // Fund pool_authority for Light-to-Light transfers (rent top-ups)
+    // Fund pool_authority for Light token transfers (rent top-ups)
     // The pool_authority needs lamports to pay for rent top-ups when transferring
     // from pool accounts to user accounts during swap/withdraw operations
     if ctx.token_config.uses_light_user_accounts() {

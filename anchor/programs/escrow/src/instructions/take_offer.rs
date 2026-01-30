@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_token::instruction::{CloseAccountCpi, RENT_SPONSOR};
+use light_token::instruction::{CloseAccountCpi, LIGHT_TOKEN_RENT_SPONSOR};
 use light_token::utils::get_token_account_balance;
 
 use crate::constants::{AUTH_SEED, OFFER_SEED, VAULT_SEED};
@@ -81,7 +81,7 @@ pub struct TakeOffer<'info> {
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: Light token rent sponsor for closing vault
-    #[account(mut, address = RENT_SPONSOR)]
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 }
 

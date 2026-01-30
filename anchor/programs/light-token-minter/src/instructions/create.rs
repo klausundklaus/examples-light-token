@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use light_sdk::interface::CreateAccountsProof;
 use light_token::anchor::LightAccounts;
-use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 
 use crate::MINT_SIGNER_SEED;
 
@@ -52,13 +52,13 @@ pub struct CreateMint<'info> {
     /// CHECK: Compression config
     pub compression_config: AccountInfo<'info>,
 
-    /// CHECK: Light token compressible config
-    #[account(address = COMPRESSIBLE_CONFIG_V1)]
-    pub light_token_compressible_config: AccountInfo<'info>,
+    /// CHECK: Light token config
+    #[account(address = LIGHT_TOKEN_CONFIG)]
+    pub light_token_config: AccountInfo<'info>,
 
     /// CHECK: Light token rent sponsor
-    #[account(mut, address = RENT_SPONSOR)]
-    pub rent_sponsor: AccountInfo<'info>,
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
+    pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light token program
     pub light_token_program: AccountInfo<'info>,
