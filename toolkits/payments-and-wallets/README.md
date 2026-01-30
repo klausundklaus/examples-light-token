@@ -26,16 +26,18 @@
 ## Setup
 
 ```bash
-npm install @lightprotocol/stateless.js@alpha \
-            @lightprotocol/compressed-token@alpha
+npm install @lightprotocol/stateless.js@beta \
+            @lightprotocol/compressed-token@beta
 ```
 
 For Localnet:
+
 ```bash
-npm i -g @lightprotocol/zk-compression-cli@alpha
+npm i -g @lightprotocol/zk-compression-cli@beta
 ```
 
 For Devnet:
+
 ```bash
 cp ../../.env.example .env # ...and set API_KEY
 ```
@@ -56,5 +58,4 @@ pnpm run unwrap
 
 ## Documentation
 
-Learn more [about to Light-Token here](https://www.zkcompression.com/light-token/welcome).
-
+Learn more [about Light-Token here](https://www.zkcompression.com/light-token/welcome).

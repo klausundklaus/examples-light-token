@@ -6,4 +6,6 @@
 **/*.json.bak
 **/test-ledger
 **/target
-cli/accounts/
+cli/accounts
+README.html
+README_files/

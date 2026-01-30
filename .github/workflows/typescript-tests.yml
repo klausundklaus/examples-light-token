@@ -56,11 +56,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/photon
-          key: photon-${{ runner.os }}-1a785036de52896b68d06413e3b0231122d6aa4a
+          key: photon-${{ runner.os }}-ac7df6c388db847b7693a7a1cb766a7c9d7809b5
 
       - name: Install Photon indexer
         if: steps.cache-photon.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/lightprotocol/photon.git --rev 1a785036de52896b68d06413e3b0231122d6aa4a --locked
+        run: cargo install --git https://github.com/lightprotocol/photon.git --rev ac7df6c388db847b7693a7a1cb766a7c9d7809b5 --locked
         env:
           RUSTFLAGS: "-A dead-code"
 
