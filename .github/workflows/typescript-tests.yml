@@ -74,7 +74,10 @@ jobs:
       - name: Start test validator
         run: |
           light test-validator &
-          sleep 15
+          for i in $(seq 1 60); do
+            curl -s http://127.0.0.1:8784/health && break
+            sleep 2
+          done
 
       - name: Run actions
         working-directory: typescript-client

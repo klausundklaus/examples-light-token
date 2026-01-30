@@ -1,0 +1,59 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOLANA_CLI_VERSION: "2.3.11"
+  RUST_TOOLCHAIN: "1.90.0"
+
+jobs:
+  test-rust:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          # basic-instructions
+          - light-token-anchor-approve
+          - light-token-anchor-burn
+          - light-token-anchor-close
+          - light-token-anchor-create-associated-token-account
+          - light-token-anchor-create-mint
+          - light-token-anchor-create-token-account
+          - light-token-anchor-freeze
+          - light-token-anchor-mint-to
+          - light-token-anchor-revoke
+          - light-token-anchor-thaw
+          - light-token-anchor-transfer-checked
+          - light-token-anchor-transfer-interface
+          # basic-macros
+          - counter
+          - light-token-macro-create-associated-token-account
+          - light-token-macro-create-mint
+          - light-token-macro-create-token-account
+          - create-and-transfer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          example: programs/anchor
+          solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
+          rust-toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Test
+        working-directory: programs/anchor
+        run: cargo test-sbf -p ${{ matrix.package }}
