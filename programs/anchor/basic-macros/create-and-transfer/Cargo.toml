@@ -21,7 +21,6 @@ light-sdk-macros = { workspace = true }
 light-compressible = { workspace = true }
 light-token = { workspace = true }
 light-token-types = { workspace = true }
-solana-program = { workspace = true }
 solana-pubkey = { workspace = true }
 solana-msg = { workspace = true }
 solana-program-error = { workspace = true }

@@ -56,7 +56,7 @@ solana-keypair = "2.2"
 solana-signer = "2.2"
 
 # Light Protocol
-light-sdk = { version = "0.19.0", features = ["anchor", "idl-build", "v2", "anchor-discriminator", "cpi-context"] }
+light-sdk = { version = "0.19.0", features = ["anchor", "v2", "anchor-discriminator", "cpi-context"] }
 light-sdk-macros = "0.19.0"
 light-sdk-types = { version = "0.19.0", features = ["v2", "cpi-context"] }
 light-compressible = { version = "0.4.0", features = ["anchor"] }
@@ -68,7 +68,7 @@ light-token-types = { version = "0.4.0", features = ["anchor"] }
 light-token-interface = "0.3.0"
 light-program-test = "0.19.0"
 light-client = { version = "0.19.0", features = ["v2", "anchor"] }
-light-anchor-spl = { version = "0.31.1", features = ["idl-build"] }
+light-anchor-spl = "0.31.1"
 
 # Testing
 tokio = "1.43.0"
