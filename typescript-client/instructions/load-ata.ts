@@ -16,15 +16,15 @@ import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
 const rpc = createRpc(RPC_URL);
 // localnet:
 // const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
@@ -32,7 +32,10 @@ const payer = Keypair.fromSecretKey(
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
 
-    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const lightTokenAta = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey,
+    );
 
     // load from cold to hot state
     const ixs = await createLoadAtaInstructions(
@@ -40,7 +43,7 @@ const payer = Keypair.fromSecretKey(
         lightTokenAta,
         payer.publicKey,
         mint,
-        payer.publicKey
+        payer.publicKey,
     );
 
     if (ixs.length === 0) return console.log("Nothing to load");

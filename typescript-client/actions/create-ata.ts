@@ -9,21 +9,18 @@ import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const rpc = createRpc(RPC_URL);
 // localnet:
-const RPC_URL = undefined;
+// const rpc = createRpc();
+
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
-    // devnet:
-    // const rpc = createRpc(RPC_URL);
-    // localnet:
-    const rpc = createRpc();
-
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
 
     const owner = Keypair.generate();

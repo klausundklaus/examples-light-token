@@ -1,5 +1,10 @@
 import "dotenv/config";
-import { Keypair, ComputeBudgetProgram, Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
+import {
+    Keypair,
+    ComputeBudgetProgram,
+    Transaction,
+    sendAndConfirmTransaction,
+} from "@solana/web3.js";
 import { createRpc, bn } from "@lightprotocol/stateless.js";
 import {
     createMint,
@@ -16,36 +21,38 @@ import { readFileSync } from "fs";
 
 // devnet:
 // const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-const rpc = createRpc(RPC_URL);
+// const rpc = createRpc(RPC_URL);
 // localnet:
-// const rpc = createRpc();
+const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
-
     // Setup: Get SPL tokens (needed to wrap)
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
-        payer.publicKey
+        payer.publicKey,
     );
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
     await decompress(rpc, payer, mint, bn(1000), payer, splAta);
 
     // Create wrap instruction
-    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const lightTokenAta = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey,
+    );
     await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
     const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
     const splInterfaceInfo = splInterfaceInfos.find(
-        (info) => info.isInitialized
+        (info) => info.isInitialized,
     );
 
     if (!splInterfaceInfo) throw new Error("No SPL interface found");
@@ -57,12 +64,13 @@ const payer = Keypair.fromSecretKey(
         mint,
         bn(500),
         splInterfaceInfo,
-        payer.publicKey
+        9, // decimals - must match the mint decimals
+        payer.publicKey,
     );
 
     const tx = new Transaction().add(
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
-        ix
+        ix,
     );
     const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
 

@@ -14,15 +14,15 @@ import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
+const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const rpc = createRpc(RPC_URL);
 // localnet:
-const rpc = createRpc();
+// const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
@@ -31,7 +31,7 @@ const payer = Keypair.fromSecretKey(
     const owner = Keypair.generate();
     const associatedToken = getAssociatedTokenAddressInterface(
         mint,
-        owner.publicKey
+        owner.publicKey,
     );
 
     const ix = createAssociatedTokenAccountInterfaceInstruction(
@@ -39,7 +39,7 @@ const payer = Keypair.fromSecretKey(
         associatedToken,
         owner.publicKey,
         mint,
-        CTOKEN_PROGRAM_ID
+        CTOKEN_PROGRAM_ID,
     );
 
     const tx = new Transaction().add(ix);

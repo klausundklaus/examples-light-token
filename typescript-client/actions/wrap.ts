@@ -14,37 +14,45 @@ import { homedir } from "os";
 import { readFileSync } from "fs";
 
 // devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+const rpc = createRpc(RPC_URL);
 // localnet:
-const RPC_URL = undefined;
+// const rpc = createRpc();
+
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
-    // devnet:
-    // const rpc = createRpc(RPC_URL);
-    // localnet:
-    const rpc = createRpc();
-
     // Setup: Get SPL tokens (needed to wrap)
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
-        payer.publicKey
+        payer.publicKey,
     );
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
     await decompress(rpc, payer, mint, bn(1000), payer, splAta);
 
     // Wrap SPL tokens to rent-free token ATA
-    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const lightTokenAta = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey,
+    );
     await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
-    const tx = await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, bn(500));
+    const tx = await wrap(
+        rpc,
+        payer,
+        splAta,
+        lightTokenAta,
+        payer,
+        mint,
+        bn(500),
+    );
 
     console.log("Tx:", tx);
 })();
