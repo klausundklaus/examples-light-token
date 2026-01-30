@@ -12,20 +12,17 @@ import { readFileSync } from "fs";
 
 // devnet:
 // const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
 // localnet:
-const RPC_URL = undefined;
+const rpc = createRpc();
+
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
-    )
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
+    ),
 );
 
 (async function () {
-    // devnet:
-    // const rpc = createRpc(RPC_URL);
-    // localnet:
-    const rpc = createRpc();
-
     // Setup: Get compressed tokens
     const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
     await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
@@ -36,7 +33,7 @@ const payer = Keypair.fromSecretKey(
 
     const delegatedAccounts = await rpc.getCompressedTokenAccountsByDelegate(
         delegate.publicKey,
-        { mint }
+        { mint },
     );
     const tx = await revoke(rpc, payer, delegatedAccounts.items, payer);
 
