@@ -9,7 +9,7 @@
 
 ## Combining macros with CPI
 
-[`create-and-transfer`](create-and-transfer) shows the pattern for instructions that both create accounts and execute logic. The `#[light_account]` macro on `destination` creates the recipient associated token account. The handler body calls `TransferInterfaceCpi` to execute the transfer.
+[`create-and-transfer`](../create-and-transfer) shows the pattern for instructions that both create accounts and execute logic. The `#[light_account]` macro on `destination` creates the recipient associated token account. The handler body calls `TransferInterfaceCpi` to execute the transfer.
 
 For existing programs, you can replace spl_token with light_token instructions as you need. The API is a superset of SPL-token so switching is straightforward.
 
