@@ -1,0 +1,15 @@
+# Build artifacts
+target/
+
+# Keypairs (sensitive)
+*-keypair.json
+*.json
+
+# IDL
+idl/
+
+# Anchor
+.anchor/
+
+# Test ledger
+test-ledger/

@@ -1,0 +1,11 @@
+[package]
+name = "basic-instructions-test-utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+light-program-test = { workspace = true }
+light-client = { workspace = true }
+light-token = { workspace = true }
+solana-sdk = { workspace = true }
+tokio = { workspace = true }
