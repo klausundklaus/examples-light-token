@@ -56,4 +56,4 @@ jobs:
 
       - name: Test
         working-directory: programs/anchor
-        run: cargo test-sbf -p ${{ matrix.package }}
+        run: cargo test-sbf -p ${{ matrix.package }} -- --test-threads=1
