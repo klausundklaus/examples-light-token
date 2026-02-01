@@ -314,7 +314,7 @@ import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 // SPL ATA must exist
 const splAta = getAssociatedTokenAddressSync(mint, owner.publicKey);
 
-await unwrap(rpc, payer, owner, mint, splAta, amount);
+await unwrap(rpc, payer, splAta, owner, mint, amount);
 ```
 
 ### Instruction
