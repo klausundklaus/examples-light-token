@@ -26,8 +26,8 @@ Light token is a high-performance token standard that reduces the cost of mint a
 | transfer-interface | [Action](typescript-client/actions/transfer-interface.ts) | [Instruction](typescript-client/instructions/transfer-interface.ts) | Transfer between light-token, T22, and SPL accounts |
 | wrap | [Action](typescript-client/actions/wrap.ts) | [Instruction](typescript-client/instructions/wrap.ts) | Wrap SPL/T22 to light-token |
 | unwrap | [Action](typescript-client/actions/unwrap.ts) | [Instruction](typescript-client/instructions/unwrap.ts) | Unwrap light-token to SPL/T22 |
-| delegate-approve | [Action](typescript-client/actions/delegate-approve.ts) | | Approve delegate |
-| delegate-revoke | [Action](typescript-client/actions/delegate-revoke.ts) | | Revoke delegate |
+| approve | [Action](typescript-client/actions/delegate-approve.ts) | | Approve delegate |
+| revoke | [Action](typescript-client/actions/delegate-revoke.ts) | | Revoke delegate |
 
 ### Rust
 
