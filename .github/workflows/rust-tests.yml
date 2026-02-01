@@ -44,6 +44,7 @@ jobs:
           - light-token-macro-create-mint
           - light-token-macro-create-token-account
           - create-and-transfer
+          - token-transfer
     steps:
       - uses: actions/checkout@v4
 
