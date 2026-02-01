@@ -7,7 +7,6 @@ members = [
     "basic-macros/create-ata",
     "basic-macros/create-token-account",
     "create-and-transfer",
-    "create-and-transfer/token-transfer",
 
     # Basic instruction examples
     "basic-instructions/approve",

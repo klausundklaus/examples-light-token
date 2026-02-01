@@ -11,7 +11,6 @@ members = [
     "basic-macros/create-ata",
     "basic-macros/create-token-account",
     "create-and-transfer",
-    "create-and-transfer/token-transfer",
     "basic-instructions/approve",
     "basic-instructions/burn",
     "basic-instructions/close",
@@ -32,7 +31,7 @@ fundraiser = "Eoiuq1dXvHxh6dLx3wh9gj8kSAUpga11krTrbfF5XYsC"
 light_token_minter = "3EPJBoxM8Evtv3Wk7R2mSWsrSzUD7WSKAaYugLgpCitV"
 swap_example = "AsGVFxWqEn8icRBFQApxJe68x3r9zvfSbmiEzYFATGYn"
 counter = "PDAm7XVHEkBvzBYDh8qF3z8NxnYQzPjGQJKcHVmMZpT"
-token_transfer = "672fL1Nm191MbPoygNM9DRiG2psBELn97XUpGbU3jW7E"
+create_and_transfer = "672fL1Nm191MbPoygNM9DRiG2psBELn97XUpGbU3jW7E"
 
 [registry]
 url = "https://api.apr.dev"
