@@ -25,7 +25,7 @@
 * **[create-mint](basic-macros/create-mint)** - Create light-token mint
 * **[create-token-account](basic-macros/create-token-account)** - Create light-token account
 
-## Composite
+## Examples
 
 * **[create-and-transfer](create-and-transfer)** - Create account via macro and transfer via CPI
 
