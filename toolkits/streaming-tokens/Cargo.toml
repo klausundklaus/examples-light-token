@@ -2,6 +2,7 @@
 name = "streaming-tokens"
 version = "0.1.0"
 edition = "2021"
+default-run = "streaming-tokens"
 
 [dependencies]
 helius-laserstream = "0.1"
@@ -10,3 +11,19 @@ futures = "0.3"
 anyhow = "1"
 dotenvy = "0.15"
 bs58 = "0.5"
+borsh = "0.10"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+light-token-interface = "0.3.0"
+light-compressed-account = { version = "0.9.0", features = ["std"] }
+light-token-client = "0.1.0"
+light-client = { version = "0.19.0", features = ["v2"] }
+solana-sdk = "2"
+
+# Pin blake3 to avoid constant_time_eq edition2024 issue
+blake3 = "=1.5.5"
+
+[[bin]]
+name = "streaming-tokens"
+path = "src/main.rs"

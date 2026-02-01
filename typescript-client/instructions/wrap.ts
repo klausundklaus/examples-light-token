@@ -5,17 +5,21 @@ import {
     Transaction,
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
-    createMint,
-    mintTo,
-    decompress,
+    createMintInterface,
+    createAtaInterface,
+    mintToInterface,
+    decompressInterface,
     createWrapInstruction,
     getAssociatedTokenAddressInterface,
     createAtaInterfaceIdempotent,
     getSplInterfaceInfos,
 } from "@lightprotocol/compressed-token";
-import { createAssociatedTokenAccount } from "@solana/spl-token";
+import {
+    createAssociatedTokenAccount,
+    TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
@@ -33,15 +37,19 @@ const payer = Keypair.fromSecretKey(
 
 (async function () {
     // Setup: Get SPL tokens (needed to wrap)
-    const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
     );
-    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
-    await decompress(rpc, payer, mint, bn(1000), payer, splAta);
+    await decompressInterface(rpc, payer, payer, mint, 1000);
 
     // Create wrap instruction
     const lightTokenAta = getAssociatedTokenAddressInterface(
@@ -62,7 +70,7 @@ const payer = Keypair.fromSecretKey(
         lightTokenAta,
         payer.publicKey,
         mint,
-        bn(500),
+        500,
         splInterfaceInfo,
         9, // decimals - must match the mint decimals
         payer.publicKey,

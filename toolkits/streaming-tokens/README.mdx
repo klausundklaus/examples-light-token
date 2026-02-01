@@ -1,90 +1,42 @@
-# Indexing new mints
+# Streaming light-token accounts
 
-- New mints
-- New mints with TokenMetadata
-- Mint updates
-- TokenMetadata updates
+Light mints and ATAs are Solana accounts owned by the Light Token Program. Subscribe to account updates and transactions to detect new mints, token transfers, and balance changes in real time.
 
-```rust
-use futures::StreamExt;
-use helius_laserstream::{ subscribe, CommitmentLevel, LaserstreamConfig, SubscribeRequest };
-use solana_pubkey::Pubkey;
+See [`src/main.rs`](src/main.rs) for the full working example.
 
-use light_compressed_account::indexer_event::parse::event_from_light_transaction;
-use light_token_types::state::{ CompressedMint, ExtensionStruct };
+## Subscriptions
 
-const LIGHT_SYSTEM_PROGRAM: &str = "SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7";
+- **Mint accounts** — new mints, supply changes, TokenMetadata updates (memcmp filter on `account_type` at byte offset 165)
+- **ATA accounts** — balance changes, delegate approvals/revocations, state transitions (datasize filter, 165 bytes)
+- **Transactions** — mint creation detection via MintAction instruction (discriminator `103`)
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let config = LaserstreamConfig {
-        api_key: std::env::var("API_KEY")?,
-        endpoint: "https://laserstream-mainnet-ewr.helius-rpc.com".to_string(),
-    };
+## Constants
 
-    let request = SubscribeRequest {
-        commitment: CommitmentLevel::Confirmed,
-        transactions: serde_json::json!({
-            "light": {
-                "vote": false,
-                "failed": false,
-                "accountInclude": [LIGHT_SYSTEM_PROGRAM]
-            }
-        }),
-        ..Default::default()
-    };
+| Constant | Value | Description |
+| -------- | ----- | ----------- |
+| `TOKEN_ACCOUNT_SIZE` | `165` | Base SPL Token Account size. Light ATAs without extensions are exactly 165 bytes. |
+| `ACCOUNT_TYPE_OFFSET` | `165` | Byte offset of `account_type` in a Mint account. BaseMint (82) + MintMetadata (67) + reserved (16). |
+| `MINT_ACTION_DISCRIMINATOR` | `103` | MintAction instruction discriminator in the Light Token Program. |
 
-    let mut stream = subscribe(config, request).await?;
-
-    while let Some(update) = stream.next().await {
-        if let Some(tx) = update?.transaction {
-            process_transaction(&tx.transaction).await?;
-        }
-    }
-    Ok(())
-}
-
-async fn process_transaction(tx: &Transaction) -> anyhow::Result<()> {
-    let (program_ids, instructions, accounts) = extract_light_transaction(
-        &tx.transaction.message.account_keys,
-        &tx.transaction.message.instructions,
-        |ix| (ix.program_id_index, &ix.accounts, &ix.data)
-    );
-    if let Some(batches) = event_from_light_transaction(&program_ids, &instruction_data, accounts_per_ix)? {
-        for event in batches {
-            // new mints
-            for m in extract_new_mints(&event, light_token_program_id, mint_storage)? {
-                println!("new Light Token mint: {}", m.mint.metadata.spl_mint);
-                if let Some(meta) = extract_token_metadata(m.mint) {
-                    println!("{} ({})", meta.name, meta.symbol);
-                }
-            }
-
-            // updates
-            for m in extract_mint_updates(&event, light_token_program_id, mint_storage)? {
-                println!("mint update: {}", m.mint.metadata.spl_mint);
-            }
-        }
-    }
-    Ok(())
-}
-```
-
-# Layouts
+## Layouts
 
 ### Mint
 
+Light mints are Solana accounts with this layout:
+
 ```rust
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone, BorshSerialize, BorshDeserialize)]
-pub struct CompressedMint {
+pub struct Mint {
     pub base: BaseMint,
-    pub metadata: CompressedMintMetadata,
+    pub metadata: MintMetadata,
+    pub reserved: [u8; 16],
+    pub account_type: u8,
+    pub compression: CompressionInfo,
     pub extensions: Option<Vec<ExtensionStruct>>,
 }
 
-// Uses custom borsh serde for SPL-token compat
-// 82 bytes
+/// SPL-compatible base mint structure (82 bytes)
+#[repr(C)]
 pub struct BaseMint {
     pub mint_authority: Option<Pubkey>,
     pub supply: u64,
@@ -93,22 +45,34 @@ pub struct BaseMint {
     pub freeze_authority: Option<Pubkey>,
 }
 
-// 34 bytes
+/// Light Protocol metadata (67 bytes)
 #[repr(C)]
-#[derive(Debug, PartialEq, Eq, Clone, BorshSerialize, BorshDeserialize)]
-pub struct CompressedMintMetadata {
-    /// Version (3)
+pub struct MintMetadata {
     pub version: u8,
-    pub spl_mint_initialized: bool,
-    /// Canonical mint address
-    pub spl_mint: Pubkey,
+    pub mint_decompressed: bool,
+    pub mint: Pubkey,
+    pub mint_signer: [u8; 32],
+    pub bump: u8,
 }
+```
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
+### Token (ATA)
+
+Light ATAs follow the standard SPL Token Account layout (165 bytes):
+
+```rust
 #[repr(C)]
-pub enum ExtensionStruct {
-		// ...
-    TokenMetadata(TokenMetadata), // 19
+pub struct Token {
+    pub mint: Pubkey,
+    pub owner: Pubkey,
+    pub amount: u64,
+    pub delegate: Option<Pubkey>,
+    pub state: AccountState,
+    pub is_native: Option<u64>,
+    pub delegated_amount: u64,
+    pub close_authority: Option<Pubkey>,
+    pub account_type: u8,
+    pub extensions: Option<Vec<ExtensionStruct>>,
 }
 ```
 
@@ -116,279 +80,25 @@ pub enum ExtensionStruct {
 
 ```rust
 #[repr(C)]
-#[derive(Debug, Clone, Hash, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub struct TokenMetadata {
-    /// The authority that can sign to update the metadata (32 bytes)
-    /// [0u8; 32] = None (immutable)
-    pub update_authority: Pubkey,
-    /// The associated mint (32 bytes)
+    pub update_authority: Pubkey,  // [0u8; 32] = immutable
     pub mint: Pubkey,
-    /// The longer name of the token (Vec<u8>, Borsh-encoded: u32 len + bytes)
     pub name: Vec<u8>,
-    /// The shortened symbol for the token (Vec<u8>, Borsh-encoded: u32 len + bytes)
     pub symbol: Vec<u8>,
-    /// The URI pointing to richer metadata (Vec<u8>, Borsh-encoded: u32 len + bytes)
     pub uri: Vec<u8>,
-    /// Any additional metadata as key-value pairs (Vec<AdditionalMetadata>)
     pub additional_metadata: Vec<AdditionalMetadata>,
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Hash, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub struct AdditionalMetadata {
-    /// The key of the metadata (Vec<u8>, Borsh-encoded: u32 len + bytes)
     pub key: Vec<u8>,
-    /// The value of the metadata (Vec<u8>, Borsh-encoded: u32 len + bytes)
     pub value: Vec<u8>,
 }
 ```
 
-# Helpers
+## Indexing markets
 
-You can directly import these via `light-compressed-token-sdk`.
+light-token accounts follow the same layout as SPL Token Accounts, so you can reuse your existing parsers.
 
-## `extract_light_transaction`
+When a market becomes inactive, its light-token accounts and related PDAs will be **compressed** — their state is committed and effectively frozen until a client decompresses it. While compressed, pure on-chain lookups will return uninitialized.
 
-```rust
-pub fn extract_light_transaction<I, F>(
-    account_keys: &[Pubkey],
-    instructions: &[I],
-    extract_fn: F,
-) -> (Vec<Pubkey>, Vec<Vec<u8>>, Vec<Vec<Pubkey>>)
-where
-    F: Fn(&I) -> (u8, &[u8], &[u8]),
-{
-    let num_instructions = instructions.len();
-
-    let mut program_ids = Vec::with_capacity(num_instructions);
-    let mut instruction_data = Vec::with_capacity(num_instructions);
-    let mut accounts_per_ix = Vec::with_capacity(num_instructions);
-
-    for ix in instructions {
-        let (program_id_index, account_indices, data) = extract_fn(ix);
-
-        let program_id_idx = program_id_index as usize;
-        let program_id = if program_id_idx < account_keys.len() {
-            account_keys[program_id_idx]
-        } else {
-            Pubkey::default()
-        };
-        program_ids.push(program_id);
-
-        instruction_data.push(data.to_vec());
-
-        let mut ix_accounts = Vec::with_capacity(account_indices.len());
-        for &account_idx in account_indices {
-            let idx = account_idx as usize;
-            if idx < account_keys.len() {
-                ix_accounts.push(account_keys[idx]);
-            }
-        }
-        accounts_per_ix.push(ix_accounts);
-    }
-
-    (program_ids, instruction_data, accounts_per_ix)
-}
-```
-
-## `extract_mints`
-
-```rust
-pub fn extract_new_mints<'a>(
-    event: &'a PublicTransactionEvent,
-    light_token_program_id: &Pubkey,
-    mint_storage: &'a mut Vec<CompressedMint>,
-) -> Result<Vec<MintRef<'a>>, std::io::Error> {
-    let mints = extract_mints(event, light_token_program_id, mint_storage)?;
-    Ok(mints.into_iter().filter(|m| m.is_new).collect())
-}
-
-pub fn extract_mint_updates<'a>(
-    event: &'a PublicTransactionEvent,
-    light_token_program_id: &Pubkey,
-    mint_storage: &'a mut Vec<CompressedMint>,
-) -> Result<Vec<MintRef<'a>>, std::io::Error> {
-    let mints = extract_mints(event, light_token_program_id, mint_storage)?;
-    Ok(mints.into_iter().filter(|m| !m.is_new).collect())
-}
-
-pub fn extract_mints<'a>(
-    event: &'a PublicTransactionEvent,
-    light_token_program_id: &Pubkey,
-    mint_storage: &'a mut Vec<CompressedMint>,
-) -> Result<Vec<MintRef<'a>>, std::io::Error> {
-    let mut indices = Vec::new();
-
-    for (idx, output) in event.output_compressed_accounts.iter().enumerate() {
-
-        if output.compressed_account.owner != *light_token_program_id {
-            continue;
-        }
-
-        let data = match &output.compressed_account.data {
-            Some(d) if d.discriminator == TOKEN_MINT_DISCRIMINATOR => &d.data,
-            _ => continue,
-        };
-
-        let mint = CompressedMint::deserialize(&mut &data[..])?;
-        mint_storage.push(mint);
-        indices.push(idx);
-    }
-
-    // Pass 2:
-    let mut results = Vec::with_capacity(mint_storage.len());
-    for (storage_idx, output_idx) in indices.iter().enumerate() {
-        let output = &event.output_compressed_accounts[*output_idx];
-
-        let is_new = match output.compressed_account.address {
-            Some(addr) => !event
-                .input_compressed_account_hashes
-                .iter()
-                .any(|h| *h == addr),
-            None => true,
-        };
-
-        results.push(MintRef {
-            mint: &mint_storage[storage_idx],
-            account_hash: &event.output_compressed_account_hashes[*output_idx],
-            leaf_index: event.output_leaf_indices[*output_idx],
-            merkle_tree_index: output.merkle_tree_index,
-            is_new,
-        });
-    }
-
-    Ok(results)
-}
-```
-
-## `extract_token_metadata`
-
-```rust
-pub fn extract_token_metadata(mint: &CompressedMint) -> Option<MintMetadata> {
-    let extensions = mint.extensions.as_ref()?;
-
-    for ext in extensions {
-        if let ExtensionStruct::TokenMetadata(m) = ext {
-            let name = parse_utf8(&m.name);
-            let symbol = parse_utf8(&m.symbol);
-            let uri = parse_utf8(&m.uri);
-
-            let update_authority = if m.update_authority.to_bytes() == [0u8; 32] {
-                None
-            } else {
-                Some(Pubkey::new_from_array(m.update_authority.to_bytes()))
-            };
-
-            return Some(MintMetadata {
-                name,
-                symbol,
-                uri,
-                update_authority,
-            });
-        }
-    }
-
-    None
-}
-```
-
-## `BaseMint` spl-compatible serde
-
-Available via `light-token-types/src/state/mint/borsh.rs`
-
-```rust
-use borsh::{BorshDeserialize, BorshSerialize};
-use light_compressed_account::Pubkey;
-use super::compressed_mint::BaseMint;
-
-// Manual implementation of BorshSerialize for SPL compatibility
-impl BorshSerialize for BaseMint {
-    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        // Write mint_authority as COption (4 bytes + 32 bytes)
-        if let Some(authority) = self.mint_authority {
-            writer.write_all(&[1, 0, 0, 0])?; // COption Some discriminator
-            writer.write_all(&authority.to_bytes())?;
-        } else {
-            writer.write_all(&[0; 36])?; // COption None (4 bytes) + empty pubkey (32 bytes)
-        }
-
-        // Write supply (8 bytes)
-        writer.write_all(&self.supply.to_le_bytes())?;
-
-        // Write decimals (1 byte)
-        writer.write_all(&[self.decimals])?;
-
-        // Write is_initialized (1 byte)
-        writer.write_all(&[if self.is_initialized { 1 } else { 0 }])?;
-
-        // Write freeze_authority as COption (4 bytes + 32 bytes)
-        if let Some(authority) = self.freeze_authority {
-            writer.write_all(&[1, 0, 0, 0])?; // COption Some discriminator
-            writer.write_all(&authority.to_bytes())?;
-        } else {
-            writer.write_all(&[0; 36])?; // COption None (4 bytes) + empty pubkey (32 bytes)
-        }
-
-        Ok(())
-    }
-}
-
-impl BorshDeserialize for BaseMint {
-    fn deserialize_reader<R: std::io::Read>(buf: &mut R) -> std::io::Result<Self> {
-        // Read mint_authority COption
-        let mut discriminator = [0u8; 4];
-        buf.read_exact(&mut discriminator)?;
-        let mut pubkey_bytes = [0u8; 32];
-        buf.read_exact(&mut pubkey_bytes)?;
-        let mint_authority = if u32::from_le_bytes(discriminator) == 1 {
-            Some(Pubkey::from(pubkey_bytes))
-        } else {
-            None
-        };
-
-        // Read supply
-        let mut supply_bytes = [0u8; 8];
-        buf.read_exact(&mut supply_bytes)?;
-        let supply = u64::from_le_bytes(supply_bytes);
-
-        // Read decimals
-        let mut decimals = [0u8; 1];
-        buf.read_exact(&mut decimals)?;
-        let decimals = decimals[0];
-
-        // Read is_initialized
-        let mut is_initialized = [0u8; 1];
-        buf.read_exact(&mut is_initialized)?;
-        let is_initialized = is_initialized[0] != 0;
-
-        // Read freeze_authority COption
-        let mut discriminator = [0u8; 4];
-        buf.read_exact(&mut discriminator)?;
-        let mut pubkey_bytes = [0u8; 32];
-        buf.read_exact(&mut pubkey_bytes)?;
-        let freeze_authority = if u32::from_le_bytes(discriminator) == 1 {
-            Some(Pubkey::from(pubkey_bytes))
-        } else {
-            None
-        };
-
-        Ok(Self {
-            mint_authority,
-            supply,
-            decimals,
-            is_initialized,
-            freeze_authority,
-        })
-    }
-}
-```
-
-# Indexing Markets
-
-cToken accounts follow the same layout as SPL-token accounts, so you can reuse your existing parsers.
-
-They include an extra compressible extension, which can be safely ignored.
-
-wWhen a market becomes inactive, its token accounts and related PDAs will be **compressed** — their state is committed and effectively frozen until a client decompresses it. While compressed, pure on-chain lookups will return uninitialized.
-
-Your indexer should be able to keep tracking, quoting, and routing markets even if the on-chain account `is_initialized: false`, `is_compressed: true`. To trade a cold market, the first client to trade must prepend an idempotent decompress “warm up” instruction.
+Your indexer should be able to keep tracking, quoting, and routing markets even if the on-chain account `is_initialized: false`, `is_compressed: true`. To trade a cold market, the first client to trade must prepend an idempotent decompress "warm up" instruction.

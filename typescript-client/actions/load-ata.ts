@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
-    createMint,
-    mintTo,
+    createMintInterface,
+    mintToCompressed,
     loadAta,
     getAssociatedTokenAddressInterface,
 } from "@lightprotocol/compressed-token";
@@ -23,15 +23,14 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Get compressed tokens (cold storage)
-    const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
-    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
+    // Inactive Light Tokens are cryptographically preserved on the Solana ledger
+    // as compressed tokens (cold storage)
+    // Setup: Get compressed tokens in light-token associated token account
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
+    await mintToCompressed(rpc, payer, mint, payer, [{ recipient: payer.publicKey, amount: 1000n }]);
 
-    // Load compressed tokens to hot balance
-    const lightTokenAta = getAssociatedTokenAddressInterface(
-        mint,
-        payer.publicKey,
-    );
+    // Load compressed tokens to light associated token account (hot balance)
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     const tx = await loadAta(rpc, lightTokenAta, payer, mint, payer);
 
     console.log("Tx:", tx);

@@ -1,11 +1,7 @@
 import "dotenv/config";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { createRpc } from "@lightprotocol/stateless.js";
-import {
-    createMintInterface,
-    mintToCompressed,
-    approve,
-} from "@lightprotocol/compressed-token";
+import { createSplInterface } from "@lightprotocol/compressed-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
@@ -22,18 +18,11 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
-    await mintToCompressed(rpc, payer, mint, payer, [{ recipient: payer.publicKey, amount: 1000n }]);
+    const existingMint = new PublicKey("YOUR_EXISTING_MINT_ADDRESS");
 
-    const delegate = Keypair.generate();
-    const tx = await approve(
-        rpc,
-        payer,
-        mint,
-        500,
-        payer,
-        delegate.publicKey,
-    );
+    // Register SPL interface PDA to enable interop with Light Tokens
+    const tx = await createSplInterface(rpc, payer, existingMint);
 
+    console.log("Mint:", existingMint.toBase58());
     console.log("Tx:", tx);
 })();

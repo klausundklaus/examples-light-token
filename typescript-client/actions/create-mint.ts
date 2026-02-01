@@ -27,14 +27,10 @@ const payer = Keypair.fromSecretKey(
         payer,
         null,
         9,
-        undefined,
-        undefined,
-        undefined,
-        createTokenMetadata(
-            "Example Token",
-            "EXT",
-            "https://example.com/metadata.json",
-        ),
+        undefined, // keypair
+        undefined, // confirmOptions (default)
+        undefined, // programId (CTOKEN_PROGRAM_ID)
+        createTokenMetadata("Example Token", "EXT", "https://example.com/metadata.json"),
     );
 
     console.log("Mint:", mint.toBase58());

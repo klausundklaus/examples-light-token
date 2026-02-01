@@ -46,6 +46,7 @@ const payer = Keypair.fromSecretKey(
         recipient.publicKey,
     );
 
+    // Transfer tokens between light-token associate token accounts
     const ix = createTransferInterfaceInstruction(
         senderAta,
         recipientAta,

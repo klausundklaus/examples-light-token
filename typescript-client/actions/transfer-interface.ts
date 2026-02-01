@@ -41,6 +41,7 @@ const payer = Keypair.fromSecretKey(
         recipient.publicKey,
     );
 
+    // Transfer tokens between light-token associated token accounts
     const tx = await transferInterface(
         rpc,
         payer,

@@ -1,15 +1,19 @@
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
-    createMint,
-    mintTo,
-    decompress,
+    createMintInterface,
+    createAtaInterface,
+    mintToInterface,
+    decompressInterface,
     wrap,
     getAssociatedTokenAddressInterface,
     createAtaInterfaceIdempotent,
 } from "@lightprotocol/compressed-token";
-import { createAssociatedTokenAccount } from "@solana/spl-token";
+import {
+    createAssociatedTokenAccount,
+    TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
@@ -27,32 +31,25 @@ const payer = Keypair.fromSecretKey(
 
 (async function () {
     // Setup: Get SPL tokens (needed to wrap)
-    const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
     );
-    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
-    await decompress(rpc, payer, mint, bn(1000), payer, splAta);
+    await decompressInterface(rpc, payer, payer, mint, 1000);
 
-    // Wrap SPL tokens to rent-free token ATA
-    const lightTokenAta = getAssociatedTokenAddressInterface(
-        mint,
-        payer.publicKey,
-    );
+    // Wrap SPL tokens to light-token associated token account
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
-    const tx = await wrap(
-        rpc,
-        payer,
-        splAta,
-        lightTokenAta,
-        payer,
-        mint,
-        bn(500),
-    );
+    const tx = await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, 500);
 
     console.log("Tx:", tx);
 })();

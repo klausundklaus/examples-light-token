@@ -5,16 +5,19 @@ import {
     Transaction,
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
-    createMint,
-    mintTo,
-    loadAta,
+    createMintInterface,
+    createAtaInterface,
+    mintToInterface,
     getAssociatedTokenAddressInterface,
     getSplInterfaceInfos,
 } from "@lightprotocol/compressed-token";
 import { createUnwrapInstruction } from "@lightprotocol/compressed-token/unified";
-import { createAssociatedTokenAccount } from "@solana/spl-token";
+import {
+    createAssociatedTokenAccount,
+    TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
@@ -31,22 +34,22 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Get compressed tokens (cold storage)
-    const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
-    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
+    // Setup: Create and mint tokens to light-token associated token account
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
 
-    // Load compressed tokens to hot balance, then create unwrap instruction
-    const lightTokenAta = getAssociatedTokenAddressInterface(
-        mint,
-        payer.publicKey,
-    );
-    await loadAta(rpc, lightTokenAta, payer, mint, payer);
+    // Unwrap light-token to SPL associated token account
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
 
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
     );
 
     const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
@@ -61,7 +64,7 @@ const payer = Keypair.fromSecretKey(
         splAta,
         payer.publicKey,
         mint,
-        bn(500),
+        500,
         splInterfaceInfo,
         9, // decimals - must match the mint decimals
         payer.publicKey,

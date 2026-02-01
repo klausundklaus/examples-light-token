@@ -19,7 +19,8 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Creates Token-2022 mint + T22 interface pda (token pool) in one transaction
+    // Creates Token-2022 mint and SPL interface PDA in one transaction
+    // SPL interface PDA holds Token-2022 tokens when wrapped to light-token
     const mintKeypair = Keypair.generate();
     const { mint, transactionSignature } = await createMintInterface(
         rpc,

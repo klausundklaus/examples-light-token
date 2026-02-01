@@ -1,9 +1,17 @@
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
-import { createMint, mintTo } from "@lightprotocol/compressed-token";
+import { createRpc } from "@lightprotocol/stateless.js";
+import {
+    createMintInterface,
+    createAtaInterface,
+    mintToInterface,
+    getAssociatedTokenAddressInterface,
+} from "@lightprotocol/compressed-token";
 import { unwrap } from "@lightprotocol/compressed-token/unified";
-import { createAssociatedTokenAccount } from "@solana/spl-token";
+import {
+    createAssociatedTokenAccount,
+    TOKEN_2022_PROGRAM_ID,
+} from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
@@ -20,18 +28,22 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Get compressed tokens (cold storage)
-    const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
-    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
+    // Setup: Create and mint tokens to light-token associated token account
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
 
-    // Unwrap rent-free tokens to SPL ATA
+    // Unwrap light-token to SPL associated token account
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
     );
-    const tx = await unwrap(rpc, payer, splAta, payer, mint, bn(500));
+    const tx = await unwrap(rpc, payer, splAta, payer, mint, 500);
 
     console.log("Tx:", tx);
 })();

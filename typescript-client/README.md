@@ -2,24 +2,31 @@
 
 TypeScript client examples for light-token-sdk.
 
-- **create-mint** - Create a light-token mint with metadata
-  - [Action](actions/create-mint.ts) | [Instruction](instructions/create-mint.ts)
-- **create-ata** - Create an associated light-token account
-  - [Action](actions/create-ata.ts) | [Instruction](instructions/create-ata.ts)
-- **load-ata** - Load token accounts from light-token, compressed tokens, SPL/T22 to one unified balance
-  - [Action](actions/load-ata.ts) | [Instruction](instructions/load-ata.ts)
-- **mint-to** - Mint tokens to a light-account
-  - [Action](actions/mint-to.ts) | [Instruction](instructions/mint-to.ts)
-- **transfer-interface** - Transfer between light-token, T22, and SPL accounts
-  - [Action](actions/transfer-interface.ts) | [Instruction](instructions/transfer-interface.ts)
-- **wrap** - Wrap SPL/T22 to light-token
-  - [Action](actions/wrap.ts) | [Instruction](instructions/wrap.ts)
-- **unwrap** - Unwrap light-token to SPL/T22
-  - [Action](actions/unwrap.ts) | [Instruction](instructions/unwrap.ts)
-- **delegate-approve** - Approve delegate
-  - [Action](actions/delegate-approve.ts)
-- **delegate-revoke** - Revoke delegate
-  - [Action](actions/delegate-revoke.ts)
+- **[create-mint](actions/create-mint.ts)** - Create a light-token mint with metadata
+- **[create-spl-mint](actions/create-spl-mint.ts)** - Create an SPL mint with SPL interface PDA
+- **[create-t22-mint](actions/create-t22-mint.ts)** - Create a Token-2022 mint with SPL interface PDA
+- **[create-spl-interface](actions/create-spl-interface.ts)** - Create SPL interface PDA for an existing mint
+- **[create-ata](actions/create-ata.ts)** - Create an associated light-token account
+- **[load-ata](actions/load-ata.ts)** - Load token accounts from light-token, compressed tokens, SPL/T22 to one unified balance
+- **[mint-to](actions/mint-to.ts)** - Mint tokens to a light-account
+- **[transfer-interface](actions/transfer-interface.ts)** - Transfer between light-token, T22, and SPL accounts
+- **[delegate-approve](actions/delegate-approve.ts)** - Approve delegate
+- **[delegate-revoke](actions/delegate-revoke.ts)** - Revoke delegate
+- **[wrap](actions/wrap.ts)** - Wrap SPL/T22 to light-token
+- **[unwrap](actions/unwrap.ts)** - Unwrap light-token to SPL/T22
+
+### Instructions
+
+- **[create-mint](instructions/create-mint.ts)** - Build create mint instruction
+- **[create-spl-mint](instructions/create-spl-mint.ts)** - Build SPL mint + SPL interface PDA instructions
+- **[create-t22-mint](instructions/create-t22-mint.ts)** - Build Token-2022 mint + SPL interface PDA instructions
+- **[create-spl-interface](instructions/create-spl-interface.ts)** - Build SPL interface PDA instruction
+- **[create-ata](instructions/create-ata.ts)** - Build create ATA instruction
+- **[load-ata](instructions/load-ata.ts)** - Build load ATA instruction
+- **[mint-to](instructions/mint-to.ts)** - Build mint-to instruction
+- **[transfer-interface](instructions/transfer-interface.ts)** - Build transfer instruction
+- **[wrap](instructions/wrap.ts)** - Wrap SPL/T22 to light-token
+- **[unwrap](instructions/unwrap.ts)** - Unwrap light-token to SPL/T22
 
 ## Setup
 
@@ -55,4 +62,4 @@ npm run load-ata:instruction
 
 ## Documentation
 
-Learn more [about Light-Token here](https://www.zkcompression.com/light-token/welcome).
+Learn more [about Light Token here](https://www.zkcompression.com/light-token/welcome).

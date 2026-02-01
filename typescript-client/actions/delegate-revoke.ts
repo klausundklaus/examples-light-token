@@ -1,9 +1,9 @@
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
-    createMint,
-    mintTo,
+    createMintInterface,
+    mintToCompressed,
     approve,
     revoke,
 } from "@lightprotocol/compressed-token";
@@ -23,13 +23,11 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Get compressed tokens
-    const { mint } = await createMint(rpc, payer, payer.publicKey, 9);
-    await mintTo(rpc, payer, mint, payer.publicKey, payer, bn(1000));
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
+    await mintToCompressed(rpc, payer, mint, payer, [{ recipient: payer.publicKey, amount: 1000n }]);
 
-    // Approve then revoke delegation
     const delegate = Keypair.generate();
-    await approve(rpc, payer, mint, bn(500), payer, delegate.publicKey);
+    await approve(rpc, payer, mint, 500, payer, delegate.publicKey);
 
     const delegatedAccounts = await rpc.getCompressedTokenAccountsByDelegate(
         delegate.publicKey,
