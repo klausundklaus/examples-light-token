@@ -3,7 +3,7 @@ use light_program_test::Rpc;
 use light_token::instruction::{Freeze, LIGHT_TOKEN_PROGRAM_ID};
 use light_token_anchor_thaw::{accounts, instruction::Thaw, ID};
 use solana_sdk::{instruction::Instruction, signer::Signer};
-use basic_instructions_test_utils::{mint_tokens, setup_test_env_with_freeze};
+use test_utils::{mint_tokens, setup_test_env_with_freeze};
 
 #[tokio::test]
 async fn test_thaw() {

@@ -26,7 +26,7 @@ light-token-types = { workspace = true }
 borsh = { workspace = true }
 tokio = { workspace = true }
 solana-sdk = { workspace = true }
-basic-instructions-test-utils = { path = "../test-utils" }
+test-utils = { workspace = true }
 
 [lints.rust.unexpected_cfgs]
 level = "allow"

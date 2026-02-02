@@ -4,7 +4,7 @@ use light_token::instruction::LIGHT_TOKEN_PROGRAM_ID;
 use light_token_anchor_transfer_checked::{accounts, instruction::TransferChecked, ID};
 use anchor_lang::system_program;
 use solana_sdk::{instruction::Instruction, signature::Keypair, signer::Signer};
-use basic_instructions_test_utils::{create_associated_token_account_for_owner, mint_tokens, setup_test_env};
+use test_utils::{create_associated_token_account_for_owner, mint_tokens, setup_test_env};
 
 #[tokio::test]
 async fn test_transfer_checked() {

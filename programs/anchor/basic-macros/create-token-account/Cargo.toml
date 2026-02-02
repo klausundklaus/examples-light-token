@@ -35,6 +35,7 @@ solana-account-info = { workspace = true }
 light-program-test = { workspace = true }
 light-client = { workspace = true }
 light-token-interface = { workspace = true }
+test-utils = { workspace = true }
 tokio = { workspace = true }
 solana-sdk = { workspace = true }
 solana-instruction = { workspace = true }

@@ -4,7 +4,7 @@ use light_token::instruction::LIGHT_TOKEN_PROGRAM_ID;
 use light_token_anchor_mint_to::{accounts, instruction::MintTo, ID};
 use anchor_lang::system_program;
 use solana_sdk::{instruction::Instruction, signer::Signer};
-use basic_instructions_test_utils::setup_test_env;
+use test_utils::setup_test_env;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_mint_to() {

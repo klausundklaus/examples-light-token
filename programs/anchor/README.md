@@ -27,6 +27,7 @@
 
 ## Examples
 
+* **[cp-swap-reference](cp-swap-reference)** - Fork of Raydium AMM that creates markets without paying rent-exemption.
 * **[create-and-transfer](create-and-transfer)** - Create account via macro and transfer via CPI
 
 ## Build and test

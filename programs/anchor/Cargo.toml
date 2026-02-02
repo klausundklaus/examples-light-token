@@ -4,7 +4,7 @@ members = [
     # Basic macro examples
     "basic-macros/counter",
     "basic-macros/create-mint",
-    "basic-macros/create-ata",
+    "basic-macros/create-associated-token-account",
     "basic-macros/create-token-account",
     "create-and-transfer",
 
@@ -12,7 +12,7 @@ members = [
     "basic-instructions/approve",
     "basic-instructions/burn",
     "basic-instructions/close",
-    "basic-instructions/create-ata",
+    "basic-instructions/create-associated-token-account",
     "basic-instructions/create-mint",
     "basic-instructions/create-token-account",
     "basic-instructions/freeze",

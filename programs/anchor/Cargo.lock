@@ -704,17 +704,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
-name = "basic-instructions-test-utils"
-version = "0.1.0"
-dependencies = [
- "light-client",
- "light-program-test",
- "light-token",
- "solana-sdk",
- "tokio",
-]
-
-[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3065,13 +3054,13 @@ name = "light-token-anchor-approve"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3080,13 +3069,13 @@ name = "light-token-anchor-burn"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3095,13 +3084,13 @@ name = "light-token-anchor-close"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3152,13 +3141,13 @@ name = "light-token-anchor-freeze"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3167,13 +3156,13 @@ name = "light-token-anchor-mint-to"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3182,13 +3171,13 @@ name = "light-token-anchor-revoke"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3197,13 +3186,13 @@ name = "light-token-anchor-thaw"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-client",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3212,12 +3201,12 @@ name = "light-token-anchor-transfer-checked"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-program-test",
  "light-sdk",
  "light-token",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3227,13 +3216,13 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "basic-instructions-test-utils",
  "borsh 0.10.4",
  "light-program-test",
  "light-sdk",
  "light-token",
  "light-token-types",
  "solana-sdk",
+ "test-utils",
  "tokio",
 ]
 
@@ -3291,6 +3280,7 @@ dependencies = [
  "solana-pubkey",
  "solana-sdk",
  "solana-signer",
+ "test-utils",
  "tokio",
 ]
 
@@ -3350,6 +3340,7 @@ dependencies = [
  "solana-pubkey",
  "solana-sdk",
  "solana-signer",
+ "test-utils",
  "tokio",
 ]
 
@@ -8018,6 +8009,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-utils"
+version = "0.1.0"
+dependencies = [
+ "light-client",
+ "light-program-test",
+ "light-token",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "testing_table"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8130,32 +8132,6 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
-
-[[package]]
-name = "token-transfer"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "borsh 0.10.4",
- "light-client",
- "light-compressible",
- "light-program-test",
- "light-sdk",
- "light-sdk-macros",
- "light-sdk-types",
- "light-token",
- "light-token-interface",
- "light-token-types",
- "solana-account-info",
- "solana-instruction",
- "solana-keypair",
- "solana-msg",
- "solana-program-error",
- "solana-pubkey",
- "solana-sdk",
- "solana-signer",
- "tokio",
-]
 
 [[package]]
 name = "tokio"

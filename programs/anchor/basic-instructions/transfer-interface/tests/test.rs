@@ -15,7 +15,7 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
 };
-use basic_instructions_test_utils::{create_associated_token_account_for_owner, mint_tokens, setup_test_env};
+use test_utils::{create_associated_token_account_for_owner, mint_tokens, setup_test_env};
 
 #[tokio::test]
 async fn test_transfer() {

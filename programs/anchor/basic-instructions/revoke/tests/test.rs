@@ -4,7 +4,7 @@ use light_token::instruction::{Approve, LIGHT_TOKEN_PROGRAM_ID};
 use light_token_anchor_revoke::{accounts, instruction::Revoke, ID};
 use anchor_lang::system_program;
 use solana_sdk::{instruction::Instruction, signature::Keypair, signer::Signer};
-use basic_instructions_test_utils::{mint_tokens, setup_test_env};
+use test_utils::{mint_tokens, setup_test_env};
 
 #[tokio::test]
 async fn test_revoke() {

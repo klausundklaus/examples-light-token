@@ -1,81 +1,14 @@
-//! Integration test for Light Protocol associated token account creation using the macro.
-
 use anchor_lang::{InstructionData, ToAccountMetas};
 use light_client::interface::{get_create_accounts_proof, InitializeRentFreeConfig};
 use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
-    Indexer, ProgramTestConfig, Rpc,
+    ProgramTestConfig, Rpc,
 };
 use light_sdk_types::LIGHT_TOKEN_PROGRAM_ID;
 use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
 use solana_instruction::Instruction;
-use solana_keypair::Keypair;
-use solana_pubkey::Pubkey;
 use solana_signer::Signer;
-
-/// Setup helper: Creates a compressed mint directly using the ctoken SDK.
-/// Returns (mint_pda, mint_seed_keypair)
-async fn setup_create_mint(
-    rpc: &mut (impl Rpc + Indexer),
-    payer: &Keypair,
-    mint_authority: Pubkey,
-    decimals: u8,
-) -> (Pubkey, Keypair) {
-    use light_token::instruction::{CreateMint, CreateMintParams, DEFAULT_RENT_PAYMENT, DEFAULT_WRITE_TOP_UP};
-
-    let mint_seed = Keypair::new();
-    let address_tree = rpc.get_address_tree_v2();
-    let output_queue = rpc.get_random_state_tree_info().unwrap().queue;
-
-    let compression_address = light_token::instruction::derive_mint_compressed_address(
-        &mint_seed.pubkey(),
-        &address_tree.tree,
-    );
-
-    let (mint, bump) = light_token::instruction::find_mint_address(&mint_seed.pubkey());
-
-    let rpc_result = rpc
-        .get_validity_proof(
-            vec![],
-            vec![light_client::indexer::AddressWithTree {
-                address: compression_address,
-                tree: address_tree.tree,
-            }],
-            None,
-        )
-        .await
-        .unwrap()
-        .value;
-
-    let params = CreateMintParams {
-        decimals,
-        address_merkle_tree_root_index: rpc_result.addresses[0].root_index,
-        mint_authority,
-        proof: rpc_result.proof.0.unwrap(),
-        compression_address,
-        mint,
-        bump,
-        freeze_authority: None,
-        extensions: None,
-        rent_payment: DEFAULT_RENT_PAYMENT,
-        write_top_up: DEFAULT_WRITE_TOP_UP,
-    };
-
-    let create_mint_builder = CreateMint::new(
-        params,
-        mint_seed.pubkey(),
-        payer.pubkey(),
-        address_tree.tree,
-        output_queue,
-    );
-    let instruction = create_mint_builder.instruction().unwrap();
-
-    rpc.create_and_send_transaction(&[instruction], &payer.pubkey(), &[payer, &mint_seed])
-        .await
-        .unwrap();
-
-    (mint, mint_seed)
-}
+use test_utils::create_mint;
 
 /// Test creating a Light Protocol associated token account using the macro.
 #[tokio::test]
@@ -105,14 +38,7 @@ async fn test_create_associated_token_account() {
         .await
         .expect("Initialize config should succeed");
 
-    // Setup mint first
-    let (mint, _mint_seed) = setup_create_mint(
-        &mut rpc,
-        &payer,
-        payer.pubkey(), // mint_authority
-        9,              // decimals
-    )
-    .await;
+    let (mint, _mint_seed) = create_mint(&mut rpc, &payer, None).await;
 
     // The associated token account owner will be the payer
     let associated_token_account_owner = payer.pubkey();

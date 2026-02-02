@@ -1,0 +1,3 @@
+[submodule "programs/anchor/cp-swap-reference"]
+	path = programs/anchor/cp-swap-reference
+	url = https://github.com/Lightprotocol/cp-swap-reference.git

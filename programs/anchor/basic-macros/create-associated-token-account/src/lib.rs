@@ -12,6 +12,20 @@ declare_id!("CLsn9MTFv97oMTsujRoQAw1u2rSm2HnKtGuWUbbc8Jfn");
 pub const LIGHT_CPI_SIGNER: CpiSigner =
     derive_light_cpi_signer!("CLsn9MTFv97oMTsujRoQAw1u2rSm2HnKtGuWUbbc8Jfn");
 
+#[light_program]
+#[program]
+pub mod light_token_macro_create_associated_token_account {
+    use super::*;
+
+    #[allow(unused_variables)]
+    pub fn create_associated_token_account<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>>,
+        params: CreateAssociatedTokenAccountParams,
+    ) -> Result<()> {
+        Ok(())
+    }
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CreateAssociatedTokenAccountParams {
     pub create_accounts_proof: CreateAccountsProof,
@@ -48,18 +62,4 @@ pub struct CreateAssociatedTokenAccount<'info> {
     pub light_token_program: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
-}
-
-#[light_program]
-#[program]
-pub mod light_token_macro_create_associated_token_account {
-    use super::*;
-
-    #[allow(unused_variables)]
-    pub fn create_associated_token_account<'info>(
-        ctx: Context<'_, '_, '_, 'info, CreateAssociatedTokenAccount<'info>>,
-        params: CreateAssociatedTokenAccountParams,
-    ) -> Result<()> {
-        Ok(())
-    }
 }

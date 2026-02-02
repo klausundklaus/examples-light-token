@@ -8,13 +8,13 @@ skip-lint = false
 members = [
     "basic-macros/counter",
     "basic-macros/create-mint",
-    "basic-macros/create-ata",
+    "basic-macros/create-associated-token-account",
     "basic-macros/create-token-account",
     "create-and-transfer",
     "basic-instructions/approve",
     "basic-instructions/burn",
     "basic-instructions/close",
-    "basic-instructions/create-ata",
+    "basic-instructions/create-associated-token-account",
     "basic-instructions/create-mint",
     "basic-instructions/create-token-account",
     "basic-instructions/freeze",
@@ -26,10 +26,6 @@ members = [
 ]
 
 [programs.localnet]
-escrow = "FKJs6rp6TXJtxzLiPtdYhqa9ExRuBXG2zwh4fda6WATN"
-fundraiser = "Eoiuq1dXvHxh6dLx3wh9gj8kSAUpga11krTrbfF5XYsC"
-light_token_minter = "3EPJBoxM8Evtv3Wk7R2mSWsrSzUD7WSKAaYugLgpCitV"
-swap_example = "AsGVFxWqEn8icRBFQApxJe68x3r9zvfSbmiEzYFATGYn"
 counter = "PDAm7XVHEkBvzBYDh8qF3z8NxnYQzPjGQJKcHVmMZpT"
 create_and_transfer = "672fL1Nm191MbPoygNM9DRiG2psBELn97XUpGbU3jW7E"
 

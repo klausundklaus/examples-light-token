@@ -3,7 +3,7 @@ use light_program_test::Rpc;
 use light_token::instruction::{rent_sponsor_pda, LIGHT_TOKEN_PROGRAM_ID};
 use light_token_anchor_close::{accounts, instruction::CloseAccount, ID};
 use solana_sdk::{instruction::Instruction, signer::Signer};
-use basic_instructions_test_utils::setup_test_env;
+use test_utils::setup_test_env;
 
 #[tokio::test]
 async fn test_close() {
