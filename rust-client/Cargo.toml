@@ -15,6 +15,7 @@ light-token-interface = "0.3.0"
 light-token-client = "0.1.0"
 light-program-test = { version = "0.19.0", features = ["v2"] }
 light-client = { version = "0.19.0", features = ["v2"] }
+light-nullifier-program = "0.1.2"
 
 # Serialization
 borsh = "0.10.4"
@@ -29,6 +30,11 @@ solana-system-interface = "1"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+
+# Utils
+dotenv = "0.15"
+rand = "0.8"
+bs58 = "0.5"
 
 # Pin blake3 to avoid constant_time_eq edition2024 issue
 blake3 = "=1.5.5"
@@ -130,3 +136,7 @@ path = "actions/wrap.rs"
 [[example]]
 name = "action_unwrap"
 path = "actions/unwrap.rs"
+
+[[example]]
+name = "action_create_nullifier"
+path = "actions/create_nullifier.rs"
