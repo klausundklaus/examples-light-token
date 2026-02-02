@@ -6,11 +6,11 @@ use light_nullifier_program::sdk::{create_nullifier_ix, derive_nullifier_address
 use solana_sdk::{signature::read_keypair_file, signer::Signer};
 use std::env;
 
-async fn setup_devnet_client() -> Result<LightClient, Box<dyn std::error::Error>> {
+async fn get_client() -> Result<LightClient, Box<dyn std::error::Error>> {
     dotenv().ok();
     let api_key = env::var("API_KEY").expect("API_KEY required in .env");
-    let rpc_url = format!("https://devnet.helius-rpc.com/?api-key={}", api_key);
-    let photon_url = "https://devnet.helius-rpc.com".to_string();
+    let rpc_url = format!("https://mainnet.helius-rpc.com/?api-key={}", api_key);
+    let photon_url = "https://mainnet.helius-rpc.com".to_string();
     let config = LightClientConfig::new(rpc_url, Some(photon_url), Some(api_key));
     let mut rpc = LightClient::new(config).await?;
 
@@ -23,10 +23,10 @@ async fn setup_devnet_client() -> Result<LightClient, Box<dyn std::error::Error>
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut rpc = setup_devnet_client().await?;
+    let mut rpc = get_client().await?;
     let payer = rpc.get_payer().insecure_clone();
 
-    // must be identifier, eg, nonce or UUID, hash of payment info
+    // must be identifier, eg, nonce/UUID/hash of payment info
     let id: [u8; 32] = rand::random();
     let nullifier_ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
 
@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let _address = derive_nullifier_address(&id);
 
-    // Duplicate should fail
+    // Double spend should fail
     assert!(create_nullifier_ix(&mut rpc, payer.pubkey(), id)
         .await
         .is_err());
