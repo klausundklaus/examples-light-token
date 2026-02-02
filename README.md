@@ -53,6 +53,20 @@ Light token is a high-performance token standard that reduces the cost of mint a
 
 ## Program Examples
 
+|  | Description |
+|---------|-------------|
+| [cp-swap-reference](https://github.com/Lightprotocol/cp-swap-reference/tree/954f679699dbdfe9711308c8ae9fbd21e69db8aa) | Fork of Raydium AMM that creates markets without paying rent-exemption. |
+| [create-and-transfer](programs/anchor/create-and-transfer) | Create account via macro and transfer via CPI |
+
+### Macros
+
+|  | Description |
+|---------|-------------|
+| [counter](programs/anchor/basic-macros/counter) | Create PDA with sponsored rent-exemption |
+| [create-associated-token-account](programs/anchor/basic-macros/create-ata) | Create associated light-token account |
+| [create-mint](programs/anchor/basic-macros/create-mint) | Create light-token mint |
+| [create-token-account](programs/anchor/basic-macros/create-token-account) | Create light-token account |
+
 ### Instructions
 
 The instructions use pure CPI calls which you can combine with existing and / or light macros.
@@ -72,22 +86,6 @@ For existing programs, you can replace spl_token with light_token instructions a
 | [thaw](programs/anchor/basic-instructions/thaw/src/lib.rs) | Thaw token account via CPI |
 | [transfer-checked](programs/anchor/basic-instructions/transfer-checked/src/lib.rs) | Transfer with mint validation via CPI |
 | [transfer-interface](programs/anchor/basic-instructions/transfer-interface/src/lib.rs) | Transfer between light-token, T22, and SPL accounts via CPI |
-
-### Macros
-
-|  | Description |
-|---------|-------------|
-| [counter](programs/anchor/basic-macros/counter) | Create PDA with sponsored rent-exemption |
-| [create-associated-token-account](programs/anchor/basic-macros/create-ata) | Create associated light-token account |
-| [create-mint](programs/anchor/basic-macros/create-mint) | Create light-token mint |
-| [create-token-account](programs/anchor/basic-macros/create-token-account) | Create light-token account |
-
-### Examples
-
-|  | Description |
-|---------|-------------|
-| [create-and-transfer](programs/anchor/create-and-transfer) | Create account via macro and transfer via CPI |
-
 
 ## Documentation
 
