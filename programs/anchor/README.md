@@ -27,7 +27,7 @@
 
 ## Examples
 
-* **[cp-swap-reference](cp-swap-reference)** - Fork of Raydium AMM that creates markets without paying rent-exemption.
+* **[cp-swap-reference](https://github.com/Lightprotocol/cp-swap-reference/tree/954f679699dbdfe9711308c8ae9fbd21e69db8aa)** - Fork of Raydium AMM that creates markets without paying rent-exemption.
 * **[create-and-transfer](create-and-transfer)** - Create account via macro and transfer via CPI
 
 ## Build and test
