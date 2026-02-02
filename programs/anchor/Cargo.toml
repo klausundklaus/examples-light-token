@@ -1,0 +1,81 @@
+[workspace]
+resolver = "2"
+members = [
+    # Basic macro examples
+    "basic-macros/counter",
+    "basic-macros/create-mint",
+    "basic-macros/create-associated-token-account",
+    "basic-macros/create-token-account",
+    "create-and-transfer",
+
+    # Basic instruction examples
+    "basic-instructions/approve",
+    "basic-instructions/burn",
+    "basic-instructions/close",
+    "basic-instructions/create-associated-token-account",
+    "basic-instructions/create-mint",
+    "basic-instructions/create-token-account",
+    "basic-instructions/freeze",
+    "basic-instructions/mint-to",
+    "basic-instructions/revoke",
+    "basic-instructions/thaw",
+    "basic-instructions/transfer-checked",
+    "basic-instructions/transfer-interface",
+    "basic-instructions/test-utils",
+]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+overflow-checks = true
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+[workspace.dependencies]
+# Pin blake3 version for solana-program compatibility
+blake3 = { version = "=1.5.5", default-features = false }
+
+# Anchor
+anchor-lang = "0.31.1"
+anchor-spl = "0.31.1"
+
+# Solana
+solana-sdk = "2.2"
+solana-program = "2.2"
+solana-pubkey = "2.2"
+solana-msg = "2.2"
+solana-account-info = "2.2"
+solana-program-error = "2.2"
+solana-instruction = "2.2"
+solana-keypair = "2.2"
+solana-signer = "2.2"
+
+# Light Protocol
+light-sdk = { version = "0.19.0", features = ["anchor", "v2", "anchor-discriminator", "cpi-context"] }
+light-sdk-macros = "0.19.0"
+light-sdk-types = { version = "0.19.0", features = ["v2", "cpi-context"] }
+light-compressible = { version = "0.4.0", features = ["anchor"] }
+light-hasher = { version = "5.0.0", features = ["solana"] }
+light-macros = "2.2.0"
+light-compressed-account = "0.9.0"
+light-token = { version = "0.4.0", features = ["anchor"] }
+light-token-types = { version = "0.4.0", features = ["anchor"] }
+light-token-interface = "0.3.0"
+light-program-test = "0.19.0"
+light-client = { version = "0.19.0", features = ["v2", "anchor"] }
+light-anchor-spl = "0.31.1"
+
+# Testing
+tokio = "1.43.0"
+borsh = "0.10.4"
+
+# Pin time to avoid time-macros 0.2.26 which requires edition2024
+# (cargo build-sbf bundles Cargo 1.84.0 which doesn't support it)
+time = "=0.3.41"
+
+# Internal
+test-utils = { path = "basic-instructions/test-utils" }

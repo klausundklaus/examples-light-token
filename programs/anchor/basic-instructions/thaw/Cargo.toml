@@ -1,0 +1,31 @@
+[package]
+name = "light-token-anchor-thaw"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "light_token_anchor_thaw"
+
+[features]
+no-entrypoint = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "light-sdk/idl-build"]
+
+[dependencies]
+anchor-lang = { workspace = true }
+light-sdk = { workspace = true }
+light-token = { workspace = true }
+
+[dev-dependencies]
+light-program-test = { workspace = true }
+light-client = { workspace = true }
+borsh = { workspace = true }
+tokio = { workspace = true }
+solana-sdk = { workspace = true }
+test-utils = { workspace = true }
+
+[lints.rust.unexpected_cfgs]
+level = "allow"
+check-cfg = ['cfg(target_os, values("solana"))']
