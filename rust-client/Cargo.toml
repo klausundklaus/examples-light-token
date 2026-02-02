@@ -35,6 +35,7 @@ tokio = { version = "1", features = ["full"] }
 dotenv = "0.15"
 rand = "0.8"
 bs58 = "0.5"
+shellexpand = "3"
 
 # Pin blake3 to avoid constant_time_eq edition2024 issue
 blake3 = "=1.5.5"

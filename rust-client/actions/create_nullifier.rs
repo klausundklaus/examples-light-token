@@ -1,54 +1,67 @@
-//! Example: Create a nullifier PDA to prevent duplicate actions.
-//!
-//! This example uses LightProgramTest for local testing.
-//! For devnet, replace LightProgramTest with LightClient (see comments below).
+//! Example: Create a nullifier PDA to prevent duplicate actions on devnet.
 //!
 //! Run with: cargo run --example action_create_nullifier
+//!
+//! Requires:
+//!   - API_KEY in .env file (Helius API key)
+//!   - Funded keypair at ~/.config/solana/id.json
 
-use light_client::rpc::Rpc;
+use dotenv::dotenv;
+use light_client::rpc::{LightClient, LightClientConfig, Rpc};
 use light_nullifier_program::sdk::{create_nullifier_ix, derive_nullifier_address, PROGRAM_ID};
-use light_program_test::{LightProgramTest, ProgramTestConfig};
-use solana_sdk::{signature::Keypair, signer::Signer};
-use solana_system_interface::instruction as system_instruction;
-
-// For devnet usage with LightClient:
-// ```rust
-// use light_client::rpc::{LightClient, LightClientConfig};
-// let api_key = std::env::var("API_KEY").expect("API_KEY required");
-// let config = LightClientConfig::new(
-//     format!("https://devnet.helius-rpc.com/?api-key={}", api_key),
-//     None,
-//     Some(api_key),
-// );
-// let mut rpc = LightClient::new(config).await?;
-// ```
+use solana_sdk::{
+    signature::read_keypair_file,
+    signer::Signer,
+};
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
+
     println!("Nullifier Program ID: {}", PROGRAM_ID);
 
-    // Setup local test environment
-    // For devnet: use LightClient instead (see comments above)
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(true, None)).await?;
-    let payer = rpc.get_payer().insecure_clone();
+    // Load API key from .env
+    let api_key = env::var("API_KEY").expect("API_KEY required in .env");
+    let rpc_url = format!("https://devnet.helius-rpc.com/?api-key={}", api_key);
+    let photon_url = "https://devnet.helius-rpc.com".to_string();
+
+    // Setup LightClient for devnet
+    // RPC URL includes api-key, Photon URL is base URL (api_key added separately)
+    let config = LightClientConfig::new(rpc_url, Some(photon_url), Some(api_key));
+    let mut rpc = LightClient::new(config).await?;
+
+    // Load keypair from default Solana CLI location
+    let keypair_path =
+        shellexpand::tilde("~/.config/solana/id.json").to_string();
+    let payer = read_keypair_file(&keypair_path)
+        .map_err(|e| format!("Failed to read keypair from {}: {}", keypair_path, e))?;
+    rpc.payer = payer.insecure_clone();
 
     println!("Payer: {}", payer.pubkey());
 
+    // Check balance
+    let balance = rpc.get_balance(&payer.pubkey()).await?;
+    println!("Balance: {} SOL", balance as f64 / 1_000_000_000.0);
+    if balance < 10_000_000 {
+        return Err("Insufficient balance. Need at least 0.01 SOL on devnet".into());
+    }
+
     // Create a unique 32-byte ID (e.g., hash of payment inputs)
     let id: [u8; 32] = rand::random();
-    println!("Nullifier ID: {:?}", &id[..8]);
+    println!("Nullifier ID: {}", bs58::encode(&id).into_string());
 
     // Build nullifier instruction
+    println!("\nFetching proof and building instruction...");
     let nullifier_ix = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
 
-    // Combine with a simple transfer (example of prepending nullifier)
-    let recipient = Keypair::new().pubkey();
-    let transfer_ix = system_instruction::transfer(&payer.pubkey(), &recipient, 1_000);
-
-    // Build and send transaction
-    rpc.create_and_send_transaction(&[nullifier_ix, transfer_ix], &payer.pubkey(), &[&payer])
+    // Send transaction with just the nullifier instruction
+    // (You can add other instructions like transfers here)
+    println!("Sending transaction...");
+    let sig = rpc
+        .create_and_send_transaction(&[nullifier_ix], &payer.pubkey(), &[&payer])
         .await?;
-    println!("Transaction confirmed");
+    println!("Transaction confirmed: {}", sig);
 
     // Verify nullifier was created
     let address = derive_nullifier_address(&id);
@@ -57,18 +70,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         bs58::encode(&address).into_string()
     );
 
-    // Try to create the same nullifier again (should fail)
+    // Try to create the same nullifier again (should fail at proof stage)
     println!("\nAttempting duplicate nullifier (should fail)...");
-    let nullifier_ix_2 = create_nullifier_ix(&mut rpc, payer.pubkey(), id).await?;
-    let transfer_ix_2 = system_instruction::transfer(&payer.pubkey(), &recipient, 1_000);
-
-    match rpc
-        .create_and_send_transaction(&[nullifier_ix_2, transfer_ix_2], &payer.pubkey(), &[&payer])
-        .await
-    {
-        Ok(_) => println!("ERROR: Duplicate nullifier should have failed!"),
-        Err(e) => println!("Expected failure: {}", e),
+    match create_nullifier_ix(&mut rpc, payer.pubkey(), id).await {
+        Ok(_) => println!("ERROR: Duplicate nullifier proof request should have failed!"),
+        Err(e) => {
+            let err_str = e.to_string();
+            if err_str.contains("already exists") {
+                println!("Duplicate correctly rejected: address already exists");
+            } else {
+                println!("Expected failure: {}", e);
+            }
+        }
     }
 
+    println!("\nSuccess! Nullifier program works on devnet.");
     Ok(())
 }
