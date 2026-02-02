@@ -53,6 +53,8 @@ Light token is a high-performance token standard that reduces the cost of mint a
 
 ## Program Examples
 
+### Examples 
+
 |  | Description |
 |---------|-------------|
 | [cp-swap-reference](https://github.com/Lightprotocol/cp-swap-reference/tree/954f679699dbdfe9711308c8ae9fbd21e69db8aa) | Fork of Raydium AMM that creates markets without paying rent-exemption. |
