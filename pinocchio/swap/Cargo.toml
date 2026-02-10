@@ -15,9 +15,9 @@ test-sbf = []
 
 [dependencies]
 # Main Light Protocol dependencies
-light-account-pinocchio = { path = "../../../light-protocol/sdk-libs/account-pinocchio", features = ["token", "std"] }
-light-token-pinocchio = { path = "../../../light-protocol/sdk-libs/token-pinocchio" }
-light-hasher = { path = "../../../light-protocol/program-libs/hasher", features = ["solana"] }
+light-account-pinocchio = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9", features = ["token", "std"] }
+light-token-pinocchio = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9" }
+light-hasher = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9", features = ["solana"] }
 
 # Serialization and utilities
 borsh = { version = "0.10.4", default-features = false }
@@ -33,11 +33,11 @@ solana-msg = "2.2"
 solana-program-error = "2.2"
 
 [dev-dependencies]
-light-program-test = { path = "../../../light-protocol/sdk-libs/program-test" }
-light-client = { path = "../../../light-protocol/sdk-libs/client", features = ["v2", "anchor", "program-test"] }
-light-token = { path = "../../../light-protocol/sdk-libs/token-sdk", features = ["anchor"] }
-light-token-client = { path = "../../../light-protocol/sdk-libs/token-client" }
-light-account = { path = "../../../light-protocol/sdk-libs/account", features = ["token"] }
+light-program-test = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9" }
+light-client = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9", features = ["v2", "anchor", "program-test"] }
+light-token = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9", features = ["anchor"] }
+light-token-client = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9" }
+light-account = { git = "https://github.com/Lightprotocol/light-protocol.git", rev = "29e1d35a2dc7cd55f0fe6368df3d216f72529ab9", features = ["token"] }
 tokio = { version = "1", features = ["full"] }
 solana-sdk = "2.2"
 solana-account = "2.2"
