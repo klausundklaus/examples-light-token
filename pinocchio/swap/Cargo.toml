@@ -15,9 +15,9 @@ test-sbf = []
 
 [dependencies]
 # Main Light Protocol dependencies
-light-account-pinocchio = { version = "0.20", features = ["token", "std"] }
-light-token-pinocchio = "0.20"
-light-hasher = { version = "5.0.0", features = ["solana"] }
+light-account-pinocchio = { path = "../../../light-protocol/sdk-libs/account-pinocchio", features = ["token", "std"] }
+light-token-pinocchio = { path = "../../../light-protocol/sdk-libs/token-pinocchio" }
+light-hasher = { path = "../../../light-protocol/program-libs/hasher", features = ["solana"] }
 
 # Serialization and utilities
 borsh = { version = "0.10.4", default-features = false }
@@ -33,11 +33,11 @@ solana-msg = "2.2"
 solana-program-error = "2.2"
 
 [dev-dependencies]
-light-program-test = "0.20"
-light-client = { version = "0.20", features = ["v2", "anchor", "program-test"] }
-light-token = { version = "0.20", features = ["anchor"] }
-light-token-client = "0.20"
-light-account = { version = "0.20", features = ["token"] }
+light-program-test = { path = "../../../light-protocol/sdk-libs/program-test" }
+light-client = { path = "../../../light-protocol/sdk-libs/client", features = ["v2", "anchor", "program-test"] }
+light-token = { path = "../../../light-protocol/sdk-libs/token-sdk", features = ["anchor"] }
+light-token-client = { path = "../../../light-protocol/sdk-libs/token-client" }
+light-account = { path = "../../../light-protocol/sdk-libs/account", features = ["token"] }
 tokio = { version = "1", features = ["full"] }
 solana-sdk = "2.2"
 solana-account = "2.2"

@@ -14,10 +14,9 @@ mod sdk;
 mod shared;
 
 use light_client::interface::{
-    create_load_instructions, get_create_accounts_proof, AccountInterfaceExt,
+    create_load_instructions, get_create_accounts_proof, AccountSpec,
     CreateAccountsProofInput, LightProgramInterface,
 };
-use light_program_test::program_test::LightProgramTest;
 use light_program_test::{program_test::TestRpc, Rpc};
 use light_token::LIGHT_TOKEN_PROGRAM_ID;
 
@@ -28,10 +27,9 @@ use light_token::instruction::{
     LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR,
 };
 use pinocchio_swap::{
-    constants::*, discriminators, init::InitializeParams, swap::SwapParams, LightAccountVariant,
-    PoolState,
+    constants::*, discriminators, init::InitializeParams, swap::SwapParams, PoolState,
 };
-use sdk::{SwapInstruction, SwapSdk};
+use sdk::SwapSdk;
 use solana_instruction::{AccountMeta, Instruction};
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;
@@ -372,52 +370,52 @@ async fn test_full_lifecycle() {
 
     // ==================== PHASE 9: Create SDK from Compressed State ====================
     let pool_interface = rpc
-        .get_account_interface(&pool_state, &program_id)
+        .get_account_interface(&pool_state, None)
         .await
-        .expect("pool should be compressed");
+        .expect("pool should be compressed")
+        .value
+        .expect("pool interface should exist");
     assert!(
         pool_interface.is_cold(),
         "pool_state should be cold after warp"
     );
 
-    let mut swap_sdk = SwapSdk::from_keyed_accounts(&[pool_interface])
-        .expect("from_keyed_accounts should succeed");
+    let swap_sdk = SwapSdk::new(pool_state, pool_interface.data())
+        .expect("SwapSdk::new should succeed");
 
-    // ==================== PHASE 10: Fetch and Update SDK ====================
-    let accounts_to_fetch = swap_sdk.get_accounts_to_update(&SwapInstruction::Swap);
-    let keyed_accounts = rpc
-        .get_multiple_account_interfaces(&accounts_to_fetch)
+    // ==================== PHASE 10: Fetch Cold Accounts ====================
+    let pubkeys = swap_sdk.instruction_accounts(&sdk::SwapInstruction::Swap);
+    let cold_accounts = rpc
+        .get_multiple_account_interfaces(pubkeys.iter().collect(), None)
         .await
-        .expect("get_multiple_account_interfaces should succeed");
-
-    swap_sdk
-        .update(&keyed_accounts)
-        .expect("sdk.update should succeed");
+        .expect("get_multiple_account_interfaces should succeed")
+        .value;
+    let cold: Vec<_> = cold_accounts.into_iter().flatten().filter(|a| a.is_cold()).collect();
 
     // ==================== PHASE 11: Build Load Instructions ====================
-    let all_specs = swap_sdk.get_specs_for_instruction(&SwapInstruction::Swap);
+    let mut all_specs = swap_sdk.load_specs(&cold)
+        .expect("load_specs should succeed");
 
     // Also need to decompress user ATAs
     let user_ata_a_interface = rpc
-        .get_ata_interface(&user.pubkey(), &mint_a)
+        .get_associated_token_account_interface(&user.pubkey(), &mint_a, None)
         .await
-        .expect("get_ata_interface for user_token_a should succeed");
+        .expect("get_associated_token_account_interface for user_token_a should succeed")
+        .value
+        .expect("user_token_a interface should exist");
 
     let user_ata_b_interface = rpc
-        .get_ata_interface(&user.pubkey(), &mint_b)
+        .get_associated_token_account_interface(&user.pubkey(), &mint_b, None)
         .await
-        .expect("get_ata_interface for user_token_b should succeed");
+        .expect("get_associated_token_account_interface for user_token_b should succeed")
+        .value
+        .expect("user_token_b interface should exist");
 
-    let mut all_specs_with_atas = all_specs;
-    all_specs_with_atas.push(light_client::interface::AccountSpec::Ata(
-        user_ata_a_interface,
-    ));
-    all_specs_with_atas.push(light_client::interface::AccountSpec::Ata(
-        user_ata_b_interface,
-    ));
+    all_specs.push(AccountSpec::Ata(user_ata_a_interface));
+    all_specs.push(AccountSpec::Ata(user_ata_b_interface));
 
-    let load_ixs = create_load_instructions::<LightAccountVariant, LightProgramTest>(
-        &all_specs_with_atas,
+    let load_ixs = create_load_instructions(
+        &all_specs,
         payer.pubkey(),
         env.config_pda,
         &rpc,
