@@ -11,7 +11,7 @@
 
 |  | Description |
 |---------|-------------|
-| [counter](programs/anchor/basic-macros/counter) | Create PDA with sponsored rent-exemption |
+| [counter](programs/anchor/basic-macros/counter) | Create, increment and close counter PDA with sponsored rent-exemption |
 | [create-associated-token-account](programs/anchor/basic-macros/create-ata) | Create associated light-token account |
 | [create-mint](programs/anchor/basic-macros/create-mint) | Create light-token mint |
 | [create-token-account](programs/anchor/basic-macros/create-token-account) | Create light-token account |
