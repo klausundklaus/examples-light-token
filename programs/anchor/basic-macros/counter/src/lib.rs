@@ -38,6 +38,17 @@ pub mod counter {
         ctx.accounts.counter.count = params.count;
         Ok(())
     }
+
+    /// Increment the counter. Standard Anchor — no Light-specific changes.
+    pub fn increment(ctx: Context<Increment>) -> Result<()> {
+        ctx.accounts.counter.count = ctx.accounts.counter.count.checked_add(1).unwrap();
+        Ok(())
+    }
+
+    /// Close the counter. Standard Anchor — no Light-specific changes.
+    pub fn close_counter(_ctx: Context<CloseCounter>) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Accounts, LightAccounts)]
@@ -63,4 +74,36 @@ pub struct CreateCounter<'info> {
     pub counter: Account<'info, Counter>,
 
     pub system_program: Program<'info, System>,
+}
+
+/// Standard Anchor
+#[derive(Accounts)]
+pub struct Increment<'info> {
+    pub owner: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [COUNTER_SEED, owner.key().as_ref()],
+        bump,
+        has_one = owner,
+    )]
+    pub counter: Account<'info, Counter>,
+}
+
+/// Standard Anchor close
+#[derive(Accounts)]
+pub struct CloseCounter<'info> {
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
+
+    pub owner: Signer<'info>,
+
+    #[account(
+        mut,
+        close = fee_payer,
+        seeds = [COUNTER_SEED, owner.key().as_ref()],
+        bump,
+        has_one = owner,
+    )]
+    pub counter: Account<'info, Counter>,
 }
