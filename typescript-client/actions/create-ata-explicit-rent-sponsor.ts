@@ -15,10 +15,10 @@ import { homedir } from "os";
 import { readFileSync } from "fs";
 
 const LIGHT_TOKEN_CONFIG = new PublicKey(
-    "ACXg8a7VaqecBWrSbdu73W4Pg9gsqXJ3EXAqkHyhvVXg",
+    "ACXg8a7VaqecBWrSbdu73W4Pg9gsqXJ3EXAqkHyhvVXg"
 );
 const LIGHT_TOKEN_RENT_SPONSOR = new PublicKey(
-    "r18WwUxfG8kQ69bQPAB2jV6zGNKy3GosFGctjQoV4ti",
+    "r18WwUxfG8kQ69bQPAB2jV6zGNKy3GosFGctjQoV4ti"
 );
 
 const DEFAULT_COMPRESSIBLE_CONFIG = {
@@ -37,8 +37,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
@@ -48,7 +48,7 @@ const payer = Keypair.fromSecretKey(
     const owner = Keypair.generate();
     const associatedToken = getAssociatedTokenAddressInterface(
         mint,
-        owner.publicKey,
+        owner.publicKey
     );
 
     const ix = createAssociatedTokenAccountInterfaceInstruction(
@@ -62,7 +62,7 @@ const payer = Keypair.fromSecretKey(
             compressibleConfig: DEFAULT_COMPRESSIBLE_CONFIG,
             configAccount: LIGHT_TOKEN_CONFIG,
             rentPayerPda: LIGHT_TOKEN_RENT_SPONSOR,
-        },
+        }
     );
 
     const { blockhash } = await rpc.getLatestBlockhash();
@@ -70,7 +70,7 @@ const payer = Keypair.fromSecretKey(
         [ComputeBudgetProgram.setComputeUnitLimit({ units: 50_000 }), ix],
         payer,
         blockhash,
-        [],
+        []
     );
     const signature = await sendAndConfirmTx(rpc, tx);
 

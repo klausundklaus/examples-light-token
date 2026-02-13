@@ -18,8 +18,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
@@ -30,7 +30,7 @@ const payer = Keypair.fromSecretKey(
 
     const destination = getAssociatedTokenAddressInterface(
         mint,
-        recipient.publicKey,
+        recipient.publicKey
     );
     const tx = await mintToInterface(
         rpc,
@@ -38,7 +38,7 @@ const payer = Keypair.fromSecretKey(
         mint,
         destination,
         payer,
-        1_000_000_000,
+        1_000_000_000
     );
 
     console.log("Tx:", tx);

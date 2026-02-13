@@ -6,7 +6,7 @@ import {
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { createRpc } from "@lightprotocol/stateless.js";
-import { CompressedTokenProgram } from "@lightprotocol/compressed-token";
+import { LightTokenProgram } from "@lightprotocol/compressed-token";
 import {
     MINT_SIZE,
     TOKEN_PROGRAM_ID,
@@ -23,8 +23,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
@@ -32,8 +32,9 @@ const payer = Keypair.fromSecretKey(
     const decimals = 9;
 
     // Get rent for mint account
-    const rentExemptBalance =
-        await rpc.getMinimumBalanceForRentExemption(MINT_SIZE);
+    const rentExemptBalance = await rpc.getMinimumBalanceForRentExemption(
+        MINT_SIZE
+    );
 
     // Instruction 1: Create mint account
     const createMintAccountIx = SystemProgram.createAccount({
@@ -50,12 +51,12 @@ const payer = Keypair.fromSecretKey(
         decimals,
         payer.publicKey, // mint authority
         null, // freeze authority
-        TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID
     );
 
     // Instruction 3: Create SPL interface PDA
     // Holds SPL tokens when wrapped to light-token
-    const createSplInterfaceIx = await CompressedTokenProgram.createTokenPool({
+    const createSplInterfaceIx = await LightTokenProgram.createSplInterface({
         feePayer: payer.publicKey,
         mint: mintKeypair.publicKey,
         tokenProgramId: TOKEN_PROGRAM_ID,
@@ -64,7 +65,7 @@ const payer = Keypair.fromSecretKey(
     const tx = new Transaction().add(
         createMintAccountIx,
         initializeMintIx,
-        createSplInterfaceIx,
+        createSplInterfaceIx
     );
 
     const signature = await sendAndConfirmTransaction(rpc, tx, [

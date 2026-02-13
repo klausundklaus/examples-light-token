@@ -19,8 +19,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
@@ -30,7 +30,7 @@ const payer = Keypair.fromSecretKey(
     await createAtaInterface(rpc, payer, mint, sender.publicKey);
     const senderAta = getAssociatedTokenAddressInterface(
         mint,
-        sender.publicKey,
+        sender.publicKey
     );
     await mintToInterface(rpc, payer, mint, senderAta, payer, 1_000_000_000);
 
@@ -38,18 +38,19 @@ const payer = Keypair.fromSecretKey(
     await createAtaInterface(rpc, payer, mint, recipient.publicKey);
     const recipientAta = getAssociatedTokenAddressInterface(
         mint,
-        recipient.publicKey,
+        recipient.publicKey
     );
 
     // Transfer tokens between light-token associated token accounts
+    // destination is recipient wallet; transferInterface creates recipient ATA idempotently
     const tx = await transferInterface(
         rpc,
         payer,
         senderAta,
         mint,
-        recipientAta,
+        recipient.publicKey,
         sender,
-        500_000_000,
+        500_000_000
     );
 
     console.log("Tx:", tx);

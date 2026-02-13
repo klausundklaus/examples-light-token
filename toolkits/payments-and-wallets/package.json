@@ -4,10 +4,18 @@
     "description": "Light Token Payments Toolkit Examples",
     "type": "module",
     "scripts": {
+        "register-spl-mint": "tsx register-spl-mint.ts",
+        "receive": "tsx receive.ts",
+        "send-instruction": "tsx send-instruction.ts",
+        "send-action": "tsx send-action.ts",
         "send-and-receive": "tsx send-and-receive.ts",
         "get-balance": "tsx get-balance.ts",
         "get-history": "tsx get-history.ts",
         "wrap": "tsx wrap.ts",
         "unwrap": "tsx unwrap.ts"
+    },
+    "dependencies": {
+        "@lightprotocol/compressed-token": "^0.23.0-beta.8",
+        "@lightprotocol/stateless.js": "^0.23.0-beta.8"
     }
 }

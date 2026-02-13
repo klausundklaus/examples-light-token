@@ -1,11 +1,16 @@
 import "dotenv/config";
-import { Keypair } from "@solana/web3.js";
+import {
+    Keypair,
+    Transaction,
+    sendAndConfirmTransaction,
+} from "@solana/web3.js";
 import { createRpc } from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
     createAtaInterface,
     getAssociatedTokenAddressInterface,
     transferInterface,
+    createLoadAtaInstructions,
 } from "@lightprotocol/compressed-token";
 import { wrap } from "@lightprotocol/compressed-token/unified";
 import {
@@ -29,7 +34,7 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // 1. Create SPL mint (includes SPL interface PDA registration)
+    // --- Setup: create SPL mint, fund sender, transfer to recipient ---
     const { mint } = await createMintInterface(
         rpc,
         payer,
@@ -41,7 +46,6 @@ const payer = Keypair.fromSecretKey(
         TOKEN_PROGRAM_ID
     );
 
-    // 2. Fund payer with SPL tokens
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
@@ -52,22 +56,42 @@ const payer = Keypair.fromSecretKey(
     );
     await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
 
-    // 3. Create light-token ATA and wrap SPL tokens into it
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
     const senderAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     await wrap(rpc, payer, splAta, senderAta, payer, mint, BigInt(1_000_000));
 
-    // 4. Transfer from payer to recipient
+    // Transfer to a fresh recipient so they have cold tokens
     const recipient = Keypair.generate();
-    const txId = await transferInterface(
+    await transferInterface(
         rpc,
         payer,
         senderAta,
         mint,
         recipient.publicKey,
         payer,
-        100
+        500
     );
 
-    console.log("Tx:", txId);
+    // --- Receive: load creates ATA if needed + pulls cold state to hot ---
+    const recipientAta = getAssociatedTokenAddressInterface(
+        mint,
+        recipient.publicKey
+    );
+
+    // Returns TransactionInstruction[][]. Each inner array is one txn.
+    // Almost always one. Empty = noop.
+    const instructions = await createLoadAtaInstructions(
+        rpc,
+        recipientAta,
+        recipient.publicKey,
+        mint,
+        payer.publicKey
+    );
+
+    for (const ixs of instructions) {
+        const tx = new Transaction().add(...ixs);
+        await sendAndConfirmTransaction(rpc, tx, [payer]);
+    }
+
+    console.log("Recipient ATA:", recipientAta.toBase58());
 })();

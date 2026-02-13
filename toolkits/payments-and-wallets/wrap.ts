@@ -4,17 +4,13 @@ import { createRpc } from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
     createAtaInterface,
-    mintToInterface,
-    decompressInterface,
     getAssociatedTokenAddressInterface,
 } from "@lightprotocol/compressed-token";
+import { wrap } from "@lightprotocol/compressed-token/unified";
 import {
-    wrap,
-    createAtaInterfaceIdempotent,
-} from "@lightprotocol/compressed-token/unified";
-import {
+    TOKEN_PROGRAM_ID,
     createAssociatedTokenAccount,
-    TOKEN_2022_PROGRAM_ID,
+    mintTo,
 } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
@@ -27,32 +23,51 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
-    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
-    await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
-    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
+    // 1. Create SPL mint (includes SPL interface PDA registration)
+    const { mint } = await createMintInterface(
+        rpc,
+        payer,
+        payer,
+        null,
+        9,
+        undefined,
+        undefined,
+        TOKEN_PROGRAM_ID
+    );
+
+    // 2. Create SPL ATA and mint tokens
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
         undefined,
-        TOKEN_2022_PROGRAM_ID,
+        TOKEN_PROGRAM_ID
     );
-    await decompressInterface(rpc, payer, payer, mint, 1000);
+    await mintTo(rpc, payer, mint, splAta, payer, 1000);
 
+    // 3. Create light-token ATA
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
     const lightTokenAta = getAssociatedTokenAddressInterface(
         mint,
-        payer.publicKey,
+        payer.publicKey
     );
-    await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
-    const tx = await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, 500);
+    // 4. Wrap: move SPL tokens into the light-token system
+    const tx = await wrap(
+        rpc,
+        payer,
+        splAta,
+        lightTokenAta,
+        payer,
+        mint,
+        BigInt(500)
+    );
 
     console.log("Tx:", tx);
 })();

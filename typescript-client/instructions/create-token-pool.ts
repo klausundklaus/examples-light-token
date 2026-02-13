@@ -6,7 +6,7 @@ import {
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { createRpc } from "@lightprotocol/stateless.js";
-import { CompressedTokenProgram } from "@lightprotocol/compressed-token";
+import { LightTokenProgram } from "@lightprotocol/compressed-token";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
@@ -19,14 +19,14 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     const existingMint = new PublicKey("YOUR_EXISTING_MINT_ADDRESS");
 
-    const ix = await CompressedTokenProgram.createTokenPool({
+    const ix = await LightTokenProgram.createSplInterface({
         feePayer: payer.publicKey,
         mint: existingMint,
         tokenProgramId: TOKEN_PROGRAM_ID,

@@ -6,7 +6,10 @@ import {
     createAtaInterface,
     getAssociatedTokenAddressInterface,
 } from "@lightprotocol/compressed-token";
-import { wrap, unwrap } from "@lightprotocol/compressed-token/unified";
+import {
+    transferInterface,
+    wrap,
+} from "@lightprotocol/compressed-token/unified";
 import {
     TOKEN_PROGRAM_ID,
     createAssociatedTokenAccount,
@@ -28,7 +31,7 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // 1. Create SPL mint (includes SPL interface PDA registration)
+    // Setup: Create SPL mint (auto-registers SPL interface PDA)
     const { mint } = await createMintInterface(
         rpc,
         payer,
@@ -40,7 +43,7 @@ const payer = Keypair.fromSecretKey(
         TOKEN_PROGRAM_ID
     );
 
-    // 2. Create SPL ATA and mint tokens
+    // Fund payer with SPL tokens, then wrap into light-token ATA
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
@@ -49,18 +52,23 @@ const payer = Keypair.fromSecretKey(
         undefined,
         TOKEN_PROGRAM_ID
     );
-    await mintTo(rpc, payer, mint, splAta, payer, 1000);
-
-    // 3. Create light-token ATA and wrap all SPL tokens into it
+    await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const lightTokenAta = getAssociatedTokenAddressInterface(
+    const cTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await wrap(rpc, payer, splAta, cTokenAta, payer, mint, BigInt(1_000_000));
+
+    const recipient = Keypair.generate();
+
+    // Handles loading cold balances, creates recipient ATA, transfers.
+    const sig = await transferInterface(
+        rpc,
+        payer,
+        cTokenAta,
         mint,
-        payer.publicKey
+        recipient.publicKey,
+        payer,
+        100
     );
-    await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, BigInt(1000));
 
-    // 4. Unwrap: move tokens back from light-token to SPL ATA
-    const tx = await unwrap(rpc, payer, splAta, payer, mint, 500);
-
-    console.log("Tx:", tx);
+    console.log("Tx:", sig);
 })();

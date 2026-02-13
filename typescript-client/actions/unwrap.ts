@@ -23,15 +23,18 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     // Setup: Create and mint tokens to light-token associated token account
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey
+    );
     await mintToInterface(rpc, payer, mint, destination, payer, 1000);
 
     // Unwrap light-token to SPL associated token account
@@ -41,7 +44,7 @@ const payer = Keypair.fromSecretKey(
         mint,
         payer.publicKey,
         undefined,
-        TOKEN_2022_PROGRAM_ID,
+        TOKEN_2022_PROGRAM_ID
     );
     const tx = await unwrap(rpc, payer, splAta, payer, mint, 500);
 

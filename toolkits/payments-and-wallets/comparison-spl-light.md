@@ -46,7 +46,7 @@ const ata = await getOrCreateAssociatedTokenAccount(
     connection,
     payer,
     mint,
-    recipient,
+    recipient
 );
 // Share ata.address with sender
 
@@ -70,8 +70,8 @@ const tx = new Transaction().add(
         payer.publicKey,
         ata,
         recipient,
-        mint,
-    ),
+        mint
+    )
 );
 ```
 
@@ -102,15 +102,15 @@ const tx = new Transaction().add(
         ata,
         recipient,
         mint,
-        LIGHT_TOKEN_PROGRAM_ID,
+        LIGHT_TOKEN_PROGRAM_ID
     ),
     ...(await createLoadAtaInstructions(
         rpc,
         ata,
         recipient,
         mint,
-        payer.publicKey,
-    )),
+        payer.publicKey
+    ))
 );
 ```
 
@@ -134,7 +134,7 @@ await transfer(
     destinationAta,
     owner,
     amount,
-    decimals,
+    decimals
 );
 ```
 
@@ -156,8 +156,8 @@ const tx = new Transaction().add(
         sourceAta,
         destinationAta,
         owner.publicKey,
-        amount,
-    ),
+        amount
+    )
 );
 ```
 
@@ -165,46 +165,41 @@ const tx = new Transaction().add(
 
 ```typescript
 const sourceAta = getAssociatedTokenAddressInterface(mint, owner.publicKey);
-const destinationAta = getAssociatedTokenAddressInterface(mint, recipient);
 
-await transferInterface(
-    rpc,
-    payer,
-    sourceAta,
-    mint,
-    destinationAta,
-    owner,
-    amount,
-);
+await transferInterface(rpc, payer, sourceAta, mint, recipient, owner, amount);
 ```
 
-**Light:**
+**Light (instruction-level):**
 
 ```typescript
+import { Transaction, sendAndConfirmTransaction } from "@solana/web3.js";
 import {
-    createLoadAtaInstructions,
-    createTransferInterfaceInstruction,
-    getAssociatedTokenAddressInterface,
+    createTransferInterfaceInstructions,
+    sliceLast,
 } from "@lightprotocol/compressed-token/unified";
 
-const sourceAta = getAssociatedTokenAddressInterface(mint, owner.publicKey);
-const destinationAta = getAssociatedTokenAddressInterface(mint, recipient);
-
-const tx = new Transaction().add(
-    ...(await createLoadAtaInstructions(
-        rpc,
-        sourceAta,
-        owner.publicKey,
-        mint,
-        payer.publicKey,
-    )),
-    createTransferInterfaceInstruction(
-        sourceAta,
-        destinationAta,
-        owner.publicKey,
-        amount,
-    ),
+const batches = await createTransferInterfaceInstructions(
+    rpc,
+    payer.publicKey,
+    mint,
+    amount,
+    owner.publicKey,
+    recipient
 );
+const { rest: loadBatches, last: transferBatch } = sliceLast(batches);
+
+await Promise.all(
+    loadBatches.map((batch) =>
+        sendAndConfirmTransaction(rpc, new Transaction().add(...batch), [
+            payer,
+            owner,
+        ])
+    )
+);
+await sendAndConfirmTransaction(rpc, new Transaction().add(...transferBatch), [
+    payer,
+    owner,
+]);
 ```
 
 To ensure your recipient's ATA exists you can prepend an idempotent creation instruction in the same atomic transaction:
@@ -222,7 +217,7 @@ const createAtaIx = createAssociatedTokenAccountIdempotentInstruction(
     payer.publicKey,
     destinationAta,
     recipient,
-    mint,
+    mint
 );
 
 new Transaction().add(createAtaIx, transferIx);
@@ -243,7 +238,7 @@ const createAtaIx = createAssociatedTokenAccountInterfaceIdempotentInstruction(
     destinationAta,
     recipient,
     mint,
-    LIGHT_TOKEN_PROGRAM_ID,
+    LIGHT_TOKEN_PROGRAM_ID
 );
 
 new Transaction().add(createAtaIx, transferIx);
@@ -323,34 +318,22 @@ await unwrap(rpc, payer, splAta, owner, mint, amount);
 
 ```typescript
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import {
-    createLoadAtaInstructions,
-    createUnwrapInstruction,
-    getAssociatedTokenAddressInterface,
-} from "@lightprotocol/compressed-token/unified";
-import { getSplInterfaceInfos } from "@lightprotocol/compressed-token";
+import { createUnwrapInstructions } from "@lightprotocol/compressed-token/unified";
 
-const lightTokenAta = getAssociatedTokenAddressInterface(mint, owner.publicKey);
 const splAta = getAssociatedTokenAddressSync(mint, owner.publicKey);
 
-const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
-const splInterfaceInfo = splInterfaceInfos.find((i) => i.isInitialized);
-
-const tx = new Transaction().add(
-    ...(await createLoadAtaInstructions(
-        rpc,
-        lightTokenAta,
-        owner.publicKey,
-        mint,
-        payer.publicKey,
-    )),
-    createUnwrapInstruction(
-        lightTokenAta,
-        splAta,
-        owner.publicKey,
-        mint,
-        amount,
-        splInterfaceInfo,
-    ),
+// Handles loading cold state + unwrapping in one go.
+const instructions = await createUnwrapInstructions(
+    rpc,
+    splAta,
+    owner.publicKey,
+    mint,
+    amount,
+    payer.publicKey
 );
+
+for (const ixs of instructions) {
+    const tx = new Transaction().add(...ixs);
+    await sendAndConfirmTransaction(rpc, tx, [payer, owner]);
+}
 ```

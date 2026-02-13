@@ -8,13 +8,16 @@ import { createRpc } from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
     createAtaInterface,
-    mintToInterface,
     getAssociatedTokenAddressInterface,
-    createUnwrapInstructions,
+} from "@lightprotocol/compressed-token";
+import {
+    createTransferInterfaceInstructions,
+    wrap,
 } from "@lightprotocol/compressed-token/unified";
 import {
+    TOKEN_PROGRAM_ID,
     createAssociatedTokenAccount,
-    TOKEN_2022_PROGRAM_ID,
+    mintTo,
 } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
@@ -32,39 +35,50 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Create and mint tokens to light-token associated token account
-    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
-    await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const destination = getAssociatedTokenAddressInterface(
-        mint,
-        payer.publicKey
+    // Setup: Create SPL mint (includes SPL interface PDA registration)
+    const { mint } = await createMintInterface(
+        rpc,
+        payer,
+        payer,
+        null,
+        9,
+        undefined,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
-    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
 
-    // Create destination SPL ATA
+    // Fund payer with SPL tokens
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
         undefined,
-        TOKEN_2022_PROGRAM_ID
+        TOKEN_PROGRAM_ID
     );
+    await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
+
+    // Create light-token ATA and wrap SPL tokens into it
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const cTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await wrap(rpc, payer, splAta, cTokenAta, payer, mint, BigInt(1_000_000));
+
+    const recipient = Keypair.generate();
 
     // Returns TransactionInstruction[][]. Each inner array is one txn.
-    // Handles loading cold state + unwrapping in one go.
-    const instructions = await createUnwrapInstructions(
+    // Almost always this returns one atomic transaction.
+    const instructions = await createTransferInterfaceInstructions(
         rpc,
-        splAta,
         payer.publicKey,
         mint,
-        500,
-        payer.publicKey
+        100,
+        payer.publicKey,
+        recipient.publicKey
     );
 
     for (const ixs of instructions) {
         const tx = new Transaction().add(...ixs);
-        const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
-        console.log("Tx:", signature);
+        const sig = await sendAndConfirmTransaction(rpc, tx, [payer]);
+        console.log("Tx:", sig);
     }
 })();
