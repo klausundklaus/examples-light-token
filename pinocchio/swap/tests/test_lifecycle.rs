@@ -14,20 +14,20 @@ mod sdk;
 mod shared;
 
 use light_client::interface::{
-    create_load_instructions, get_create_accounts_proof, AccountSpec,
-    CreateAccountsProofInput, LightProgramInterface,
+    AccountSpec, CreateAccountsProofInput, LightProgramInterface, create_load_instructions,
+    get_create_accounts_proof,
 };
-use light_program_test::{program_test::TestRpc, Rpc};
+use light_program_test::{Rpc, program_test::TestRpc};
 use light_token::LIGHT_TOKEN_PROGRAM_ID;
 
 /// Slots per epoch for compression timing (matches light-compressible).
 const SLOTS_PER_EPOCH: u64 = 13500;
 use light_token::instruction::{
-    get_associated_token_address_and_bump, CreateAssociatedTokenAccount, MintTo,
-    LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR,
+    CreateAssociatedTokenAccount, LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR, MintTo,
+    get_associated_token_address_and_bump,
 };
 use pinocchio_swap::{
-    constants::*, discriminators, init::InitializeParams, swap::SwapParams, PoolState,
+    PoolState, constants::*, discriminators, init::InitializeParams, swap::SwapParams,
 };
 use sdk::SwapSdk;
 use solana_instruction::{AccountMeta, Instruction};
@@ -380,8 +380,8 @@ async fn test_full_lifecycle() {
         "pool_state should be cold after warp"
     );
 
-    let swap_sdk = SwapSdk::new(pool_state, pool_interface.data())
-        .expect("SwapSdk::new should succeed");
+    let swap_sdk =
+        SwapSdk::new(pool_state, pool_interface.data()).expect("SwapSdk::new should succeed");
 
     // ==================== PHASE 10: Fetch Cold Accounts ====================
     let pubkeys = swap_sdk.instruction_accounts(&sdk::SwapInstruction::Swap);
@@ -390,10 +390,15 @@ async fn test_full_lifecycle() {
         .await
         .expect("get_multiple_account_interfaces should succeed")
         .value;
-    let cold: Vec<_> = cold_accounts.into_iter().flatten().filter(|a| a.is_cold()).collect();
+    let cold: Vec<_> = cold_accounts
+        .into_iter()
+        .flatten()
+        .filter(|a| a.is_cold())
+        .collect();
 
     // ==================== PHASE 11: Build Load Instructions ====================
-    let mut all_specs = swap_sdk.load_specs(&cold)
+    let mut all_specs = swap_sdk
+        .load_specs(&cold)
         .expect("load_specs should succeed");
 
     // Also need to decompress user ATAs
@@ -414,14 +419,9 @@ async fn test_full_lifecycle() {
     all_specs.push(AccountSpec::Ata(user_ata_a_interface));
     all_specs.push(AccountSpec::Ata(user_ata_b_interface));
 
-    let load_ixs = create_load_instructions(
-        &all_specs,
-        payer.pubkey(),
-        env.config_pda,
-        &rpc,
-    )
-    .await
-    .expect("create_load_instructions should succeed");
+    let load_ixs = create_load_instructions(&all_specs, payer.pubkey(), env.config_pda, &rpc)
+        .await
+        .expect("create_load_instructions should succeed");
 
     // ==================== PHASE 12: Execute Decompression ====================
     println!("Decompressing accounts...");
