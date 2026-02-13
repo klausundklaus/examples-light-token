@@ -4,24 +4,17 @@ import { createRpc } from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
     createAtaInterface,
-    mintToInterface,
     getAssociatedTokenAddressInterface,
 } from "@lightprotocol/compressed-token";
+import { wrap, unwrap } from "@lightprotocol/compressed-token/unified";
 import {
-    unwrap,
-    getOrCreateAtaInterface,
-} from "@lightprotocol/compressed-token/unified";
-import {
+    TOKEN_PROGRAM_ID,
     createAssociatedTokenAccount,
-    TOKEN_2022_PROGRAM_ID,
+    mintTo,
 } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-// devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
-// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -31,21 +24,24 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
-    await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
-    await mintToInterface(rpc, payer, mint, destination, payer, 1000);
-    await getOrCreateAtaInterface(rpc, payer, mint, payer);
-
-    const splAta = await createAssociatedTokenAccount(
-        rpc,
-        payer,
-        mint,
-        payer.publicKey,
-        undefined,
-        TOKEN_2022_PROGRAM_ID,
+    // 1. Create SPL mint (includes SPL interface PDA registration)
+    const { mint } = await createMintInterface(
+        rpc, payer, payer, null, 9,
+        undefined, undefined, TOKEN_PROGRAM_ID,
     );
 
+    // 2. Create SPL ATA and mint tokens
+    const splAta = await createAssociatedTokenAccount(
+        rpc, payer, mint, payer.publicKey, undefined, TOKEN_PROGRAM_ID,
+    );
+    await mintTo(rpc, payer, mint, splAta, payer, 1000);
+
+    // 3. Create c-token ATA and wrap all SPL tokens into it
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, BigInt(1000));
+
+    // 4. Unwrap: move tokens back from light-token to SPL ATA
     const tx = await unwrap(rpc, payer, splAta, payer, mint, 500);
 
     console.log("Tx:", tx);

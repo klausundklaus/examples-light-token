@@ -11,10 +11,6 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-// devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
-// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -29,6 +25,7 @@ const payer = Keypair.fromSecretKey(
 
     // One-time: Register the SPL interface PDA for this mint.
     // This creates the omnibus account that holds SPL tokens when wrapped to light-token.
+    // Note: createMintInterface(... TOKEN_PROGRAM_ID) does this automatically for new mints.
     const ix = await LightTokenProgram.createSplInterface({
         feePayer: payer.publicKey,
         mint,

@@ -4,22 +4,23 @@ import {
     Transaction,
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
-    mintToInterface,
-    getOrCreateAtaInterface,
-    createLoadAtaInstructions,
+    createAtaInterface,
     getAssociatedTokenAddressInterface,
-} from "@lightprotocol/compressed-token/unified";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+    transferInterface,
+    createLoadAtaInstructions,
+} from "@lightprotocol/compressed-token";
+import { wrap } from "@lightprotocol/compressed-token/unified";
+import {
+    TOKEN_PROGRAM_ID,
+    createAssociatedTokenAccount,
+    mintTo,
+} from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-// devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
-// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -29,44 +30,36 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Create SPL mint with interface, fund an ATA
+    // --- Setup: create SPL mint, fund sender, transfer to recipient ---
     const { mint } = await createMintInterface(
-        rpc,
-        payer,
-        payer,
-        null,
-        9,
-        undefined,
-        undefined,
-        TOKEN_PROGRAM_ID
-    );
-    const { parsed: sourceAta } = await getOrCreateAtaInterface(
-        rpc,
-        payer,
-        mint,
-        payer
-    );
-    await mintToInterface(
-        rpc,
-        payer,
-        mint,
-        sourceAta.address,
-        payer,
-        bn(1_000_000)
+        rpc, payer, payer, null, 9,
+        undefined, undefined, TOKEN_PROGRAM_ID,
     );
 
-    // Receive: Load creates the ATA if needed and pulls any cold state to hot.
+    const splAta = await createAssociatedTokenAccount(
+        rpc, payer, mint, payer.publicKey, undefined, TOKEN_PROGRAM_ID,
+    );
+    await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
+
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const senderAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await wrap(rpc, payer, splAta, senderAta, payer, mint, BigInt(1_000_000));
+
+    // Transfer to a fresh recipient so they have cold tokens
     const recipient = Keypair.generate();
-    const ata = getAssociatedTokenAddressInterface(mint, recipient.publicKey);
+    await transferInterface(rpc, payer, senderAta, mint, recipient.publicKey, payer, 500);
+
+    // --- Receive: load creates ATA if needed + pulls cold state to hot ---
+    const recipientAta = getAssociatedTokenAddressInterface(mint, recipient.publicKey);
 
     // Returns TransactionInstruction[][]. Each inner array is one txn.
     // Almost always one. Empty = noop.
     const instructions = await createLoadAtaInstructions(
         rpc,
-        ata,
+        recipientAta,
         recipient.publicKey,
         mint,
-        payer.publicKey
+        payer.publicKey,
     );
 
     for (const ixs of instructions) {
@@ -74,5 +67,5 @@ const payer = Keypair.fromSecretKey(
         await sendAndConfirmTransaction(rpc, tx, [payer]);
     }
 
-    console.log("Recipient ATA:", ata.toBase58());
+    console.log("Recipient ATA:", recipientAta.toBase58());
 })();

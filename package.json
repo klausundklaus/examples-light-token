@@ -9,8 +9,8 @@
         "toolkit:payments": "npm run -w toolkits/payments-and-wallets"
     },
     "dependencies": {
-        "@lightprotocol/compressed-token": "^0.23.0-beta.5",
-        "@lightprotocol/stateless.js": "^0.23.0-beta.5",
+        "@lightprotocol/compressed-token": "^0.23.0-beta.6",
+        "@lightprotocol/stateless.js": "^0.23.0-beta.6",
         "@solana/spl-token": "^0.4.13",
         "@solana/web3.js": "1.98.4",
         "dotenv": "^16.5.0"

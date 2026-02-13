@@ -4,21 +4,24 @@ import {
     Transaction,
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { createRpc, bn } from "@lightprotocol/stateless.js";
+import { createRpc } from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
-    mintToInterface,
-    getOrCreateAtaInterface,
+    createAtaInterface,
+    getAssociatedTokenAddressInterface,
+} from "@lightprotocol/compressed-token";
+import {
     createTransferInterfaceInstructions,
+    wrap,
 } from "@lightprotocol/compressed-token/unified";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+    TOKEN_PROGRAM_ID,
+    createAssociatedTokenAccount,
+    mintTo,
+} from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-// devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
-// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -28,7 +31,7 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // Setup: Create SPL mint with interface, fund an ATA
+    // Setup: Create SPL mint (includes SPL interface PDA registration)
     const { mint } = await createMintInterface(
         rpc,
         payer,
@@ -39,20 +42,22 @@ const payer = Keypair.fromSecretKey(
         undefined,
         TOKEN_PROGRAM_ID
     );
-    const { parsed: sourceAta } = await getOrCreateAtaInterface(
+
+    // Fund payer with SPL tokens
+    const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
-        payer
+        payer.publicKey,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
-    await mintToInterface(
-        rpc,
-        payer,
-        mint,
-        sourceAta.address,
-        payer,
-        bn(1_000_000)
-    );
+    await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
+
+    // Create c-token ATA and wrap SPL tokens into it
+    await createAtaInterface(rpc, payer, mint, payer.publicKey);
+    const cTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await wrap(rpc, payer, splAta, cTokenAta, payer, mint, BigInt(1_000_000));
 
     const recipient = Keypair.generate();
 
@@ -62,7 +67,7 @@ const payer = Keypair.fromSecretKey(
         rpc,
         payer.publicKey,
         mint,
-        bn(100),
+        100,
         payer.publicKey,
         recipient.publicKey
     );
