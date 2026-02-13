@@ -14,8 +14,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
@@ -30,7 +30,7 @@ const payer = Keypair.fromSecretKey(
         9,
         mintKeypair,
         undefined,
-        TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID
     );
 
     console.log("Mint:", mint.toBase58());

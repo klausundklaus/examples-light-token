@@ -31,15 +31,18 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     // Setup: Get SPL tokens (needed to wrap)
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey
+    );
     await mintToInterface(rpc, payer, mint, destination, payer, 1000);
     const splAta = await createAssociatedTokenAccount(
         rpc,
@@ -47,20 +50,20 @@ const payer = Keypair.fromSecretKey(
         mint,
         payer.publicKey,
         undefined,
-        TOKEN_2022_PROGRAM_ID,
+        TOKEN_2022_PROGRAM_ID
     );
     await decompressInterface(rpc, payer, payer, mint, 1000);
 
     // Create wrap instruction
     const lightTokenAta = getAssociatedTokenAddressInterface(
         mint,
-        payer.publicKey,
+        payer.publicKey
     );
     await createAtaInterfaceIdempotent(rpc, payer, mint, payer.publicKey);
 
     const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
     const splInterfaceInfo = splInterfaceInfos.find(
-        (info) => info.isInitialized,
+        (info) => info.isInitialized
     );
 
     if (!splInterfaceInfo) throw new Error("No SPL interface found");
@@ -73,12 +76,12 @@ const payer = Keypair.fromSecretKey(
         500,
         splInterfaceInfo,
         9, // decimals - must match the mint decimals
-        payer.publicKey,
+        payer.publicKey
     );
 
     const tx = new Transaction().add(
         ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
-        ix,
+        ix
     );
     const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
 

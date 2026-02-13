@@ -13,8 +13,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {

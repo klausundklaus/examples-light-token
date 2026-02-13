@@ -22,8 +22,8 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
@@ -31,11 +31,13 @@ const payer = Keypair.fromSecretKey(
     // as compressed tokens (cold storage)
     // Setup: Get compressed tokens in light-token associated token account
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
-    await mintToCompressed(rpc, payer, mint, payer, [{ recipient: payer.publicKey, amount: 1000n }]);
+    await mintToCompressed(rpc, payer, mint, payer, [
+        { recipient: payer.publicKey, amount: 1000n },
+    ]);
 
     const lightTokenAta = getAssociatedTokenAddressInterface(
         mint,
-        payer.publicKey,
+        payer.publicKey
     );
 
     // Load compressed tokens to light associated token account (hot balance)
@@ -44,7 +46,7 @@ const payer = Keypair.fromSecretKey(
         lightTokenAta,
         payer.publicKey,
         mint,
-        payer.publicKey,
+        payer.publicKey
     );
 
     if (ixs.length === 0) return console.log("Nothing to load");

@@ -17,23 +17,18 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
-    await mintToCompressed(rpc, payer, mint, payer, [{ recipient: payer.publicKey, amount: 1000n }]);
+    await mintToCompressed(rpc, payer, mint, payer, [
+        { recipient: payer.publicKey, amount: 1000n },
+    ]);
 
     const delegate = Keypair.generate();
-    const tx = await approve(
-        rpc,
-        payer,
-        mint,
-        500,
-        payer,
-        delegate.publicKey,
-    );
+    const tx = await approve(rpc, payer, mint, 500, payer, delegate.publicKey);
 
     console.log("Tx:", tx);
 })();
