@@ -16,6 +16,10 @@ import {
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -27,12 +31,23 @@ const payer = Keypair.fromSecretKey(
 (async function () {
     // Setup: Create SPL mint, fund sender
     const { mint } = await createMintInterface(
-        rpc, payer, payer, null, 9,
-        undefined, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        payer,
+        null,
+        9,
+        undefined,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
 
     const splAta = await createAssociatedTokenAccount(
-        rpc, payer, mint, payer.publicKey, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        mint,
+        payer.publicKey,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
     await mintTo(rpc, payer, mint, splAta, payer, 1000);
 
@@ -42,7 +57,15 @@ const payer = Keypair.fromSecretKey(
 
     // Transfer to recipient
     const recipient = Keypair.generate();
-    await transferInterface(rpc, payer, senderAta, mint, recipient.publicKey, payer, 100);
+    await transferInterface(
+        rpc,
+        payer,
+        senderAta,
+        mint,
+        recipient.publicKey,
+        payer,
+        100
+    );
 
     // Get transaction history
     const result = await rpc.getSignaturesForOwnerInterface(payer.publicKey);

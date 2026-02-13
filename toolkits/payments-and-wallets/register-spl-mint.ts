@@ -11,6 +11,10 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(

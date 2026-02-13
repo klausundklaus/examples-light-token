@@ -16,6 +16,10 @@ import {
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -27,17 +31,28 @@ const payer = Keypair.fromSecretKey(
 (async function () {
     // 1. Create SPL mint (includes SPL interface PDA registration)
     const { mint } = await createMintInterface(
-        rpc, payer, payer, null, 9,
-        undefined, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        payer,
+        null,
+        9,
+        undefined,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
 
     // 2. Fund payer with SPL tokens
     const splAta = await createAssociatedTokenAccount(
-        rpc, payer, mint, payer.publicKey, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        mint,
+        payer.publicKey,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
     await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
 
-    // 3. Create c-token ATA and wrap SPL tokens into it
+    // 3. Create light-token ATA and wrap SPL tokens into it
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
     const senderAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     await wrap(rpc, payer, splAta, senderAta, payer, mint, BigInt(1_000_000));
@@ -51,7 +66,7 @@ const payer = Keypair.fromSecretKey(
         mint,
         recipient.publicKey,
         payer,
-        100,
+        100
     );
 
     console.log("Tx:", txId);

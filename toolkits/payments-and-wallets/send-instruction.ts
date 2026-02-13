@@ -22,6 +22,10 @@ import {
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -54,7 +58,7 @@ const payer = Keypair.fromSecretKey(
     );
     await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
 
-    // Create c-token ATA and wrap SPL tokens into it
+    // Create light-token ATA and wrap SPL tokens into it
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
     const cTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
     await wrap(rpc, payer, splAta, cTokenAta, payer, mint, BigInt(1_000_000));

@@ -21,6 +21,10 @@ import {
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
@@ -32,12 +36,23 @@ const payer = Keypair.fromSecretKey(
 (async function () {
     // --- Setup: create SPL mint, fund sender, transfer to recipient ---
     const { mint } = await createMintInterface(
-        rpc, payer, payer, null, 9,
-        undefined, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        payer,
+        null,
+        9,
+        undefined,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
 
     const splAta = await createAssociatedTokenAccount(
-        rpc, payer, mint, payer.publicKey, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        mint,
+        payer.publicKey,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
     await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
 
@@ -47,10 +62,21 @@ const payer = Keypair.fromSecretKey(
 
     // Transfer to a fresh recipient so they have cold tokens
     const recipient = Keypair.generate();
-    await transferInterface(rpc, payer, senderAta, mint, recipient.publicKey, payer, 500);
+    await transferInterface(
+        rpc,
+        payer,
+        senderAta,
+        mint,
+        recipient.publicKey,
+        payer,
+        500
+    );
 
     // --- Receive: load creates ATA if needed + pulls cold state to hot ---
-    const recipientAta = getAssociatedTokenAddressInterface(mint, recipient.publicKey);
+    const recipientAta = getAssociatedTokenAddressInterface(
+        mint,
+        recipient.publicKey
+    );
 
     // Returns TransactionInstruction[][]. Each inner array is one txn.
     // Almost always one. Empty = noop.
@@ -59,7 +85,7 @@ const payer = Keypair.fromSecretKey(
         recipientAta,
         recipient.publicKey,
         mint,
-        payer.publicKey,
+        payer.publicKey
     );
 
     for (const ixs of instructions) {

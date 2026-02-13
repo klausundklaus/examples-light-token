@@ -15,30 +15,48 @@ import {
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
+// devnet:
+// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
+// const rpc = createRpc(RPC_URL);
+// localnet:
 const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     // 1. Create SPL mint (includes SPL interface PDA registration)
     const { mint } = await createMintInterface(
-        rpc, payer, payer, null, 9,
-        undefined, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        payer,
+        null,
+        9,
+        undefined,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
 
     // 2. Create SPL ATA and mint tokens
     const splAta = await createAssociatedTokenAccount(
-        rpc, payer, mint, payer.publicKey, undefined, TOKEN_PROGRAM_ID,
+        rpc,
+        payer,
+        mint,
+        payer.publicKey,
+        undefined,
+        TOKEN_PROGRAM_ID
     );
     await mintTo(rpc, payer, mint, splAta, payer, 1000);
 
-    // 3. Create c-token ATA and wrap all SPL tokens into it
+    // 3. Create light-token ATA and wrap all SPL tokens into it
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const lightTokenAta = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey
+    );
     await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, BigInt(1000));
 
     // 4. Unwrap: move tokens back from light-token to SPL ATA
