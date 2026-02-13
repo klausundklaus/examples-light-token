@@ -19,15 +19,15 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     const existingMint = new PublicKey("YOUR_EXISTING_MINT_ADDRESS");
 
     // Register SPL interface PDA to enable interop with Light Tokens
-    const ix = await CompressedTokenProgram.createTokenPool({
+    const ix = await CompressedTokenProgram.createSplInterface({
         feePayer: payer.publicKey,
         mint: existingMint,
         tokenProgramId: TOKEN_PROGRAM_ID,
