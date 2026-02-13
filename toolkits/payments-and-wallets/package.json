@@ -4,6 +4,10 @@
     "description": "Light Token Payments Toolkit Examples",
     "type": "module",
     "scripts": {
+        "register-spl-mint": "tsx register-spl-mint.ts",
+        "receive": "tsx receive.ts",
+        "send-instruction": "tsx send-instruction.ts",
+        "send-action": "tsx send-action.ts",
         "send-and-receive": "tsx send-and-receive.ts",
         "get-balance": "tsx get-balance.ts",
         "get-history": "tsx get-history.ts",

@@ -318,34 +318,22 @@ await unwrap(rpc, payer, splAta, owner, mint, amount);
 
 ```typescript
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import {
-    createLoadAtaInstructions,
-    createUnwrapInstruction,
-    getAssociatedTokenAddressInterface,
-} from "@lightprotocol/compressed-token/unified";
-import { getSplInterfaceInfos } from "@lightprotocol/compressed-token";
+import { createUnwrapInstructions } from "@lightprotocol/compressed-token/unified";
 
-const lightTokenAta = getAssociatedTokenAddressInterface(mint, owner.publicKey);
 const splAta = getAssociatedTokenAddressSync(mint, owner.publicKey);
 
-const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
-const splInterfaceInfo = splInterfaceInfos.find((i) => i.isInitialized);
-
-const tx = new Transaction().add(
-    ...(await createLoadAtaInstructions(
-        rpc,
-        lightTokenAta,
-        owner.publicKey,
-        mint,
-        payer.publicKey
-    )),
-    createUnwrapInstruction(
-        lightTokenAta,
-        splAta,
-        owner.publicKey,
-        mint,
-        amount,
-        splInterfaceInfo
-    )
+// Handles loading cold state + unwrapping in one go.
+const instructions = await createUnwrapInstructions(
+    rpc,
+    splAta,
+    owner.publicKey,
+    mint,
+    amount,
+    payer.publicKey
 );
+
+for (const ixs of instructions) {
+    const tx = new Transaction().add(...ixs);
+    await sendAndConfirmTransaction(rpc, tx, [payer, owner]);
+}
 ```

@@ -6,7 +6,7 @@ import {
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { createRpc } from "@lightprotocol/stateless.js";
-import { CompressedTokenProgram } from "@lightprotocol/compressed-token";
+import { LightTokenProgram } from "@lightprotocol/compressed-token";
 import {
     MINT_SIZE,
     TOKEN_2022_PROGRAM_ID,
@@ -56,12 +56,11 @@ const payer = Keypair.fromSecretKey(
 
     // Instruction 3: Create SPL interface PDA
     // Holds Token-2022 tokens when wrapped to light-token
-    const createSplInterfaceIx =
-        await CompressedTokenProgram.createSplInterface({
-            feePayer: payer.publicKey,
-            mint: mintKeypair.publicKey,
-            tokenProgramId: TOKEN_2022_PROGRAM_ID,
-        });
+    const createSplInterfaceIx = await LightTokenProgram.createSplInterface({
+        feePayer: payer.publicKey,
+        mint: mintKeypair.publicKey,
+        tokenProgramId: TOKEN_2022_PROGRAM_ID,
+    });
 
     const tx = new Transaction().add(
         createMintAccountIx,

@@ -1,7 +1,6 @@
 import "dotenv/config";
 import {
     Keypair,
-    ComputeBudgetProgram,
     Transaction,
     sendAndConfirmTransaction,
 } from "@solana/web3.js";
@@ -11,9 +10,8 @@ import {
     createAtaInterface,
     mintToInterface,
     getAssociatedTokenAddressInterface,
-    getSplInterfaceInfos,
-} from "@lightprotocol/compressed-token";
-import { createUnwrapInstruction } from "@lightprotocol/compressed-token/unified";
+    createUnwrapInstructions,
+} from "@lightprotocol/compressed-token/unified";
 import {
     createAssociatedTokenAccount,
     TOKEN_2022_PROGRAM_ID,
@@ -29,52 +27,44 @@ const rpc = createRpc();
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
-        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8")),
-    ),
+        JSON.parse(readFileSync(`${homedir()}/.config/solana/id.json`, "utf8"))
+    )
 );
 
 (async function () {
     // Setup: Create and mint tokens to light-token associated token account
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const destination = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    const destination = getAssociatedTokenAddressInterface(
+        mint,
+        payer.publicKey
+    );
     await mintToInterface(rpc, payer, mint, destination, payer, 1000);
 
-    // Unwrap light-token to SPL associated token account
-    const lightTokenAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
-
+    // Create destination SPL ATA
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
         mint,
         payer.publicKey,
         undefined,
-        TOKEN_2022_PROGRAM_ID,
+        TOKEN_2022_PROGRAM_ID
     );
 
-    const splInterfaceInfos = await getSplInterfaceInfos(rpc, mint);
-    const splInterfaceInfo = splInterfaceInfos.find(
-        (info) => info.isInitialized,
-    );
-
-    if (!splInterfaceInfo) throw new Error("No SPL interface found");
-
-    const ix = createUnwrapInstruction(
-        lightTokenAta,
+    // Returns TransactionInstruction[][]. Each inner array is one txn.
+    // Handles loading cold state + unwrapping in one go.
+    const instructions = await createUnwrapInstructions(
+        rpc,
         splAta,
         payer.publicKey,
         mint,
         500,
-        splInterfaceInfo,
-        9, // decimals - must match the mint decimals
-        payer.publicKey,
+        payer.publicKey
     );
 
-    const tx = new Transaction().add(
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }),
-        ix,
-    );
-    const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
-
-    console.log("Tx:", signature);
+    for (const ixs of instructions) {
+        const tx = new Transaction().add(...ixs);
+        const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
+        console.log("Tx:", signature);
+    }
 })();

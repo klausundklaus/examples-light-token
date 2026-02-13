@@ -24,18 +24,20 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    const existingMint = new PublicKey("YOUR_EXISTING_MINT_ADDRESS");
+    // Replace with your existing SPL mint (e.g. USDC)
+    const mint = new PublicKey("YOUR_EXISTING_MINT_ADDRESS");
 
-    // Register SPL interface PDA to enable interop with Light Tokens
+    // One-time: Register the SPL interface PDA for this mint.
+    // This creates the omnibus account that holds SPL tokens when wrapped to light-token.
     const ix = await LightTokenProgram.createSplInterface({
         feePayer: payer.publicKey,
-        mint: existingMint,
+        mint,
         tokenProgramId: TOKEN_PROGRAM_ID,
     });
 
     const tx = new Transaction().add(ix);
     const signature = await sendAndConfirmTransaction(rpc, tx, [payer]);
 
-    console.log("Mint:", existingMint.toBase58());
+    console.log("Mint:", mint.toBase58());
     console.log("Tx:", signature);
 })();
