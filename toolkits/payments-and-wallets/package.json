@@ -15,7 +15,7 @@
         "unwrap": "tsx unwrap.ts"
     },
     "dependencies": {
-        "@lightprotocol/compressed-token": "^0.23.0-beta.7",
-        "@lightprotocol/stateless.js": "^0.23.0-beta.7"
+        "@lightprotocol/compressed-token": "^0.23.0-beta.8",
+        "@lightprotocol/stateless.js": "^0.23.0-beta.8"
     }
 }
