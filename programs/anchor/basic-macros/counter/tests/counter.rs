@@ -12,13 +12,17 @@ use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
     ProgramTestConfig, Rpc,
 };
-use light_token::instruction::RENT_SPONSOR;
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;
 use solana_signer::Signer;
 
 const PROGRAM_ID: Pubkey = counter::ID;
+
+/// Derives the rent sponsor PDA for the counter program.
+fn rent_sponsor_pda() -> Pubkey {
+    Pubkey::find_program_address(&[b"rent_sponsor"], &PROGRAM_ID).0
+}
 
 /// Setup: create test RPC and initialize rent-free config for the counter program.
 async fn setup() -> (LightProgramTest, Keypair, Pubkey) {
@@ -34,7 +38,7 @@ async fn setup() -> (LightProgramTest, Keypair, Pubkey) {
         &PROGRAM_ID,
         &payer.pubkey(),
         &program_data_pda,
-        RENT_SPONSOR,
+        rent_sponsor_pda(),
         payer.pubkey(),
     )
     .build();
@@ -42,6 +46,16 @@ async fn setup() -> (LightProgramTest, Keypair, Pubkey) {
     rpc.create_and_send_transaction(&[init_config_ix], &payer.pubkey(), &[&payer])
         .await
         .expect("initialize rent-free config");
+
+    // Fund the rent sponsor PDA. In production, the protocol funds this automatically.
+    let fund_ix = solana_sdk::system_instruction::transfer(
+        &payer.pubkey(),
+        &rent_sponsor_pda(),
+        10_000_000,
+    );
+    rpc.create_and_send_transaction(&[fund_ix], &payer.pubkey(), &[&payer])
+        .await
+        .expect("fund rent sponsor");
 
     (rpc, payer, compression_config)
 }
@@ -68,6 +82,7 @@ async fn test_counter_lifecycle() {
         fee_payer: payer.pubkey(),
         owner: payer.pubkey(),
         compression_config,
+        pda_rent_sponsor: rent_sponsor_pda(),
         counter: counter_pda,
         system_program: solana_sdk::system_program::ID,
     };

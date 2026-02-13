@@ -1,8 +1,10 @@
 #![allow(unexpected_cfgs, deprecated)]
 
 use anchor_lang::prelude::*;
-use light_sdk::{interface::CreateAccountsProof, LightDiscriminator};
-use light_token::anchor::{derive_light_cpi_signer, light_program, CompressionInfo, CpiSigner, LightAccount, LightAccounts};
+use light_account::{
+    derive_light_cpi_signer, light_program, CompressionInfo, CreateAccountsProof, CpiSigner,
+    LightAccount, LightAccounts, LightDiscriminator,
+};
 
 declare_id!("PDAm7XVHEkBvzBYDh8qF3z8NxnYQzPjGQJKcHVmMZpT");
 
@@ -14,7 +16,7 @@ pub const COUNTER_SEED: &[u8] = b"counter";
 #[derive(Default, Debug, InitSpace, LightAccount)]
 #[account]
 pub struct Counter {
-    pub compression_info: Option<CompressionInfo>,
+    pub compression_info: CompressionInfo,
     pub owner: Pubkey,
     pub count: u64,
 }
@@ -63,10 +65,14 @@ pub struct CreateCounter<'info> {
     /// CHECK: Validated by Light Protocol CPI.
     pub compression_config: AccountInfo<'info>,
 
+    /// CHECK: PDA rent sponsor for compression rent reimbursement.
+    #[account(mut)]
+    pub pda_rent_sponsor: AccountInfo<'info>,
+
     #[account(
         init,
         payer = fee_payer,
-        space = 8 + Counter::INIT_SPACE,
+        space = 8 + <Counter as anchor_lang::Space>::INIT_SPACE,
         seeds = [COUNTER_SEED, owner.key().as_ref()],
         bump,
     )]
