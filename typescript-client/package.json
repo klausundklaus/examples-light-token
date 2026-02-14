@@ -4,8 +4,9 @@
     "type": "module",
     "description": "Working examples for light-token operations on Solana devnet",
     "dependencies": {
-        "@lightprotocol/compressed-token": "beta",
-        "@lightprotocol/stateless.js": "beta",
+        "@lightprotocol/compressed-token": "file:../../light-protocol/js/compressed-token",
+        "@lightprotocol/stateless.js": "file:../../light-protocol/js/stateless.js",
+        "@solana/spl-token": "^0.4.14",
         "@solana/web3.js": "^1.98.0",
         "dotenv": "^16.0.0"
     },
@@ -42,6 +43,12 @@
         "load-ata:instruction": "tsx instructions/load-ata.ts",
         "delegate:approve": "tsx actions/delegate-approve.ts",
         "delegate:revoke": "tsx actions/delegate-revoke.ts",
-        "merge-accounts": "tsx actions/merge-token-accounts.ts"
+        "merge-accounts": "tsx actions/merge-token-accounts.ts",
+        "test:load-ata": "npm run test:load-ata:cold && npm run test:load-ata:spl && npm run test:load-ata:t22 && npm run test:load-ata:transfer && npm run test:load-ata:idempotency",
+        "test:load-ata:cold": "tsx tests/load-ata/cold-only.ts",
+        "test:load-ata:spl": "tsx tests/load-ata/spl-sources.ts",
+        "test:load-ata:t22": "tsx tests/load-ata/t22-sources.ts",
+        "test:load-ata:transfer": "tsx tests/load-ata/load-and-transfer.ts",
+        "test:load-ata:idempotency": "tsx tests/load-ata/idempotency.ts"
     }
 }
