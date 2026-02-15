@@ -4,7 +4,7 @@ Transfer, wrap, unwrap, and query light-tokens signed with Privy wallets. Learn 
 
 - **[Node.js](nodejs/)** — Server-side scripts using `@privy-io/node` with server wallet signing
 - **[React](react/)** — Browser app using `@privy-io/react-auth` with embedded wallet signing
-- **[Setup scripts](scripts/)** — Create test mints and fund wallets on devnet (local keypair, no Privy needed)
+- **[Setup scripts](scripts/)** — Create test mints and fund wallets on devnet
 
 | Creation cost     | SPL                 | Light Token          |
 | :---------------- | :------------------ | :------------------- |
