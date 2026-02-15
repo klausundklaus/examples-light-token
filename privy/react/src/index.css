@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Ensure Privy modal displays above everything */
+#privy-modal-content,
+[data-privy-dialog],
+[data-radix-portal] {
+  z-index: 9999 !important;
+}
+
+/* Fix for Privy iframe */
+iframe[src*="privy"] {
+  z-index: 9999 !important;
+}
+
+.button {
+  @apply flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer;
+}
+
+.button-primary {
+  @apply px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.input {
+  @apply w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+}
+
+.section {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6;
+}

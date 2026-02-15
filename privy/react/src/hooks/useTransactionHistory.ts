@@ -1,0 +1,63 @@
+import { useState, useCallback } from 'react';
+import { PublicKey } from '@solana/web3.js';
+import { createRpc } from '@lightprotocol/stateless.js';
+
+export interface Transaction {
+  signature: string;
+  slot: number;
+  blockTime: number;
+  timestamp: string;
+}
+
+export function useTransactionHistory() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTransactionHistory = useCallback(
+    async (
+      ownerAddress: string,
+      limit: number = 10,
+    ) => {
+      if (!ownerAddress) {
+        setTransactions([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const rpc = createRpc(import.meta.env.VITE_HELIUS_RPC_URL);
+        const owner = new PublicKey(ownerAddress);
+
+        const result = await rpc.getSignaturesForOwnerInterface(owner);
+
+        if (!result.signatures || result.signatures.length === 0) {
+          setTransactions([]);
+          return;
+        }
+
+        const limitedSignatures = result.signatures.slice(0, limit);
+
+        const basicTransactions = limitedSignatures.map((sig) => ({
+          signature: sig.signature,
+          slot: sig.slot,
+          blockTime: sig.blockTime ?? 0,
+          timestamp: sig.blockTime ? new Date(sig.blockTime * 1000).toISOString() : '',
+        }));
+
+        setTransactions(basicTransactions);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
+        setTransactions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  return { transactions, isLoading, error, fetchTransactionHistory };
+}
