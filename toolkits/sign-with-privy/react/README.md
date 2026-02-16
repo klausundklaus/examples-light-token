@@ -27,7 +27,7 @@ Light Token gives you rent-free token accounts on Solana. Light-token accounts h
 - **[useWrap.ts](src/hooks/useWrap.ts)** — Wrap SPL or T22 tokens into light-token associated token account. Auto-detects token program.
 - **[useUnwrap.ts](src/hooks/useUnwrap.ts)** — Unwrap light-token associated token account back to SPL or T22. Hook only, not wired into UI.
 - **[useLightBalance.ts](src/hooks/useLightBalance.ts)** — Query hot, cold, and unified Light Token balance for a single mint.
-- **[useLightTokenBalances.ts](src/hooks/useLightTokenBalances.ts)** — Query balance breakdown: SOL, SPL, T22, light-token, and compressed.
+- **[useUnifiedBalance.ts](src/hooks/useUnifiedBalance.ts)** — Query balance breakdown: SOL, SPL, Token 2022, light-token hot, and compressed cold.
 - **[useTransactionHistory.ts](src/hooks/useTransactionHistory.ts)** — Fetch transaction history for light-token operations.
 
 #### Components

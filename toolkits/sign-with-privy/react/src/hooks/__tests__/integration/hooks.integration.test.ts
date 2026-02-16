@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Keypair } from '@solana/web3.js';
 import { renderHook, act } from '@testing-library/react';
-import { useLightTokenBalances } from '../../useLightTokenBalances';
+import { useUnifiedBalance } from '../../useUnifiedBalance';
 import { useTransactionHistory } from '../../useTransactionHistory';
 
 const RPC_URL = import.meta.env.VITE_HELIUS_RPC_URL;
@@ -10,9 +10,9 @@ const RPC_URL = import.meta.env.VITE_HELIUS_RPC_URL;
 const TEST_ADDRESS = Keypair.generate().publicKey.toBase58();
 
 describe.runIf(RPC_URL)('hooks (devnet integration)', () => {
-  describe('useLightTokenBalances', () => {
+  describe('useUnifiedBalance', () => {
     it('fetches SOL balance for empty wallet', async () => {
-      const { result } = renderHook(() => useLightTokenBalances());
+      const { result } = renderHook(() => useUnifiedBalance());
 
       await act(async () => {
         await result.current.fetchBalances(TEST_ADDRESS);

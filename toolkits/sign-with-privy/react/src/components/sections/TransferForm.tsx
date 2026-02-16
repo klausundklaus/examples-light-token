@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ConnectedStandardSolanaWallet } from '@privy-io/js-sdk-core';
 import { useSignTransaction } from '@privy-io/react-auth/solana';
 import { useTransfer } from '../../hooks/useTransfer';
-import type { TokenBalance } from '../../hooks/useLightTokenBalances';
+import type { TokenBalance } from '../../hooks/useUnifiedBalance';
 import CopyButton from '../reusables/CopyButton';
 import Section from '../reusables/Section';
 

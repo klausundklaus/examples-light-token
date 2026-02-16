@@ -18,7 +18,7 @@ export interface TokenBalance {
   unified: bigint;
 }
 
-export function useLightTokenBalances() {
+export function useUnifiedBalance() {
   const [balances, setBalances] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 

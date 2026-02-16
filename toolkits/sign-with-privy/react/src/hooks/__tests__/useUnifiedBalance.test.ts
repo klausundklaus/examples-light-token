@@ -20,7 +20,7 @@ vi.mock('@lightprotocol/compressed-token/unified', () => ({
 }));
 
 // Import after mocks are hoisted
-import { useLightTokenBalances } from '../useLightTokenBalances';
+import { useUnifiedBalance } from '../useUnifiedBalance';
 
 const OWNER = '7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV';
 
@@ -35,9 +35,9 @@ beforeEach(() => {
   mockGetAtaInterface.mockRejectedValue(new Error('Account not found'));
 });
 
-describe('useLightTokenBalances', () => {
+describe('useUnifiedBalance', () => {
   it('returns empty balances and does not fetch when address is empty', async () => {
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances('');
@@ -48,7 +48,7 @@ describe('useLightTokenBalances', () => {
   });
 
   it('fetches SOL balance as native entry', async () => {
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances(OWNER);
@@ -75,7 +75,7 @@ describe('useLightTokenBalances', () => {
       })
       .mockResolvedValueOnce({ value: [] });
 
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances(OWNER);
@@ -109,7 +109,7 @@ describe('useLightTokenBalances', () => {
       parsed: { amount: 1_000_000n },
     });
 
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances(OWNER);
@@ -149,7 +149,7 @@ describe('useLightTokenBalances', () => {
       },
     });
 
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances(OWNER);
@@ -176,7 +176,7 @@ describe('useLightTokenBalances', () => {
       },
     });
 
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances(OWNER);
@@ -195,7 +195,7 @@ describe('useLightTokenBalances', () => {
   });
 
   it('sets isLoading during fetch and clears after', async () => {
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     expect(result.current.isLoading).toBe(false);
 
@@ -224,7 +224,7 @@ describe('useLightTokenBalances', () => {
       new Error('RPC down'),
     );
 
-    const { result } = renderHook(() => useLightTokenBalances());
+    const { result } = renderHook(() => useUnifiedBalance());
 
     await act(async () => {
       await result.current.fetchBalances(OWNER);

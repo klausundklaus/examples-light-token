@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useWallets } from '@privy-io/react-auth/solana';
-import { useLightTokenBalances } from './hooks/useLightTokenBalances';
+import { useUnifiedBalance } from './hooks/useUnifiedBalance';
 import { Header } from './components/ui/Header';
 import WalletInfo from './components/sections/WalletInfo';
 import TransferForm from './components/sections/TransferForm';
@@ -12,7 +12,7 @@ import { ArrowLeftIcon, ClipboardIcon } from '@heroicons/react/24/outline';
 export default function App() {
   const { login, logout, authenticated, user } = usePrivy();
   const { wallets } = useWallets();
-  const { balances, isLoading: isLoadingBalances, fetchBalances } = useLightTokenBalances();
+  const { balances, isLoading: isLoadingBalances, fetchBalances } = useUnifiedBalance();
 
   const [selectedWallet, setSelectedWallet] = useState<string>('');
   const [selectedMint, setSelectedMint] = useState<string>('');

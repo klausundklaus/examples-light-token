@@ -97,7 +97,7 @@ Each hook returns `{ actionFn, isLoading }` and accepts `{ params, wallet, signT
 - `useWrap` — SPL to light-token (creates light-token ATA idempotently, verifies SPL balance)
 - `useUnwrap` — light-token to SPL T22 (creates T22 ATA if missing)
 - `useLightBalance` — single-mint hook returning hot, cold, and unified Light Token balance
-- `useLightTokenBalances` — fetches SOL, SPL (Token Program), and light-token (T22) balances by parsing raw account data
+- `useUnifiedBalance` — fetches SOL, SPL (Token Program), and light-token (Token 2022) balances by parsing raw account data
 - `useTransactionHistory` — queries `getSignaturesForOwnerInterface`
 
 ## Environment variables
