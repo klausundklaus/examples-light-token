@@ -69,6 +69,7 @@ Standalone async functions, each creating their own `PrivyClient` and `createRpc
 - `wrap.ts` — `createWrapInstruction` with SPL interface lookup via `getSplInterfaceInfos`
 - `unwrap.ts` — `createUnwrapInstruction` from `@lightprotocol/compressed-token/unified`
 - `load.ts` — `createLoadAtaInstructionsFromInterface` to consolidate cold + SPL + T22 into light-token ATA
+- `light-balance.ts` — queries hot (`getAtaInterface`) and cold (`getCompressedTokenBalancesByOwnerV2`) for a single mint; returns hot, cold, unified
 - `balances.ts` — queries hot (`getAtaInterface`), cold (`getCompressedTokenBalancesByOwnerV2`), SPL T22 (`getTokenAccountsByOwner` + raw data parsing)
 - `get-transaction-history.ts` — `getSignaturesForOwnerInterface`
 - `config.ts` — centralized env var exports with validation
@@ -95,6 +96,7 @@ Each hook returns `{ actionFn, isLoading }` and accepts `{ params, wallet, signT
 - `useTransfer` — light-token ATA to ATA transfer
 - `useWrap` — SPL to light-token (creates light-token ATA idempotently, verifies SPL balance)
 - `useUnwrap` — light-token to SPL T22 (creates T22 ATA if missing)
+- `useLightBalance` — single-mint hook returning hot, cold, and unified Light Token balance
 - `useLightTokenBalances` — fetches SOL, SPL (Token Program), and light-token (T22) balances by parsing raw account data
 - `useTransactionHistory` — queries `getSignaturesForOwnerInterface`
 

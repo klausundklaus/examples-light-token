@@ -6,6 +6,7 @@
     "transfer": "tsx src/transfer.ts",
     "wrap": "tsx src/wrap.ts",
     "unwrap": "tsx src/unwrap.ts",
+    "light-balance": "tsx src/light-balance.ts",
     "balances": "tsx src/balances.ts",
     "history": "tsx src/get-transaction-history.ts"
   },

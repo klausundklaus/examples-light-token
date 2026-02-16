@@ -9,7 +9,6 @@ Privy handles user authentication and wallet management. You build transactions 
 
 Light Token gives you rent-free token accounts on Solana. Light-token accounts hold balances from any light, SPL, or Token-2022 mint.
 
-
 ## What you will implement
 
 | | SPL | Light Token |
@@ -27,6 +26,7 @@ Light Token gives you rent-free token accounts on Solana. Light-token accounts h
 - **[wrap.ts](src/wrap.ts)** — Wrap SPL or T22 tokens into light-token associated token account.
 - **[unwrap.ts](src/unwrap.ts)** — Unwrap light-token associated token account back to SPL or T22.
 - **[load.ts](src/load.ts)** — Consolidate cold (compressed) and SPL/T22 balances into the light-token associated token account.
+- **[light-balance.ts](src/light-balance.ts)** — Query hot, cold, and unified Light Token balance for a single mint.
 - **[balances.ts](src/balances.ts)** — Query balance breakdown: hot, cold, SPL/T22, and SOL.
 - **[get-transaction-history.ts](src/get-transaction-history.ts)** — Fetch transaction history for light-token operations.
 
@@ -109,6 +109,7 @@ These are the operations your app calls at runtime. Transactions are signed serv
 | `npm run wrap` | Wrap SPL or T22 tokens into light-token associated token account. Auto-detects token program from the mint's interface PDA. |
 | `npm run unwrap` | Unwrap light-token associated token account back to SPL or T22. Auto-detects token program. |
 | `npm run load` | Consolidate cold (compressed) and SPL/T22 balances into the light-token associated token account. |
+| `npm run light-balance` | Query Light Token balance (hot, cold, unified) for `TEST_MINT`. |
 | `npm run balances` | Query balance breakdown: hot, cold, SPL/T22, and SOL. |
 | `npm run history` | Fetch transaction history for light-token interface operations. |
 

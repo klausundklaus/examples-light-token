@@ -67,6 +67,7 @@ npm run transfer      # Light-token ATA → ATA transfer (auto-loads cold balanc
 npm run wrap          # SPL/T22 → light-token ATA
 npm run unwrap        # Light-token ATA → SPL/T22
 npm run load          # Consolidate cold + SPL + T22 into light-token ATA
+npm run light-balance # Query Light Token balance (hot, cold, unified) for TEST_MINT
 npm run balances      # Query balance breakdown (hot, cold, SPL/T22, SOL)
 npm run history       # Transaction history for light-token interface ops
 
@@ -172,7 +173,7 @@ Server-side scripts that sign transactions via Privy's wallet API instead of a l
 
 **Two workspaces, two signing modes**:
 
-- **App operations** (`toolkits/sign-with-privy/nodejs/src/*.ts`): Privy server wallet signing. Six scripts: `transfer`, `wrap`, `unwrap`, `load`, `balances`, `get-transaction-history`.
+- **App operations** (`toolkits/sign-with-privy/nodejs/src/*.ts`): Privy server wallet signing. Seven scripts: `transfer`, `wrap`, `unwrap`, `load`, `light-balance`, `balances`, `get-transaction-history`.
 - **Setup helpers** (`toolkits/sign-with-privy/scripts/src/*.ts`): Separate npm workspace. Uses local filesystem keypair (`~/.config/solana/id.json`), not Privy. Scripts: `mint-spl-and-wrap`, `mint-spl`, `register-spl-interface`.
 
 **Config**: All env vars centralized in `src/config.ts` with validation. Exports `TREASURY_WALLET_ID`, `TREASURY_WALLET_ADDRESS`, `TREASURY_AUTHORIZATION_KEY`, `HELIUS_RPC_URL`, `TEST_MINT`, and convenience defaults (`DEFAULT_TEST_RECIPIENT`, `DEFAULT_AMOUNT`, `DEFAULT_DECIMALS`). Scripts import from `./config.js` (ESM `.js` extension required).
@@ -183,6 +184,7 @@ Server-side scripts that sign transactions via Privy's wallet API instead of a l
 - **wrap** — Manually assembles 3 instructions: `setComputeUnitLimit(200_000)` + `createAssociatedTokenAccountInterfaceIdempotentInstruction` + `createWrapInstruction`. Calls `getSplInterfaceInfos` (from root `@lightprotocol/compressed-token`, not `/unified`) to get `tokenProgram` and derive the correct SPL ATA.
 - **unwrap** — Calls `createUnwrapInstructions` from `/unified` subpath. Returns batched instructions handling load + unwrap together.
 - **load** — Calls `createLoadAtaInstructions`. Can return empty array (nothing to load). Derives light-token ATA via `getAssociatedTokenAddressInterface`.
+- **light-balance** — Queries hot (`getAtaInterface`) and cold (`getCompressedTokenBalancesByOwnerV2`) for a single `TEST_MINT`. Returns hot, cold, unified.
 - **balances** — Queries 4 sources: SOL (`getBalance`), hot (`getAtaInterface`), cold (`getCompressedTokenBalancesByOwnerV2`), SPL + T22 (raw `getTokenAccountsByOwner` with manual buffer parsing at offset 64). Hardcodes decimals=9.
 - **get-transaction-history** — Calls `getSignaturesForOwnerInterface`, a light-token specific RPC method.
 
