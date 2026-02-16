@@ -48,9 +48,6 @@ export async function getBalances(
     return entry;
   };
 
-  // Track Light Token associated token accounts so we don't double-count them as Token 2022 balances
-  const lightAtaMints = new Set<string>();
-
   // 1. SPL accounts (standard token program)
   try {
     const splAccounts = await rpc.getTokenAccountsByOwner(owner, {
@@ -68,31 +65,24 @@ export async function getBalances(
     // No SPL accounts
   }
 
-  // 2. T22 accounts (Token-2022) — skip Light Token associated token accounts
+  // 2. Token 2022 accounts
   try {
     const t22Accounts = await rpc.getTokenAccountsByOwner(owner, {
       programId: TOKEN_2022_PROGRAM_ID,
     });
-    for (const {pubkey, account} of t22Accounts.value) {
+    for (const {account} of t22Accounts.value) {
       const buf = toBuffer(account.data);
       if (!buf || buf.length < 72) continue;
       const mint = new PublicKey(buf.subarray(0, 32));
+      const amount = buf.readBigUInt64LE(64);
       const mintStr = mint.toBase58();
-      const expectedAta = getAssociatedTokenAddressInterface(mint, owner);
-      if (pubkey.equals(expectedAta)) {
-        // Light Token associated token account — query via getAtaInterface instead
-        lightAtaMints.add(mintStr);
-        getOrCreate(mintStr);
-      } else {
-        const amount = buf.readBigUInt64LE(64);
-        getOrCreate(mintStr).t22 += toUiAmount(amount, 9);
-      }
+      getOrCreate(mintStr).t22 += toUiAmount(amount, 9);
     }
   } catch {
     // No Token 2022 accounts
   }
 
-  // 3. Hot balance via getAtaInterface (parallelize per mint)
+  // 3. Hot balance from Light Token associated token account
   const mintKeys = [...mintMap.keys()];
   await Promise.allSettled(
     mintKeys.map(async (mintStr) => {
@@ -107,7 +97,7 @@ export async function getBalances(
     }),
   );
 
-  // 4. Cold balance (compressed token accounts — all mints at once)
+  // 4. Cold balance from compressed token accounts
   try {
     const compressed = await rpc.getCompressedTokenBalancesByOwnerV2(owner);
     for (const item of compressed.value.items) {
@@ -163,7 +153,7 @@ getBalances(TREASURY_WALLET_ADDRESS)
       console.log(`  Hot (Light Token associated token account): ${t.hot}`);
       console.log(`  Cold (compressed):     ${t.cold}`);
       console.log(`  SPL:                   ${t.spl}`);
-      console.log(`  T22:                   ${t.t22}`);
+      console.log(`  Token 2022:            ${t.t22}`);
     }
   })
   .catch(console.error);

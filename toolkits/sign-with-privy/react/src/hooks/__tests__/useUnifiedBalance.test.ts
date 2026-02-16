@@ -9,13 +9,10 @@ vi.mock('@lightprotocol/stateless.js', () => ({
   createRpc: () => mockRpc,
 }));
 
-// Deterministic light-token ATA address for mock comparison
-const MOCK_LIGHT_ATA = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
-
 const mockGetAtaInterface = vi.fn();
 
 vi.mock('@lightprotocol/compressed-token/unified', () => ({
-  getAssociatedTokenAddressInterface: () => MOCK_LIGHT_ATA,
+  getAssociatedTokenAddressInterface: () => PublicKey.unique(),
   getAtaInterface: (...args: unknown[]) => mockGetAtaInterface(...args),
 }));
 
@@ -31,7 +28,7 @@ beforeEach(() => {
   mockRpc.getCompressedTokenBalancesByOwnerV2.mockResolvedValue({
     value: { items: [] },
   });
-  // Default: getAtaInterface throws (no ATA exists)
+  // Default: getAtaInterface throws (no associated token account exists)
   mockGetAtaInterface.mockRejectedValue(new Error('Account not found'));
 });
 
@@ -68,7 +65,7 @@ describe('useUnifiedBalance', () => {
     const mint = PublicKey.unique();
     const data = buildTokenAccountData(mint, 500_000n);
 
-    // First call: SPL accounts, second call: T22 accounts
+    // First call: SPL accounts, second call: Token 2022 accounts
     mockRpc.getTokenAccountsByOwner
       .mockResolvedValueOnce({
         value: [{ pubkey: PublicKey.unique(), account: { data } }],
@@ -93,49 +90,10 @@ describe('useUnifiedBalance', () => {
     expect(spl!.isNative).toBe(false);
   });
 
-  it('excludes light-token ATA from T22 balance', async () => {
-    const mint = PublicKey.unique();
-    const data = buildTokenAccountData(mint, 1_000_000n);
-
-    // SPL: empty, T22: one account whose pubkey matches the mock light ATA
-    mockRpc.getTokenAccountsByOwner
-      .mockResolvedValueOnce({ value: [] })
-      .mockResolvedValueOnce({
-        value: [{ pubkey: MOCK_LIGHT_ATA, account: { data } }],
-      });
-
-    // getAtaInterface returns the hot balance for this mint
-    mockGetAtaInterface.mockResolvedValue({
-      parsed: { amount: 1_000_000n },
-    });
-
-    const { result } = renderHook(() => useUnifiedBalance());
-
-    await act(async () => {
-      await result.current.fetchBalances(OWNER);
-    });
-
-    const entry = result.current.balances.find(
-      (b) => b.mint === mint.toBase58(),
-    );
-    expect(entry).toBeDefined();
-    // T22 balance should be 0 (light-token ATA excluded)
-    expect(entry!.t22).toBe(0n);
-    // Hot balance should come from getAtaInterface
-    expect(entry!.hot).toBe(1_000_000n);
-    expect(entry!.unified).toBe(1_000_000n);
-  });
-
   it('aggregates hot and cold balances into unified', async () => {
     const mint = PublicKey.unique();
-    const hotData = buildTokenAccountData(mint, 300_000n);
 
-    // T22 account is a light-token ATA
-    mockRpc.getTokenAccountsByOwner
-      .mockResolvedValueOnce({ value: [] })
-      .mockResolvedValueOnce({
-        value: [{ pubkey: MOCK_LIGHT_ATA, account: { data: hotData } }],
-      });
+    mockRpc.getTokenAccountsByOwner.mockResolvedValue({ value: [] });
 
     // Hot balance via getAtaInterface: 300k
     mockGetAtaInterface.mockResolvedValue({
@@ -161,7 +119,6 @@ describe('useUnifiedBalance', () => {
     expect(entry).toBeDefined();
     expect(entry!.hot).toBe(300_000n);
     expect(entry!.cold).toBe(200_000n);
-    // unified = hot + cold
     expect(entry!.unified).toBe(500_000n);
     expect(entry!.t22).toBe(0n);
   });
