@@ -1,0 +1,23 @@
+{
+  "name": "privy-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "mint:spl-and-wrap": "tsx src/mint-spl-and-wrap.ts",
+    "mint:spl-and-wrap:spl": "tsx src/mint-spl-and-wrap.ts --spl",
+    "mint:spl": "tsx src/mint-spl.ts",
+    "register:spl-interface": "tsx src/register-spl-interface.ts"
+  },
+  "dependencies": {
+    "@lightprotocol/compressed-token": "beta",
+    "@lightprotocol/stateless.js": "beta",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "1.98.4",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  }
+}

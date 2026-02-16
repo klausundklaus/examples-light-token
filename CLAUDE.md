@@ -58,7 +58,7 @@ cargo test-sbf -p <package-name> -- --test-threads=1
 ### Privy Node.js (devnet)
 
 ```bash
-cd privy/nodejs
+cd toolkits/sign-with-privy/nodejs
 npm install
 cp .env.example .env  # fill in Privy credentials + Helius RPC URL
 
@@ -70,7 +70,7 @@ npm run load          # Consolidate cold + SPL + T22 into light-token ATA
 npm run balances      # Query balance breakdown (hot, cold, SPL/T22, SOL)
 npm run history       # Transaction history for light-token interface ops
 
-# Setup helpers live in privy/scripts/ (separate workspace, uses local keypair)
+# Setup helpers live in toolkits/sign-with-privy/scripts/ (separate workspace, uses local keypair)
 cd ../scripts
 npm run mint:spl-and-wrap <recipient>    # Create mint + interface PDA + fund treasury
 npm run mint:spl <mint> <recipient>     # Mint SPL/T22 tokens to existing mint
@@ -80,7 +80,7 @@ npm run register:spl-interface <mint>   # Register interface PDA on existing min
 ### Privy React (devnet — WIP)
 
 ```bash
-cd privy/react
+cd toolkits/sign-with-privy/react
 npm install
 cp .env.example .env  # fill in VITE_PRIVY_APP_ID and VITE_HELIUS_RPC_URL
 
@@ -102,7 +102,7 @@ curl http://127.0.0.1:8784/health
 
 ### Workspace layout
 
-Root `package.json` defines npm workspaces: `typescript-client`, `toolkits/payments-and-wallets`, `privy/nodejs`, `privy/react`, and `privy/scripts`. Dependencies are hoisted to root.
+Root `package.json` defines npm workspaces: `typescript-client`, `toolkits/payments-and-wallets`, `toolkits/sign-with-privy/nodejs`, `toolkits/sign-with-privy/react`, and `toolkits/sign-with-privy/scripts`. Dependencies are hoisted to root.
 
 - `typescript-client/` — Core examples: `actions/` (high-level) and `instructions/` (low-level)
 - `rust-client/` — Rust client examples as cargo examples
@@ -113,9 +113,9 @@ Root `package.json` defines npm workspaces: `typescript-client`, `toolkits/payme
 - `toolkits/` — Domain-specific implementations
   - `payments-and-wallets/` — Wallet integration patterns (uses `@lightprotocol/compressed-token/unified` subpath)
   - `streaming-tokens/` — Laserstream-based token indexing
-- `privy/` — Privy wallet integration examples (devnet)
-  - `nodejs/` — Server-side scripts using `@privy-io/node` with server wallet signing
-  - `react/` — Browser app using `@privy-io/react-auth` with embedded wallet signing (WIP)
+  - `sign-with-privy/` — Privy wallet integration examples (devnet)
+    - `nodejs/` — Server-side scripts using `@privy-io/node` with server wallet signing
+    - `react/` — Browser app using `@privy-io/react-auth` with embedded wallet signing (WIP)
 
 ### TypeScript: actions vs instructions
 
@@ -162,7 +162,7 @@ const payer = Keypair.fromSecretKey(
 
 **CPI pattern** (`basic-instructions/`): Explicit CPI calls like `TransferInterfaceCpi`.
 
-### Privy Node.js architecture (`privy/nodejs/`)
+### Privy Node.js architecture (`toolkits/sign-with-privy/nodejs/`)
 
 Server-side scripts that sign transactions via Privy's wallet API instead of a local keypair. Each script in `src/` is standalone and runnable with `tsx`. All scripts target **devnet**.
 
@@ -172,8 +172,8 @@ Server-side scripts that sign transactions via Privy's wallet API instead of a l
 
 **Two workspaces, two signing modes**:
 
-- **App operations** (`privy/nodejs/src/*.ts`): Privy server wallet signing. Six scripts: `transfer`, `wrap`, `unwrap`, `load`, `balances`, `get-transaction-history`.
-- **Setup helpers** (`privy/scripts/src/*.ts`): Separate npm workspace. Uses local filesystem keypair (`~/.config/solana/id.json`), not Privy. Scripts: `mint-spl-and-wrap`, `mint-spl`, `register-spl-interface`.
+- **App operations** (`toolkits/sign-with-privy/nodejs/src/*.ts`): Privy server wallet signing. Six scripts: `transfer`, `wrap`, `unwrap`, `load`, `balances`, `get-transaction-history`.
+- **Setup helpers** (`toolkits/sign-with-privy/scripts/src/*.ts`): Separate npm workspace. Uses local filesystem keypair (`~/.config/solana/id.json`), not Privy. Scripts: `mint-spl-and-wrap`, `mint-spl`, `register-spl-interface`.
 
 **Config**: All env vars centralized in `src/config.ts` with validation. Exports `TREASURY_WALLET_ID`, `TREASURY_WALLET_ADDRESS`, `TREASURY_AUTHORIZATION_KEY`, `HELIUS_RPC_URL`, `TEST_MINT`, and convenience defaults (`DEFAULT_TEST_RECIPIENT`, `DEFAULT_AMOUNT`, `DEFAULT_DECIMALS`). Scripts import from `./config.js` (ESM `.js` extension required).
 

@@ -12,6 +12,13 @@ Your users hold and receive tokens of the same mints, just stored more efficient
 - **[wrap](payments-and-wallets/wrap.ts)** - Wrap SPL/T22 to light-token
 - **[unwrap](payments-and-wallets/unwrap.ts)** - Unwrap light-token to SPL/T22
 
+### Sign with Privy
+
+Light-token operations signed with [Privy](https://privy.io) wallets. Server-side (Node.js) and client-side (React) examples for transfer, wrap, unwrap, load, and balance queries on devnet.
+- **[Node.js](sign-with-privy/nodejs/)** — Server-side scripts using `@privy-io/node` with server wallet signing
+- **[React](sign-with-privy/react/)** — Browser app using `@privy-io/react-auth` with embedded wallet signing
+- **[Setup scripts](sign-with-privy/scripts/)** — Create test mints and fund wallets on devnet
+
 ### Streaming Tokens
 
 [Rust program example to stream mint events](streaming-tokens/) of the Light-Token Program.

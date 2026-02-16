@@ -4,9 +4,9 @@
     "workspaces": [
         "typescript-client",
         "toolkits/payments-and-wallets",
-        "privy/react",
-        "privy/nodejs",
-        "privy/scripts"
+        "toolkits/sign-with-privy/react",
+        "toolkits/sign-with-privy/nodejs",
+        "toolkits/sign-with-privy/scripts"
     ],
     "scripts": {
         "toolkit:payments": "npm run -w toolkits/payments-and-wallets"
