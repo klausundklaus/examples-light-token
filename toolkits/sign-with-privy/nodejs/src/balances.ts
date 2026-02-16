@@ -48,7 +48,7 @@ export async function getBalances(
     return entry;
   };
 
-  // 1. SPL accounts (standard token program)
+  // 1. SPL accounts
   try {
     const splAccounts = await rpc.getTokenAccountsByOwner(owner, {
       programId: TOKEN_PROGRAM_ID,
