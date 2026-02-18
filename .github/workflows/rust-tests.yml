@@ -44,6 +44,11 @@ jobs:
           - light-token-macro-create-mint
           - light-token-macro-create-token-account
           - create-and-transfer
+          # example programs
+          - escrow
+          - fundraiser
+          - light-token-minter
+          - swap_example
     steps:
       - uses: actions/checkout@v4
 

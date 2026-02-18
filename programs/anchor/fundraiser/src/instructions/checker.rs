@@ -1,0 +1,124 @@
+use anchor_lang::prelude::*;
+use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
+use light_token::instruction::{TransferCheckedCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
+use light_token::utils::get_token_account_balance;
+
+use crate::constants::{AUTH_SEED, VAULT_SEED};
+use crate::state::Fundraiser;
+use crate::FundraiserError;
+
+#[derive(Accounts)]
+pub struct CheckContributions<'info> {
+    /// The maker who checks and claims the fundraiser (also the fee payer for Light Protocol)
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
+
+    /// CHECK: Authority PDA — signs vault operations. Writable for Light Token CPI.
+    #[account(mut, seeds = [AUTH_SEED], bump)]
+    pub authority: UncheckedAccount<'info>,
+
+    #[account(mint::token_program = token_program)]
+    pub mint_to_raise: InterfaceAccount<'info, Mint>,
+
+    #[account(
+        mut,
+        has_one = mint_to_raise,
+        seeds = [b"fundraiser".as_ref(), fee_payer.key().as_ref()],
+        bump = fundraiser.bump,
+        close = fee_payer,
+    )]
+    pub fundraiser: Account<'info, Fundraiser>,
+
+    /// CHECK: Vault token account (Light token account)
+    #[account(
+        mut,
+        seeds = [VAULT_SEED, fundraiser.key().as_ref()],
+        bump,
+    )]
+    pub vault: UncheckedAccount<'info>,
+
+    /// Maker's SPL ATA - must be pre-created before calling this instruction
+    /// Receives funds from the Light vault via SPL interface
+    #[account(
+        mut,
+        token::mint = mint_to_raise,
+        token::authority = fee_payer,
+    )]
+    pub maker_ata: InterfaceAccount<'info, TokenAccount>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+
+    /// Light token program for CPI calls
+    pub light_token_program: Interface<'info, TokenInterface>,
+
+    /// CHECK: Light token rent sponsor - validated by address constraint
+    #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
+    pub light_token_rent_sponsor: AccountInfo<'info>,
+
+    /// CHECK: light-token CPI authority - must be writable for Light token CPI
+    #[account(mut)]
+    pub light_token_cpi_authority: AccountInfo<'info>,
+
+    /// CHECK: SPL interface PDA for mint (token pool holding SPL tokens)
+    /// Derived by light-token program: ["pool", mint]
+    #[account(mut)]
+    pub spl_interface_pda: UncheckedAccount<'info>,
+}
+
+impl<'info> CheckContributions<'info> {
+    pub fn check_contributions(&self, _bumps: &CheckContributionsBumps, spl_interface_bump: u8) -> Result<()> {
+        let vault_balance = get_token_account_balance(&self.vault.to_account_info())
+            .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+        require!(
+            vault_balance >= self.fundraiser.amount_to_raise,
+            FundraiserError::TargetNotMet
+        );
+
+        let authority_seeds: &[&[u8]] = &[
+            AUTH_SEED,
+            &[self.fundraiser.auth_bump],
+        ];
+
+        let decimals = self.mint_to_raise.decimals;
+
+        if self.spl_interface_pda.key() != Pubkey::default() {
+            let cpi = TransferInterfaceCpi::new(
+                vault_balance,
+                decimals,
+                self.vault.to_account_info(),
+                self.maker_ata.to_account_info(),
+                self.authority.to_account_info(),
+                self.fee_payer.to_account_info(),
+                self.light_token_cpi_authority.to_account_info(),
+                self.system_program.to_account_info(),
+            )
+            .with_spl_interface(
+                Some(self.mint_to_raise.to_account_info()),
+                Some(self.token_program.to_account_info()),
+                Some(self.spl_interface_pda.to_account_info()),
+                Some(spl_interface_bump),
+            )
+            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+
+            cpi.invoke_signed(&[authority_seeds])
+                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        } else {
+            TransferCheckedCpi {
+                source: self.vault.to_account_info(),
+                mint: self.mint_to_raise.to_account_info(),
+                destination: self.maker_ata.to_account_info(),
+                amount: vault_balance,
+                decimals,
+                authority: self.authority.to_account_info(),
+                system_program: self.system_program.to_account_info(),
+                max_top_up: None,
+                fee_payer: Some(self.fee_payer.to_account_info()),
+            }
+            .invoke_signed(&[authority_seeds])
+            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        }
+
+        Ok(())
+    }
+}

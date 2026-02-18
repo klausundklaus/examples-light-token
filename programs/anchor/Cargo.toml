@@ -1,14 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-    # Basic macro examples
-    "basic-macros/counter",
-    "basic-macros/create-mint",
-    "basic-macros/create-associated-token-account",
-    "basic-macros/create-token-account",
-    "create-and-transfer",
-
-    # Basic instruction examples
+    "escrow",
+    "fundraiser",
+    "light-token-minter",
+    "token-swap",
+    "shared-test-utils",
     "basic-instructions/approve",
     "basic-instructions/burn",
     "basic-instructions/close",
@@ -18,10 +15,15 @@ members = [
     "basic-instructions/freeze",
     "basic-instructions/mint-to",
     "basic-instructions/revoke",
+    "basic-instructions/test-utils",
     "basic-instructions/thaw",
     "basic-instructions/transfer-checked",
     "basic-instructions/transfer-interface",
-    "basic-instructions/test-utils",
+    "basic-macros/counter",
+    "basic-macros/create-associated-token-account",
+    "basic-macros/create-mint",
+    "basic-macros/create-token-account",
+    "create-and-transfer",
 ]
 
 [profile.release]
@@ -57,6 +59,7 @@ solana-signer = "2"
 # SPL
 spl-token = "7"
 spl-token-2022 = "7"
+spl-pod = "0.5"
 
 # Light Protocol
 light-sdk = { version = "0.22.0", features = ["anchor", "v2", "cpi-context"] }
@@ -83,4 +86,5 @@ borsh = "0.10.4"
 time = "=0.3.41"
 
 # Internal
+shared-test-utils = { path = "shared-test-utils" }
 test-utils = { path = "basic-instructions/test-utils" }
