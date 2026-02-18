@@ -25,3 +25,5 @@
 # Project-specific
 cli/accounts/
 bugs.md
+
+.surfpool/
