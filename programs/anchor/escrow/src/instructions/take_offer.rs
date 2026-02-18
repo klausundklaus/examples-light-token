@@ -77,7 +77,6 @@ pub struct TakeOffer<'info> {
     pub light_token_program: Interface<'info, TokenInterface>,
 
     /// CHECK: Light Token CPI authority
-    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: Light Token rent sponsor
@@ -113,10 +112,10 @@ pub fn send_wanted_tokens_to_maker(ctx: &Context<TakeOffer>, params: &TakeOfferP
         Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
         Some(params.spl_interface_bump_b),
     )
-    .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+    ?;
 
-    cpi.invoke()
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e).into())
+    cpi.invoke()?;
+    Ok(())
 }
 
 pub fn withdraw_from_vault(ctx: &Context<TakeOffer>, params: &TakeOfferParams) -> Result<()> {
@@ -144,10 +143,9 @@ pub fn withdraw_from_vault(ctx: &Context<TakeOffer>, params: &TakeOfferParams) -
         Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
         Some(params.spl_interface_bump_a),
     )
-    .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+    ?;
 
-    cpi.invoke_signed(&[authority_seeds])
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+    cpi.invoke_signed(&[authority_seeds])?;
 
     msg!(
         "Offer taken: id={}, taker={}, transferred {} token_b to maker, received {} token_a",
@@ -171,6 +169,6 @@ pub fn close_vault(ctx: &Context<TakeOffer>) -> Result<()> {
         owner: ctx.accounts.authority.to_account_info(),
         rent_sponsor: ctx.accounts.light_token_rent_sponsor.to_account_info(),
     }
-    .invoke_signed(&[authority_seeds])
-    .map_err(|e| anchor_lang::prelude::ProgramError::from(e).into())
+    .invoke_signed(&[authority_seeds])?;
+    Ok(())
 }

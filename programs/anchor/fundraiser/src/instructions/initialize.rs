@@ -74,8 +74,11 @@ pub struct Initialize<'info> {
 
 impl<'info> Initialize<'info> {
     pub fn initialize(&mut self, params: &InitializeParams, bumps: &InitializeBumps) -> Result<()> {
+        let min_unit = 10_u64.checked_pow(self.mint_to_raise.decimals as u32)
+            .and_then(|v| MIN_AMOUNT_TO_RAISE.checked_mul(v))
+            .ok_or(FundraiserError::InvalidAmount)?;
         require!(
-            params.amount >= MIN_AMOUNT_TO_RAISE.checked_mul(10_u64.pow(self.mint_to_raise.decimals as u32)).ok_or(FundraiserError::InvalidAmount)?,
+            params.amount >= min_unit,
             FundraiserError::InvalidAmount
         );
 

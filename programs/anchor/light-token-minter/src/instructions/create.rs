@@ -10,9 +10,9 @@ pub struct CreateMintParams {
     pub create_accounts_proof: CreateAccountsProof,
     pub decimals: u8,
     pub mint_signer_bump: u8,
-    pub token_name: String,
-    pub token_symbol: String,
-    pub token_uri: String,
+    pub token_name: Vec<u8>,
+    pub token_symbol: Vec<u8>,
+    pub token_uri: Vec<u8>,
 }
 
 #[derive(Accounts, LightAccounts)]
@@ -38,9 +38,9 @@ pub struct CreateMint<'info> {
         mint::decimals = params.decimals,
         mint::seeds = &[MINT_SIGNER_SEED, self.authority.to_account_info().key.as_ref()],
         mint::bump = params.mint_signer_bump,
-        mint::name = params.token_name.clone().into_bytes(),
-        mint::symbol = params.token_symbol.clone().into_bytes(),
-        mint::uri = params.token_uri.clone().into_bytes(),
+        mint::name = params.token_name.clone(),
+        mint::symbol = params.token_symbol.clone(),
+        mint::uri = params.token_uri.clone(),
         mint::update_authority = authority
     )]
     pub light_mint: UncheckedAccount<'info>,
@@ -70,9 +70,9 @@ pub fn create_token<'info>(
     params: &CreateMintParams,
 ) -> Result<()> {
     msg!("Light mint created with metadata");
-    msg!("Name: {}", params.token_name);
-    msg!("Symbol: {}", params.token_symbol);
-    msg!("URI: {}", params.token_uri);
+    msg!("Name: {}", String::from_utf8_lossy(&params.token_name));
+    msg!("Symbol: {}", String::from_utf8_lossy(&params.token_symbol));
+    msg!("URI: {}", String::from_utf8_lossy(&params.token_uri));
     msg!("Mint signer: {}", ctx.accounts.mint_signer.key());
     msg!("Mint authority: {}", ctx.accounts.authority.key());
     Ok(())

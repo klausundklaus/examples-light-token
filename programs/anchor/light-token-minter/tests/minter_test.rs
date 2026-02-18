@@ -85,9 +85,9 @@ async fn test_create_light_mint() {
             create_accounts_proof: proof_result.create_accounts_proof,
             decimals: 9,
             mint_signer_bump,
-            token_name: "Test Token".to_string(),
-            token_symbol: "TEST".to_string(),
-            token_uri: "https://example.com/metadata.json".to_string(),
+            token_name: b"Test Token".to_vec(),
+            token_symbol: b"TEST".to_vec(),
+            token_uri: b"https://example.com/metadata.json".to_vec(),
         },
     };
 
@@ -142,7 +142,7 @@ async fn test_mint_signer_derivation() {
         &program_id,
     );
 
-    let (mint_pda, _) = find_mint_address(&mint_signer_pda);
+    let (_mint_pda, _) = find_mint_address(&mint_signer_pda);
 
     let (verify_signer, verify_bump) = Pubkey::find_program_address(
         &[
@@ -224,9 +224,9 @@ async fn test_mint_to() {
             create_accounts_proof: proof_result.create_accounts_proof,
             decimals: 9,
             mint_signer_bump,
-            token_name: "Test Token".to_string(),
-            token_symbol: "TEST".to_string(),
-            token_uri: "https://example.com/metadata.json".to_string(),
+            token_name: b"Test Token".to_vec(),
+            token_symbol: b"TEST".to_vec(),
+            token_uri: b"https://example.com/metadata.json".to_vec(),
         },
     };
 

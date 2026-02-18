@@ -32,8 +32,11 @@ pub fn swap_exact_tokens_for_tokens(
         .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
 
     let amm = &ctx.accounts.amm;
-    let fee_amount = (input as u128 * amm.fee as u128 / 10000) as u64;
-    let taxed_input = input - fee_amount;
+    let fee_amount = (input as u128)
+        .checked_mul(amm.fee as u128)
+        .and_then(|v| v.checked_div(10000))
+        .ok_or(SwapError::Overflow)? as u64;
+    let taxed_input = input.checked_sub(fee_amount).ok_or(SwapError::Underflow)?;
 
     let output = if swap_a {
         I64F64::from_num(taxed_input)
@@ -62,7 +65,9 @@ pub fn swap_exact_tokens_for_tokens(
         return err!(SwapError::OutputTooSmall);
     }
 
-    let invariant = (pool_a_balance as u128) * (pool_b_balance as u128);
+    let invariant = (pool_a_balance as u128)
+        .checked_mul(pool_b_balance as u128)
+        .ok_or(SwapError::Overflow)?;
 
     let authority_bump = ctx.bumps.pool_authority;
     let authority_seeds: &[&[u8]] = &[
@@ -73,7 +78,7 @@ pub fn swap_exact_tokens_for_tokens(
     let decimals_a = ctx.accounts.mint_a.decimals;
     let decimals_b = ctx.accounts.mint_b.decimals;
 
-    let is_spl = ctx.accounts.spl_interface_pda_a.key() != Pubkey::default();
+    let is_spl = ctx.accounts.spl_interface_pda_a.is_some();
 
     if swap_a {
         if !is_spl {
@@ -89,8 +94,7 @@ pub fn swap_exact_tokens_for_tokens(
                 max_top_up: None,
                 fee_payer: Some(ctx.accounts.payer.to_account_info()),
             }
-            .invoke()
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            .invoke()?;
 
             TransferCheckedCpi {
                 source: ctx.accounts.pool_account_b.to_account_info(),
@@ -103,8 +107,7 @@ pub fn swap_exact_tokens_for_tokens(
                 max_top_up: None,
                 fee_payer: Some(ctx.accounts.payer.to_account_info()),
             }
-            .invoke_signed(&[authority_seeds])
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            .invoke_signed(&[authority_seeds])?;
         } else {
             let cpi_input = TransferInterfaceCpi::new(
                 input,
@@ -119,13 +122,11 @@ pub fn swap_exact_tokens_for_tokens(
             .with_spl_interface(
                 Some(ctx.accounts.mint_a.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
-                Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
+                ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_a),
-            )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            )?;
 
-            cpi_input.invoke()
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            cpi_input.invoke()?;
 
             let cpi_output = TransferInterfaceCpi::new(
                 output,
@@ -140,13 +141,11 @@ pub fn swap_exact_tokens_for_tokens(
             .with_spl_interface(
                 Some(ctx.accounts.mint_b.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
-                Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
+                ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_b),
-            )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            )?;
 
-            cpi_output.invoke_signed(&[authority_seeds])
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            cpi_output.invoke_signed(&[authority_seeds])?;
         }
     } else {
         if !is_spl {
@@ -161,8 +160,7 @@ pub fn swap_exact_tokens_for_tokens(
                 max_top_up: None,
                 fee_payer: Some(ctx.accounts.payer.to_account_info()),
             }
-            .invoke()
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            .invoke()?;
 
             TransferCheckedCpi {
                 source: ctx.accounts.pool_account_a.to_account_info(),
@@ -175,8 +173,7 @@ pub fn swap_exact_tokens_for_tokens(
                 max_top_up: None,
                 fee_payer: Some(ctx.accounts.payer.to_account_info()),
             }
-            .invoke_signed(&[authority_seeds])
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            .invoke_signed(&[authority_seeds])?;
         } else {
             let cpi_input = TransferInterfaceCpi::new(
                 input,
@@ -191,13 +188,11 @@ pub fn swap_exact_tokens_for_tokens(
             .with_spl_interface(
                 Some(ctx.accounts.mint_b.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
-                Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
+                ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_b),
-            )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            )?;
 
-            cpi_input.invoke()
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            cpi_input.invoke()?;
 
             let cpi_output = TransferInterfaceCpi::new(
                 output,
@@ -212,13 +207,11 @@ pub fn swap_exact_tokens_for_tokens(
             .with_spl_interface(
                 Some(ctx.accounts.mint_a.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
-                Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
+                ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_a),
-            )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            )?;
 
-            cpi_output.invoke_signed(&[authority_seeds])
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            cpi_output.invoke_signed(&[authority_seeds])?;
         }
     }
 
@@ -237,7 +230,10 @@ pub fn swap_exact_tokens_for_tokens(
         get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
             .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
 
-    if invariant > (new_pool_a_balance as u128) * (new_pool_b_balance as u128) {
+    if invariant > (new_pool_a_balance as u128)
+        .checked_mul(new_pool_b_balance as u128)
+        .ok_or(SwapError::Overflow)?
+    {
         return err!(SwapError::InvariantViolated);
     }
 
@@ -326,7 +322,6 @@ pub struct SwapExactTokensForTokens<'info> {
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light token CPI authority
-    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_a]

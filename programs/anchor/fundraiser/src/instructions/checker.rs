@@ -13,8 +13,8 @@ pub struct CheckContributions<'info> {
     #[account(mut)]
     pub fee_payer: Signer<'info>,
 
-    /// CHECK: Authority PDA — signs vault operations. Writable for Light Token CPI.
-    #[account(mut, seeds = [AUTH_SEED], bump)]
+    /// CHECK: Authority PDA
+    #[account(seeds = [AUTH_SEED], bump)]
     pub authority: UncheckedAccount<'info>,
 
     #[account(mint::token_program = token_program)]
@@ -56,8 +56,7 @@ pub struct CheckContributions<'info> {
     #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
-    /// CHECK: light-token CPI authority - must be writable for Light token CPI
-    #[account(mut)]
+    /// CHECK: Light token CPI authority
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint (token pool holding SPL tokens)
@@ -99,10 +98,9 @@ impl<'info> CheckContributions<'info> {
                 Some(self.spl_interface_pda.to_account_info()),
                 Some(spl_interface_bump),
             )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            ?;
 
-            cpi.invoke_signed(&[authority_seeds])
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            cpi.invoke_signed(&[authority_seeds])?;
         } else {
             TransferCheckedCpi {
                 source: self.vault.to_account_info(),
@@ -115,8 +113,7 @@ impl<'info> CheckContributions<'info> {
                 max_top_up: None,
                 fee_payer: Some(self.fee_payer.to_account_info()),
             }
-            .invoke_signed(&[authority_seeds])
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            .invoke_signed(&[authority_seeds])?;
         }
 
         Ok(())

@@ -33,7 +33,7 @@
 //! For `Spl`/`Token2022`: user accounts are SPL/Token 2022, vaults are Light →
 //! `TransferInterfaceCpi` (with SPL interface PDA).
 //!
-//! For `Light`/`FullLight`/`LightSpl`/`LightT22`: all accounts are Light Token →
+//! For `Light`/`LightToLight`/`LightSpl`/`LightT22`: all accounts are Light Token →
 //! `TransferCheckedCpi` (no interface PDA needed).
 //!
 //! `LightSpl`/`LightT22` convert tokens from SPL/Token 2022 associated token accounts
@@ -42,7 +42,7 @@
 //!
 //! ## Pool creation modes
 //!
-//! `FullLight` uses `create_pool_light_lp` which creates pool vaults via
+//! `LightToLight` uses `create_pool_light_lp` which creates pool vaults via
 //! explicit `CreateTokenAccountCpi` and the LP mint as a Light Token mint.
 //! All other configs use `create_pool` with macro-initialized vaults and
 //! an SPL/Token 2022 LP mint.
@@ -144,7 +144,7 @@ async fn test_swap_t22_light() {
 #[tokio::test]
 async fn test_swap_full_light() {
     let mut rpc = create_test_rpc().await;
-    let ctx = setup_amm_test(&mut rpc, TokenConfig::FullLight).await;
+    let ctx = setup_amm_test(&mut rpc, TokenConfig::LightToLight).await;
     run_amm_full_flow(&mut rpc, &ctx).await;
 }
 
@@ -164,7 +164,7 @@ async fn test_create_amm() {
 /// Run the full AMM flow for any token configuration: SPL, Token 2022, Light.
 ///
 /// 1. Create AMM with 2.5% fee
-/// 2. Create pool with Light Token vaults (standard or FullLight path)
+/// 2. Create pool with Light Token vaults (standard or LightToLight path)
 /// 3. Deposit initial liquidity, receive LP tokens
 /// 4. Create trader with funded accounts
 /// 5. Swap A→B
@@ -179,7 +179,7 @@ async fn run_amm_full_flow<R: Rpc + TestRpc + Indexer>(
     let liquidity_token_program = match ctx.token_config {
         TokenConfig::Light | TokenConfig::LightSpl | TokenConfig::Spl => token::ID,
         TokenConfig::Token2022 | TokenConfig::LightT22 => spl_token_2022::ID,
-        TokenConfig::FullLight => Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
+        TokenConfig::LightToLight => Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
     };
 
     create_amm(rpc, ctx, 250).await;
@@ -303,7 +303,7 @@ async fn create_amm<R: Rpc + TestRpc + Indexer>(
 
 /// Fetch validity proof and send `create_pool` or `create_pool_light_lp` instruction.
 ///
-/// FullLight proves LP mint signer (vaults created via explicit CPI).
+/// LightToLight proves LP mint signer (vaults created via explicit CPI).
 /// Standard proves pool vault PDAs (vaults created via macro).
 async fn create_pool<R: Rpc + TestRpc + Indexer>(
     rpc: &mut R,
@@ -311,12 +311,12 @@ async fn create_pool<R: Rpc + TestRpc + Indexer>(
     token_program: Pubkey,
     liquidity_token_program: Pubkey,
 ) {
-    // Validity proof: verifies the vault PDAs (or LP mint signer for FullLight)
+    // Validity proof: verifies the vault PDAs (or LP mint signer for LightToLight)
     // do not yet exist in the address tree. Required for Light Token account creation.
     let proof_inputs = if ctx.token_config.uses_light_lp_mint() {
         vec![CreateAccountsProofInput::mint(
             ctx.lp_mint_signer
-                .expect("FullLight config should have lp_mint_signer"),
+                .expect("LightToLight config should have lp_mint_signer"),
         )]
     } else {
         vec![
@@ -332,7 +332,7 @@ async fn create_pool<R: Rpc + TestRpc + Indexer>(
     if ctx.token_config.uses_light_lp_mint() {
         let lp_mint_signer = ctx
             .lp_mint_signer
-            .expect("FullLight config should have lp_mint_signer");
+            .expect("LightToLight config should have lp_mint_signer");
 
         let accounts = swap_example::accounts::CreatePoolLightLp {
             amm: ctx.amm_pda,
@@ -458,7 +458,7 @@ async fn deposit_liquidity<R: Rpc + TestRpc + Indexer>(
             )
             .await
         }
-        TokenConfig::FullLight => {
+        TokenConfig::LightToLight => {
             create_light_ata(
                 rpc,
                 &ctx.payer,
@@ -550,8 +550,8 @@ async fn swap_exact_tokens_for_tokens<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda_a: if ctx.token_config.uses_light_user_accounts() { Pubkey::default() } else { ctx.spl_interface_pda_a },
-        spl_interface_pda_b: if ctx.token_config.uses_light_user_accounts() { Pubkey::default() } else { ctx.spl_interface_pda_b },
+        spl_interface_pda_a: if ctx.token_config.uses_light_user_accounts() { None } else { Some(ctx.spl_interface_pda_a) },
+        spl_interface_pda_b: if ctx.token_config.uses_light_user_accounts() { None } else { Some(ctx.spl_interface_pda_b) },
     };
 
     let (_, spl_interface_bump_a) = find_spl_interface_pda(&ctx.mint_a_pubkey, false);
@@ -606,8 +606,8 @@ async fn withdraw_liquidity<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda_a: if ctx.token_config.uses_light_user_accounts() { Pubkey::default() } else { ctx.spl_interface_pda_a },
-        spl_interface_pda_b: if ctx.token_config.uses_light_user_accounts() { Pubkey::default() } else { ctx.spl_interface_pda_b },
+        spl_interface_pda_a: if ctx.token_config.uses_light_user_accounts() { None } else { Some(ctx.spl_interface_pda_a) },
+        spl_interface_pda_b: if ctx.token_config.uses_light_user_accounts() { None } else { Some(ctx.spl_interface_pda_b) },
     };
 
     let (_, spl_interface_bump_a) = find_spl_interface_pda(&ctx.mint_a_pubkey, false);

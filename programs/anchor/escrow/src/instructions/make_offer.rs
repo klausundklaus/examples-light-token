@@ -90,7 +90,6 @@ pub struct MakeOffer<'info> {
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light Token CPI authority
-    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint A
@@ -122,7 +121,8 @@ pub fn send_offered_tokens_to_vault<'info>(
     )
     ?;
 
-    cpi.invoke()
+    cpi.invoke()?;
+    Ok(())
 }
 
 pub fn save_offer<'info>(

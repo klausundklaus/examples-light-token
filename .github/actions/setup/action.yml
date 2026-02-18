@@ -16,7 +16,7 @@ inputs:
   light-cli-version:
     description: "Light CLI version"
     required: false
-    default: "alpha"
+    default: "beta"
   photon-indexer:
     description: "Install Photon indexer (required for TypeScript tests)"
     required: false

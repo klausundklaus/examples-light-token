@@ -56,8 +56,7 @@ pub struct Contribute<'info> {
     #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
-    /// CHECK: light-token CPI authority - must be writable for Light token CPI
-    #[account(mut)]
+    /// CHECK: Light token CPI authority
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint (token pool holding SPL tokens)
@@ -69,7 +68,7 @@ pub struct Contribute<'info> {
 impl<'info> Contribute<'info> {
     pub fn contribute(&mut self, amount: u64, spl_interface_bump: u8) -> Result<()> {
         require!(
-            amount >= 10_u64.pow(self.mint_to_raise.decimals as u32),
+            amount >= 10_u64.checked_pow(self.mint_to_raise.decimals as u32).ok_or(FundraiserError::CalculationOverflow)?,
             FundraiserError::ContributionTooSmall
         );
 
@@ -112,10 +111,9 @@ impl<'info> Contribute<'info> {
                 Some(self.spl_interface_pda.to_account_info()),
                 Some(spl_interface_bump),
             )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            ?;
 
-            cpi.invoke()
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            cpi.invoke()?;
         } else {
             TransferCheckedCpi {
                 source: self.contributor_ata.to_account_info(),
@@ -128,8 +126,7 @@ impl<'info> Contribute<'info> {
                 max_top_up: None,
                 fee_payer: Some(self.contributor.to_account_info()),
             }
-            .invoke()
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            .invoke()?;
         }
 
         self.fundraiser.current_amount = self.fundraiser.current_amount

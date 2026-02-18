@@ -10,7 +10,7 @@ pub struct Amm {
 }
 
 impl Amm {
-    pub const LEN: usize = 8 + 32 + 32 + 2;
+    pub const LEN: usize = 8 + std::mem::size_of::<Self>();
 }
 
 #[account]
@@ -24,5 +24,5 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 8;
+    pub const LEN: usize = 8 + std::mem::size_of::<Self>();
 }

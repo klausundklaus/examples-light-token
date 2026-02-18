@@ -74,7 +74,7 @@ pub fn deposit_liquidity(
             return err!(SwapError::DepositTooSmall);
         }
 
-        liquidity -= MINIMUM_LIQUIDITY;
+        liquidity = liquidity.checked_sub(MINIMUM_LIQUIDITY).ok_or(SwapError::Underflow)?;
     }
 
     let decimals_a = ctx.accounts.mint_a.decimals;
@@ -95,8 +95,7 @@ pub fn deposit_liquidity(
             max_top_up: None,
             fee_payer: Some(ctx.accounts.payer.to_account_info()),
         }
-        .invoke()
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        .invoke()?;
 
         TransferCheckedCpi {
             source: ctx.accounts.depositor_account_b.to_account_info(),
@@ -109,8 +108,7 @@ pub fn deposit_liquidity(
             max_top_up: None,
             fee_payer: Some(ctx.accounts.payer.to_account_info()),
         }
-        .invoke()
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        .invoke()?;
     } else {
         let cpi_a = TransferInterfaceCpi::new(
             amount_a,
@@ -127,11 +125,9 @@ pub fn deposit_liquidity(
             Some(ctx.accounts.token_program.to_account_info()),
             Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
             Some(spl_interface_bump_a),
-        )
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        )?;
 
-        cpi_a.invoke()
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        cpi_a.invoke()?;
 
         let cpi_b = TransferInterfaceCpi::new(
             amount_b,
@@ -148,11 +144,9 @@ pub fn deposit_liquidity(
             Some(ctx.accounts.token_program.to_account_info()),
             Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
             Some(spl_interface_bump_b),
-        )
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        )?;
 
-        cpi_b.invoke()
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        cpi_b.invoke()?;
     }
 
     let authority_bump = ctx.bumps.pool_authority;
@@ -284,7 +278,6 @@ pub struct DepositLiquidity<'info> {
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light token CPI authority
-    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_a]

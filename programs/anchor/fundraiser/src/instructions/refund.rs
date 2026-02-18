@@ -62,8 +62,7 @@ pub struct Refund<'info> {
     #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
-    /// CHECK: light-token CPI authority - must be writable for Light token CPI
-    #[account(mut)]
+    /// CHECK: Light token CPI authority
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA for mint (token pool holding SPL tokens)
@@ -77,7 +76,10 @@ impl<'info> Refund<'info> {
         let current_time = Clock::get()?.unix_timestamp;
         require!(
             self.fundraiser.duration
-                < ((current_time - self.fundraiser.time_started) / SECONDS_TO_DAYS) as u16,
+                < (current_time.checked_sub(self.fundraiser.time_started)
+                    .ok_or(FundraiserError::CalculationOverflow)?
+                    .checked_div(SECONDS_TO_DAYS)
+                    .ok_or(FundraiserError::CalculationOverflow)?) as u16,
             FundraiserError::FundraiserNotEnded
         );
 
@@ -113,7 +115,7 @@ impl<'info> Refund<'info> {
                 Some(self.spl_interface_pda.to_account_info()),
                 Some(spl_interface_bump),
             )
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+            ?;
 
             cpi.invoke_signed(&[authority_seeds])
              ?;

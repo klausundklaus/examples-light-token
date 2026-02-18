@@ -307,9 +307,9 @@ pub mod light_tokens {
                 create_accounts_proof: proof_result.create_accounts_proof,
                 decimals,
                 mint_signer_bump,
-                token_name: token_name.to_string(),
-                token_symbol: token_symbol.to_string(),
-                token_uri: format!("https://example.com/{}.json", token_symbol.to_lowercase()),
+                token_name: token_name.as_bytes().to_vec(),
+                token_symbol: token_symbol.as_bytes().to_vec(),
+                token_uri: format!("https://example.com/{}.json", token_symbol.to_lowercase()).into_bytes(),
             },
         };
 

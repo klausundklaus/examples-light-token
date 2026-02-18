@@ -4,12 +4,12 @@
 //! vaults are always Light Token accounts:
 //!
 //! - `Spl` / `Token2022`: standard associated token accounts, transfers via `TransferInterfaceCpi`
-//! - `Light` / `FullLight`: Light Token accounts, transfers via `TransferCheckedCpi`
+//! - `Light` / `LightToLight`: Light Token accounts, transfers via `TransferCheckedCpi`
 //! - `LightSpl` / `LightT22`: SPL/Token 2022 mints converted into Light Token accounts before
 //!   the AMM starts (tokens are minted to a temp associated token account, then
 //!   transferred to an associated Light Token account via `transfer_spl_to_light`)
 //!
-//! `FullLight` additionally creates the LP mint as a Light Token mint via `create_pool_light_lp`,
+//! `LightToLight` additionally creates the LP mint as a Light Token mint via `create_pool_light_lp`,
 //! making the entire pool rent-free.
 //!
 //! ## Setup flow
@@ -66,7 +66,7 @@ pub enum TokenConfig {
     /// Light Token mint + associated Light Token accounts + SPL LP mint.
     Light,
     /// Light Token mints + associated Light Token accounts + Light Token LP mint.
-    FullLight,
+    LightToLight,
 }
 
 impl TokenConfig {
@@ -76,7 +76,7 @@ impl TokenConfig {
         match self {
             TokenConfig::Spl | TokenConfig::LightSpl => MintType::Spl,
             TokenConfig::Token2022 | TokenConfig::LightT22 => MintType::Token2022,
-            TokenConfig::Light | TokenConfig::FullLight => MintType::Spl,
+            TokenConfig::Light | TokenConfig::LightToLight => MintType::Spl,
         }
     }
 
@@ -85,7 +85,7 @@ impl TokenConfig {
         match self {
             TokenConfig::Spl | TokenConfig::LightSpl => token::ID,
             TokenConfig::Token2022 | TokenConfig::LightT22 => spl_token_2022::ID,
-            TokenConfig::Light | TokenConfig::FullLight => {
+            TokenConfig::Light | TokenConfig::LightToLight => {
                 Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID)
             }
         }
@@ -98,18 +98,18 @@ impl TokenConfig {
             TokenConfig::LightSpl
                 | TokenConfig::LightT22
                 | TokenConfig::Light
-                | TokenConfig::FullLight
+                | TokenConfig::LightToLight
         )
     }
 
     /// Returns true if mints are Light Token mints (not SPL/Token 2022).
     pub fn uses_light_mints(&self) -> bool {
-        matches!(self, TokenConfig::Light | TokenConfig::FullLight)
+        matches!(self, TokenConfig::Light | TokenConfig::LightToLight)
     }
 
     /// Returns true if LP mint is a Light Token mint.
     pub fn uses_light_lp_mint(&self) -> bool {
-        matches!(self, TokenConfig::FullLight)
+        matches!(self, TokenConfig::LightToLight)
     }
 }
 
@@ -142,7 +142,7 @@ pub struct AmmTestContext {
     pub token_config: TokenConfig,
     /// Authority keypair for Light Token mint A (if Light config).
     pub light_mint_authority_a: Option<Keypair>,
-    /// LP mint signer PDA (for FullLight config).
+    /// LP mint signer PDA (for LightToLight config).
     pub lp_mint_signer: Option<Pubkey>,
     pub lp_mint_signer_bump: u8,
     /// Config PDA for rent-free Light Token mint creation.
@@ -174,7 +174,7 @@ pub async fn create_test_rpc() -> LightProgramTest {
 /// Light Token accounts — `TransferInterfaceCpi` needs the interface PDA when an
 /// SPL/Token 2022 account transfers to a Light Token vault.
 ///
-/// For `Light`/`FullLight` configs, no interface PDA is created (early return).
+/// For `Light`/`LightToLight` configs, no interface PDA is created (early return).
 pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
     rpc: &mut R,
     config: TokenConfig,
@@ -245,7 +245,7 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
             Pubkey::find_program_address(&[b"pool_b", pool_pda.as_ref()], &program_id);
 
         // Light config: SPL LP mint via standard PDA.
-        // FullLight config: Light Token LP mint via lp_mint_signer PDA.
+        // LightToLight config: Light Token LP mint via lp_mint_signer PDA.
         let (mint_liquidity, lp_mint_signer, lp_mint_signer_bump) =
             if config.uses_light_lp_mint() {
                 let (lp_mint_signer, lp_mint_signer_bump) = Pubkey::find_program_address(
@@ -308,8 +308,8 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
             let mint_b = create_t22_mint(rpc, &payer, &payer.pubkey(), 9).await;
             (mint_a, mint_b)
         }
-        TokenConfig::Light | TokenConfig::FullLight => {
-            unreachable!("Light/FullLight config handled above")
+        TokenConfig::Light | TokenConfig::LightToLight => {
+            unreachable!("Light/LightToLight config handled above")
         }
     };
 
@@ -429,8 +429,8 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
 
             (light_ata_a, light_ata_b)
         }
-        TokenConfig::Light | TokenConfig::FullLight => {
-            unreachable!("Light/FullLight config handled above")
+        TokenConfig::Light | TokenConfig::LightToLight => {
+            unreachable!("Light/LightToLight config handled above")
         }
     };
 
@@ -501,7 +501,7 @@ pub async fn setup_amm_test<R: Rpc + TestRpc + Indexer>(
 ///
 /// Account creation varies by config:
 /// - `Spl` / `Token2022`: create standard ATAs, mint directly
-/// - `Light` / `FullLight`: create associated Light Token accounts via `mint_light_tokens` (creates + mints in one call)
+/// - `Light` / `LightToLight`: create associated Light Token accounts via `mint_light_tokens` (creates + mints in one call)
 /// - `LightSpl` / `LightT22`: create temp SPL/Token 2022 ATAs, mint, then
 ///   create associated Light Token accounts and convert via `transfer_spl_to_light`
 pub async fn create_trader<R: Rpc + Indexer>(
@@ -627,12 +627,12 @@ pub async fn create_trader<R: Rpc + Indexer>(
 
             (light_ata_a, light_ata_b)
         }
-        TokenConfig::Light | TokenConfig::FullLight => {
+        TokenConfig::Light | TokenConfig::LightToLight => {
             // Light Token mints support direct minting to associated Light Token accounts.
             let mint_authority_a = ctx
                 .light_mint_authority_a
                 .as_ref()
-                .expect("Light/FullLight config should have mint authority A");
+                .expect("Light/LightToLight config should have mint authority A");
 
             let light_ata_a = mint_light_tokens(
                 rpc,

@@ -59,6 +59,11 @@ jobs:
           solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
           rust-toolchain: ${{ env.RUST_TOOLCHAIN }}
 
+      - name: Build light-token-minter
+        if: contains(fromJson('["escrow", "fundraiser", "swap_example"]'), matrix.package)
+        working-directory: programs/anchor
+        run: cargo build-sbf --manifest-path light-token-minter/Cargo.toml
+
       - name: Test
         working-directory: programs/anchor
         run: cargo test-sbf -p ${{ matrix.package }} -- --test-threads=1

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use fixed::types::I64F64;
 use light_anchor_spl::token_interface::{self, Burn, Mint, TokenAccount, TokenInterface};
 use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
-use light_token::instruction::{BurnCpi, TransferCheckedCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
+use light_token::instruction::{BurnCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
 use light_token::utils::get_token_account_balance;
 
 use crate::{
@@ -38,45 +38,27 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
 
     let decimals_a = ctx.accounts.mint_a.decimals;
 
-    let is_spl = ctx.accounts.spl_interface_pda_a.key() != Pubkey::default();
+    let is_spl = ctx.accounts.spl_interface_pda_a.is_some();
 
-    if !is_spl {
-        // fee_payer: Some ensures authority is readonly (required for PDA with account data)
-        TransferCheckedCpi {
-            source: ctx.accounts.pool_account_a.to_account_info(),
-            mint: ctx.accounts.mint_a.to_account_info(),
-            destination: ctx.accounts.depositor_account_a.to_account_info(),
-            amount: amount_a,
-            decimals: decimals_a,
-            authority: ctx.accounts.pool_authority.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
-            fee_payer: Some(ctx.accounts.payer.to_account_info()),
-        }
-        .invoke_signed(&[authority_seeds])
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
-    } else {
-        let cpi_a = TransferInterfaceCpi::new(
-            amount_a,
-            decimals_a,
-            ctx.accounts.pool_account_a.to_account_info(),
-            ctx.accounts.depositor_account_a.to_account_info(),
-            ctx.accounts.pool_authority.to_account_info(),
-            ctx.accounts.payer.to_account_info(),
-            ctx.accounts.light_token_cpi_authority.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-        )
-        .with_spl_interface(
+    let mut cpi_a = TransferInterfaceCpi::new(
+        amount_a,
+        decimals_a,
+        ctx.accounts.pool_account_a.to_account_info(),
+        ctx.accounts.depositor_account_a.to_account_info(),
+        ctx.accounts.pool_authority.to_account_info(),
+        ctx.accounts.payer.to_account_info(),
+        ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
+    );
+    if is_spl {
+        cpi_a = cpi_a.with_spl_interface(
             Some(ctx.accounts.mint_a.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
-            Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
+            ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
             Some(spl_interface_bump_a),
-        )
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
-
-        cpi_a.invoke_signed(&[authority_seeds])
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        )?;
     }
+    cpi_a.invoke_signed(&[authority_seeds])?;
 
     let amount_b = I64F64::from_num(amount)
         .checked_mul(I64F64::from_num(pool_b_balance))
@@ -88,42 +70,25 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
 
     let decimals_b = ctx.accounts.mint_b.decimals;
 
-    if !is_spl {
-        TransferCheckedCpi {
-            source: ctx.accounts.pool_account_b.to_account_info(),
-            mint: ctx.accounts.mint_b.to_account_info(),
-            destination: ctx.accounts.depositor_account_b.to_account_info(),
-            amount: amount_b,
-            decimals: decimals_b,
-            authority: ctx.accounts.pool_authority.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
-            fee_payer: Some(ctx.accounts.payer.to_account_info()),
-        }
-        .invoke_signed(&[authority_seeds])
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
-    } else {
-        let cpi_b = TransferInterfaceCpi::new(
-            amount_b,
-            decimals_b,
-            ctx.accounts.pool_account_b.to_account_info(),
-            ctx.accounts.depositor_account_b.to_account_info(),
-            ctx.accounts.pool_authority.to_account_info(),
-            ctx.accounts.payer.to_account_info(),
-            ctx.accounts.light_token_cpi_authority.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-        )
-        .with_spl_interface(
+    let mut cpi_b = TransferInterfaceCpi::new(
+        amount_b,
+        decimals_b,
+        ctx.accounts.pool_account_b.to_account_info(),
+        ctx.accounts.depositor_account_b.to_account_info(),
+        ctx.accounts.pool_authority.to_account_info(),
+        ctx.accounts.payer.to_account_info(),
+        ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
+    );
+    if is_spl {
+        cpi_b = cpi_b.with_spl_interface(
             Some(ctx.accounts.mint_b.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
-            Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
+            ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
             Some(spl_interface_bump_b),
-        )
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
-
-        cpi_b.invoke_signed(&[authority_seeds])
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        )?;
     }
+    cpi_b.invoke_signed(&[authority_seeds])?;
 
     if is_light_lp {
         BurnCpi {
@@ -251,14 +216,13 @@ pub struct WithdrawLiquidity<'info> {
     pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light token CPI authority
-    #[account(mut)]
     pub light_token_cpi_authority: AccountInfo<'info>,
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_a]
     #[account(mut)]
-    pub spl_interface_pda_a: UncheckedAccount<'info>,
+    pub spl_interface_pda_a: Option<AccountInfo<'info>>,
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_b]
     #[account(mut)]
-    pub spl_interface_pda_b: UncheckedAccount<'info>,
+    pub spl_interface_pda_b: Option<AccountInfo<'info>>,
 }
