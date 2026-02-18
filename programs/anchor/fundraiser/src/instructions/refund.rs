@@ -116,7 +116,7 @@ impl<'info> Refund<'info> {
             .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
 
             cpi.invoke_signed(&[authority_seeds])
-                .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+             ?;
         } else {
             TransferCheckedCpi {
                 source: self.vault.to_account_info(),
@@ -130,7 +130,7 @@ impl<'info> Refund<'info> {
                 fee_payer: Some(self.contributor.to_account_info()),
             }
             .invoke_signed(&[authority_seeds])
-            .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+     ?;
         }
 
         self.fundraiser.current_amount = self.fundraiser.current_amount
