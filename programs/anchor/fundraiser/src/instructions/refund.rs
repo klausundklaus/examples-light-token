@@ -15,7 +15,7 @@ pub struct Refund<'info> {
     pub maker: SystemAccount<'info>,
 
     /// CHECK: Authority PDA — signs vault operations. Writable for Light Token CPI.
-    #[account(mut, seeds = [AUTH_SEED], bump)]
+    #[account(seeds = [AUTH_SEED], bump)]
     pub authority: UncheckedAccount<'info>,
 
     #[account(mint::token_program = token_program)]
