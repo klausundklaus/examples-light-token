@@ -15,11 +15,11 @@ use test_utils::create_mint;
 /// 3. The vault has the correct owner and mint
 #[tokio::test]
 async fn test_create_token_vault() {
-    use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+    use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
     use light_token_macro_create_token_account::{
         CreateTokenVaultParams, VAULT_AUTH_SEED, VAULT_SEED,
     };
-    use light_token_types::CPI_AUTHORITY_PDA;
+    use light_token::constants::LIGHT_TOKEN_CPI_AUTHORITY;
 
     let program_id = light_token_macro_create_token_account::ID;
     let config = ProgramTestConfig::new_v2(
@@ -49,9 +49,9 @@ async fn test_create_token_vault() {
         mint,
         vault_authority,
         vault,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        light_token_rent_sponsor: RENT_SPONSOR,
-        light_token_cpi_authority: CPI_AUTHORITY_PDA.into(),
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
+        light_token_cpi_authority: LIGHT_TOKEN_CPI_AUTHORITY,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID,
         system_program: solana_sdk::system_program::ID,
     };

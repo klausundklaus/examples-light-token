@@ -54,11 +54,15 @@ Light token is a high-performance token standard that reduces the cost of mint a
 
 ## Program Examples
 
-### Examples 
+### Examples
 
 |  | Description |
 |---------|-------------|
-| [cp-swap-reference](https://github.com/Lightprotocol/cp-swap-reference/tree/954f679699dbdfe9711308c8ae9fbd21e69db8aa) | Fork of Raydium AMM that creates markets without paying rent-exemption. |
+| [escrow](programs/anchor/escrow) | Peer-to-peer light-token swap with offer/accept flow |
+| [fundraiser](programs/anchor/fundraiser) | Token fundraiser with target, deadline, and refunds |
+| [light-token-minter](programs/anchor/light-token-minter) | Create light-mints with metadata, mint tokens |
+| [token-swap](programs/anchor/token-swap) | AMM with liquidity pools and swaps |
+| [cp-swap-reference](https://github.com/Lightprotocol/cp-swap-reference/tree/954f679699dbdfe9711308c8ae9fbd21e69db8aa) | Fork of Raydium AMM that creates markets without paying rent-exemption |
 | [create-and-transfer](programs/anchor/create-and-transfer) | Create account via macro and transfer via CPI |
 
 ### Macros
@@ -66,7 +70,7 @@ Light token is a high-performance token standard that reduces the cost of mint a
 |  | Description |
 |---------|-------------|
 | [counter](programs/anchor/basic-macros/counter) | Create, increment and close counter PDA with sponsored rent-exemption |
-| [create-associated-token-account](programs/anchor/basic-macros/create-ata) | Create associated light-token account |
+| [create-associated-token-account](programs/anchor/basic-macros/create-associated-token-account) | Create associated light-token account |
 | [create-mint](programs/anchor/basic-macros/create-mint) | Create light-token mint |
 | [create-token-account](programs/anchor/basic-macros/create-token-account) | Create light-token account |
 
@@ -80,7 +84,7 @@ For existing programs, you can replace spl_token with light_token instructions a
 | [approve](programs/anchor/basic-instructions/approve/src/lib.rs) | Approve delegate via CPI |
 | [burn](programs/anchor/basic-instructions/burn/src/lib.rs) | Burn tokens via CPI |
 | [close](programs/anchor/basic-instructions/close/src/lib.rs) | Close token account via CPI |
-| [create-associated-token-account](programs/anchor/basic-instructions/create-ata/src/lib.rs) | Create associated light-token account via CPI |
+| [create-associated-token-account](programs/anchor/basic-instructions/create-associated-token-account/src/lib.rs) | Create associated light-token account via CPI |
 | [create-mint](programs/anchor/basic-instructions/create-mint/src/lib.rs) | Create light-token mint via CPI |
 | [create-token-account](programs/anchor/basic-instructions/create-token-account/src/lib.rs) | Create light-token account via CPI |
 | [freeze](programs/anchor/basic-instructions/freeze/src/lib.rs) | Freeze token account via CPI |

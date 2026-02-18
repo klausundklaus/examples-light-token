@@ -4,10 +4,11 @@ use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
     Indexer, ProgramTestConfig, Rpc,
 };
-use light_sdk_types::LIGHT_TOKEN_PROGRAM_ID;
+use light_account::LIGHT_TOKEN_PROGRAM_ID;
 use light_token::instruction::{
-    derive_token_ata, find_mint_address, COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR,
+    derive_token_ata, find_mint_address, LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR,
 };
+use light_account::derive_rent_sponsor_pda;
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
 use solana_signer::Signer;
@@ -112,11 +113,13 @@ async fn test_transfer() {
 
     let program_data_pda = setup_mock_program_data(&mut rpc, &payer, &ID);
 
+    let (rent_sponsor, _) = derive_rent_sponsor_pda(&ID);
+
     let (init_config_ix, _config_pda) = InitializeRentFreeConfig::new(
         &ID,
         &payer.pubkey(),
         &program_data_pda,
-        RENT_SPONSOR,
+        rent_sponsor,
         payer.pubkey(),
     )
     .build();
@@ -136,7 +139,7 @@ async fn test_transfer() {
     println!("Mint created at: {}", mint_pda);
 
     let sender = Keypair::new();
-    let (sender_associated_token_account, _sender_associated_token_account_bump) = derive_token_ata(&sender.pubkey(), &mint_pda);
+    let sender_associated_token_account = derive_token_ata(&sender.pubkey(), &mint_pda);
 
     let create_sender_associated_token_account_ix =
         light_token::instruction::CreateAssociatedTokenAccount::new(
@@ -157,7 +160,7 @@ async fn test_transfer() {
     println!("Minted {} tokens to sender: {}", mint_amount, sender_associated_token_account);
 
     let recipient = Keypair::new();
-    let (recipient_associated_token_account, recipient_associated_token_account_bump) = derive_token_ata(&recipient.pubkey(), &mint_pda);
+    let recipient_associated_token_account = derive_token_ata(&recipient.pubkey(), &mint_pda);
 
     let transfer_proof_result = get_create_accounts_proof(&rpc, &ID, vec![])
         .await
@@ -172,9 +175,9 @@ async fn test_transfer() {
         destination: recipient_associated_token_account,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
         system_program: solana_sdk::system_program::ID,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        rent_sponsor: RENT_SPONSOR,
-        light_token_cpi_authority: light_token_types::CPI_AUTHORITY_PDA.into(),
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
+        light_token_cpi_authority: light_token::constants::LIGHT_TOKEN_CPI_AUTHORITY,
     };
 
     let transfer_amount: u64 = 500_000_000; // 0.5 tokens
@@ -190,7 +193,6 @@ async fn test_transfer() {
         data: create_and_transfer::instruction::Transfer {
             params: TransferParams {
                 create_accounts_proof: transfer_proof_result.create_accounts_proof,
-                dest_associated_token_account_bump: recipient_associated_token_account_bump,
                 amount: transfer_amount,
                 decimals,
             },

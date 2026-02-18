@@ -1,8 +1,8 @@
 #![allow(unexpected_cfgs, deprecated)]
 
 use anchor_lang::prelude::*;
-use light_sdk::interface::CreateAccountsProof;
-use light_token::anchor::{derive_light_cpi_signer, light_program, CpiSigner, LightAccounts};
+use light_account::CreateAccountsProof;
+use light_account::{derive_light_cpi_signer, light_program, CpiSigner, LightAccounts};
 use light_token::instruction::TransferInterfaceCpi;
 
 declare_id!("672fL1Nm191MbPoygNM9DRiG2psBELn97XUpGbU3jW7E");
@@ -13,7 +13,6 @@ pub const LIGHT_CPI_SIGNER: CpiSigner =
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct TransferParams {
     pub create_accounts_proof: CreateAccountsProof,
-    pub dest_associated_token_account_bump: u8,
     pub amount: u64,
     pub decimals: u8,
 }
@@ -65,8 +64,7 @@ pub struct Transfer<'info> {
     #[account(mut)]
     #[light_account(init,
         associated_token::authority = recipient,
-        associated_token::mint = mint,
-        associated_token::bump = params.dest_associated_token_account_bump
+        associated_token::mint = mint
     )]
     pub destination: UncheckedAccount<'info>,
 
@@ -76,11 +74,11 @@ pub struct Transfer<'info> {
     pub system_program: Program<'info, System>,
 
     /// CHECK: Validated by light-token CPI
-    pub light_token_compressible_config: AccountInfo<'info>,
+    pub light_token_config: AccountInfo<'info>,
 
     /// CHECK: Validated by light-token CPI
     #[account(mut)]
-    pub rent_sponsor: AccountInfo<'info>,
+    pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Validated by light-token CPI
     pub light_token_cpi_authority: AccountInfo<'info>,

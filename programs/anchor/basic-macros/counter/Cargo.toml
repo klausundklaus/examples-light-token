@@ -18,10 +18,9 @@ test-sbf = []
 
 [dependencies]
 anchor-lang = { workspace = true }
-blake3 = { workspace = true }
-light-account = { version = "0.20.0", features = ["anchor"] }
-light-compressed-account = "0.10.1"
-light-sdk = { version = "0.20.0", features = ["anchor", "cpi-context", "v2"] }
+light-account = { workspace = true }
+light-compressed-account = { workspace = true }
+light-sdk = { workspace = true }
 light-hasher = { workspace = true, features = ["solana"] }
 solana-program = { workspace = true }
 solana-pubkey = { workspace = true }
@@ -30,8 +29,8 @@ solana-program-error = { workspace = true }
 solana-msg = { workspace = true }
 
 [dev-dependencies]
-light-program-test = "0.20.0"
-light-client = { version = "0.20.0", features = ["v2", "anchor"] }
+light-program-test = { workspace = true }
+light-client = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 solana-keypair = { workspace = true }
 solana-signer = { workspace = true }

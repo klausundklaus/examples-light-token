@@ -165,7 +165,7 @@ async fn test_transfer_spl_to_light() {
 
     // 4. Create Light ATA for destination
     let recipient = Keypair::new();
-    let (dest_ata, _) = derive_token_ata(&recipient.pubkey(), &mint);
+    let dest_ata = derive_token_ata(&recipient.pubkey(), &mint);
     let create_ata_ix = CreateAssociatedTokenAccount::new(payer.pubkey(), recipient.pubkey(), mint)
         .instruction()
         .unwrap();

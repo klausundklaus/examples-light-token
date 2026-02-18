@@ -9,13 +9,12 @@ declare_id!("35MukgdfpNUbPMhTmEk63ECV8vjgpNVFRH9nP8ovMN58");
 pub mod light_token_anchor_create_associated_token_account {
     use super::*;
 
-    pub fn create_associated_token_account(ctx: Context<CreateAssociatedTokenAccountAccounts>, bump: u8, idempotent: bool) -> Result<()> {
+    pub fn create_associated_token_account(ctx: Context<CreateAssociatedTokenAccountAccounts>, idempotent: bool) -> Result<()> {
         let cpi = CreateAssociatedAccountCpi {
             payer: ctx.accounts.payer.to_account_info(),
             owner: ctx.accounts.owner.to_account_info(),
             mint: ctx.accounts.mint.to_account_info(),
             ata: ctx.accounts.associated_token_account.to_account_info(),
-            bump,
         };
 
         if idempotent {

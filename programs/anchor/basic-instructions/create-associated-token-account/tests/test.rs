@@ -75,7 +75,7 @@ async fn test_create_associated_token_account() {
 
     // You can use light, spl, t22 mints to create a light token associated token account.
     // Derive associated token account address and bump
-    let (associated_token_account, associated_token_account_bump) = derive_token_ata(&payer.pubkey(), &mint_pda);
+    let associated_token_account = derive_token_ata(&payer.pubkey(), &mint_pda);
 
     // Call the anchor program to create associated token account
     let compressible_config = config_pda();
@@ -95,7 +95,6 @@ async fn test_create_associated_token_account() {
         }
         .to_account_metas(Some(true)),
         data: CreateAssociatedTokenAccount {
-            bump: associated_token_account_bump,
             idempotent: false,
         }
         .data(),

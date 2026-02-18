@@ -138,7 +138,7 @@ pub async fn create_associated_token_account_for_owner(
     owner: &Pubkey,
     mint_pda: &Pubkey,
 ) -> Pubkey {
-    let (associated_token_account, _) = derive_token_ata(owner, mint_pda);
+    let associated_token_account = derive_token_ata(owner, mint_pda);
     let create_associated_token_account_ix = CreateAssociatedTokenAccount::new(payer.pubkey(), *owner, *mint_pda)
         .instruction()
         .unwrap();

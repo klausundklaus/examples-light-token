@@ -1,19 +1,26 @@
 name: Setup Environment
-description: Setup Rust, Solana CLI, and Light CLI for testing
+description: Setup Rust, Solana CLI, and optionally Node.js for testing
 
 inputs:
+  example:
+    description: "Example directory path"
+    required: true
   solana-cli-version:
     description: "Solana CLI version"
     required: false
-    default: "2.1.21"
+    default: "2.3.11"
   rust-toolchain:
     description: "Rust toolchain version"
     required: false
-    default: "1.85.0"
+    default: "1.90.0"
   light-cli-version:
     description: "Light CLI version"
     required: false
     default: "alpha"
+  photon-indexer:
+    description: "Install Photon indexer (required for TypeScript tests)"
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -22,18 +29,20 @@ runs:
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: ${{ inputs.rust-toolchain }}
-        cache: false
+        rustflags: ""
+        cache-workspaces: ${{ inputs.example || '.' }}
+
+    - name: Setup Node.js
+      if: inputs.node-version != ''
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
 
     - name: Setup Node.js (for Light CLI)
+      if: inputs.node-version == ''
       uses: actions/setup-node@v4
       with:
         node-version: "22"
-
-    - name: Cache npm global packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: npm-${{ runner.os }}-light-cli-${{ inputs.light-cli-version }}
 
     - name: Cache Solana CLI tools
       uses: actions/cache@v4
@@ -41,7 +50,7 @@ runs:
         path: |
           ~/.cache/solana/
           ~/.local/share/solana/
-        key: solana-cli-${{ runner.os }}-${{ inputs.solana-cli-version }}
+        key: solana-cli-${{ runner.os }}-build-${{ inputs.solana-cli-version }}
 
     - name: Install Solana CLI tools
       shell: bash
@@ -52,6 +61,21 @@ runs:
     - name: Install Light CLI
       shell: bash
       run: npm install -g @lightprotocol/zk-compression-cli@${{ inputs.light-cli-version }}
+
+    - name: Cache Photon indexer
+      if: inputs.photon-indexer == 'true'
+      id: cache-photon
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin/photon
+        key: photon-${{ runner.os }}-ac7df6c388db847b7693a7a1cb766a7c9d7809b5
+
+    - name: Install Photon indexer
+      if: inputs.photon-indexer == 'true' && steps.cache-photon.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        RUSTFLAGS: "-A dead-code"
+      run: cargo install --git https://github.com/lightprotocol/photon.git --rev ac7df6c388db847b7693a7a1cb766a7c9d7809b5 --locked --force
 
     - name: Generate keypair
       shell: bash
@@ -64,4 +88,3 @@ runs:
         cargo --version
         solana --version
         light --version
-

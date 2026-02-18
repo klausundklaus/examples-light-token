@@ -1,14 +1,27 @@
+# Dependencies
 **/node_modules/
 **/dist/
+
+# Environment and secrets
 **/.env
+**/.env.*
+**/*-keypair.json
+**/id.json
+
+# Build artifacts
+**/target
+**/.anchor
+
+# Test artifacts
+**/test-ledger
+
+# Lock files
 **/pnpm-lock.yaml
 **/package-lock.json
-**/*.json.bak
-**/test-ledger
-**/target
-cli/accounts
-README.html
-README_files/
 
-**/.surfpool
-.surfpool
+# Backups
+**/*.json.bak
+
+# Project-specific
+cli/accounts/
+bugs.md

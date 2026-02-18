@@ -1,10 +1,9 @@
 #![allow(deprecated)]
 
 use anchor_lang::prelude::*;
-use light_compressible::CreateAccountsProof;
-use light_sdk::derive_light_cpi_signer;
-use light_sdk_macros::{light_program, LightAccounts};
-use light_sdk_types::CpiSigner;
+use light_account::{
+    derive_light_cpi_signer, light_program, CreateAccountsProof, CpiSigner, LightAccounts,
+};
 
 declare_id!("HVmVqSJyMejBeUigePMSfX4aENJzCGHNxAJuT2PDMPRx");
 
@@ -57,12 +56,12 @@ pub struct CreateMint<'info> {
     /// CHECK: Compression config PDA
     pub compression_config: AccountInfo<'info>,
 
-    /// CHECK: Light Token compressible config
-    pub light_token_compressible_config: AccountInfo<'info>,
+    /// CHECK: Light Token config
+    pub light_token_config: AccountInfo<'info>,
 
     /// CHECK: Rent sponsor
     #[account(mut)]
-    pub rent_sponsor: AccountInfo<'info>,
+    pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light Token program
     pub light_token_program: AccountInfo<'info>,
@@ -106,12 +105,12 @@ pub struct CreateMintWithMetadata<'info> {
     /// CHECK: Compression config PDA
     pub compression_config: AccountInfo<'info>,
 
-    /// CHECK: Light Token compressible config
-    pub light_token_compressible_config: AccountInfo<'info>,
+    /// CHECK: Light Token config
+    pub light_token_config: AccountInfo<'info>,
 
     /// CHECK: Rent sponsor
     #[account(mut)]
-    pub rent_sponsor: AccountInfo<'info>,
+    pub light_token_rent_sponsor: AccountInfo<'info>,
 
     /// CHECK: Light Token program
     pub light_token_program: AccountInfo<'info>,

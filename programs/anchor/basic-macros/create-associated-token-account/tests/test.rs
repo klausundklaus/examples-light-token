@@ -4,8 +4,8 @@ use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
     ProgramTestConfig, Rpc,
 };
-use light_sdk_types::LIGHT_TOKEN_PROGRAM_ID;
-use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+use light_account::{derive_rent_sponsor_pda, LIGHT_TOKEN_PROGRAM_ID};
+use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 use solana_instruction::Instruction;
 use solana_signer::Signer;
 use test_utils::create_mint;
@@ -25,11 +25,13 @@ async fn test_create_associated_token_account() {
 
     let program_data_pda = setup_mock_program_data(&mut rpc, &payer, &program_id);
 
+    let (rent_sponsor, _) = derive_rent_sponsor_pda(&program_id);
+
     let (init_config_ix, _config_pda) = InitializeRentFreeConfig::new(
         &program_id,
         &payer.pubkey(),
         &program_data_pda,
-        RENT_SPONSOR,
+        rent_sponsor,
         payer.pubkey(),
     )
     .build();
@@ -44,7 +46,7 @@ async fn test_create_associated_token_account() {
     let associated_token_account_owner = payer.pubkey();
 
     // Derive the associated token account address using Light Token SDK's derivation
-    let (associated_token_account, associated_token_account_bump) = light_token::instruction::derive_token_ata(&associated_token_account_owner, &mint);
+    let associated_token_account = light_token::instruction::derive_token_ata(&associated_token_account_owner, &mint);
 
     // Get proof (no PDA accounts for associated token account-only instruction)
     let proof_result = get_create_accounts_proof(&rpc, &program_id, vec![])
@@ -57,8 +59,8 @@ async fn test_create_associated_token_account() {
         associated_token_account_mint: mint,
         associated_token_account_owner,
         associated_token_account,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        light_token_rent_sponsor: RENT_SPONSOR,
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
         system_program: solana_sdk::system_program::ID,
     };
@@ -66,7 +68,6 @@ async fn test_create_associated_token_account() {
     let instruction_data = light_token_macro_create_associated_token_account::instruction::CreateAssociatedTokenAccount {
         params: CreateAssociatedTokenAccountParams {
             create_accounts_proof: proof_result.create_accounts_proof,
-            associated_token_account_bump,
         },
     };
 

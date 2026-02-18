@@ -1,11 +1,10 @@
 #![allow(deprecated)]
 
 use anchor_lang::prelude::*;
-use light_compressible::CreateAccountsProof;
-use light_sdk::derive_light_cpi_signer;
-use light_sdk_macros::{light_program, LightAccounts};
-use light_sdk_types::CpiSigner;
-use light_token::instruction::{COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR as LIGHT_TOKEN_RENT_SPONSOR};
+use light_account::{
+    derive_light_cpi_signer, light_program, CreateAccountsProof, CpiSigner, LightAccounts,
+};
+use light_token::instruction::{LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 
 declare_id!("9p5BUDtVmRRJqp2sN73ZUZDbaYtYvEWuxzrHH3A2ni9y");
 
@@ -45,16 +44,17 @@ pub struct CreateTokenVault<'info> {
     )]
     #[light_account(
         init,
-        token::authority = [VAULT_SEED, self.mint.key()],
+        token::seeds = [VAULT_SEED, self.mint.key()],
         token::mint = mint,
         token::owner = vault_authority,
+        token::owner_seeds = [VAULT_AUTH_SEED],
         token::bump = params.vault_bump
     )]
     pub vault: UncheckedAccount<'info>,
 
     /// CHECK: Validated by address constraint
-    #[account(address = COMPRESSIBLE_CONFIG_V1)]
-    pub light_token_compressible_config: AccountInfo<'info>,
+    #[account(address = LIGHT_TOKEN_CONFIG)]
+    pub light_token_config: AccountInfo<'info>,
 
     /// CHECK: Validated by address constraint
     #[account(mut, address = LIGHT_TOKEN_RENT_SPONSOR)]

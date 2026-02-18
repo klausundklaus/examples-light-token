@@ -6,8 +6,8 @@ use light_program_test::{
     program_test::{setup_mock_program_data, LightProgramTest},
     ProgramTestConfig, Rpc,
 };
-use light_sdk_types::LIGHT_TOKEN_PROGRAM_ID;
-use light_token::instruction::{find_mint_address, COMPRESSIBLE_CONFIG_V1, RENT_SPONSOR};
+use light_account::{derive_rent_sponsor_pda, LIGHT_TOKEN_PROGRAM_ID};
+use light_token::instruction::{find_mint_address, LIGHT_TOKEN_CONFIG, LIGHT_TOKEN_RENT_SPONSOR};
 use solana_instruction::Instruction;
 use solana_keypair::Keypair;
 use solana_pubkey::Pubkey;
@@ -26,11 +26,13 @@ async fn setup() -> (light_program_test::LightProgramTest, Keypair, Pubkey, Pubk
 
     let program_data_pda = setup_mock_program_data(&mut rpc, &payer, &program_id);
 
+    let (rent_sponsor, _) = derive_rent_sponsor_pda(&program_id);
+
     let (init_config_ix, config_pda) = InitializeRentFreeConfig::new(
         &program_id,
         &payer.pubkey(),
         &program_data_pda,
-        RENT_SPONSOR,
+        rent_sponsor,
         payer.pubkey(),
     )
     .build();
@@ -69,10 +71,10 @@ async fn test_create_mint() {
         mint_signer: mint_signer_pda,
         mint: mint_pda,
         compression_config: config_pda,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        rent_sponsor: RENT_SPONSOR,
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
-        light_token_cpi_authority: light_token_types::CPI_AUTHORITY_PDA.into(),
+        light_token_cpi_authority: light_token::constants::LIGHT_TOKEN_CPI_AUTHORITY,
         system_program: solana_sdk::system_program::ID,
     };
 
@@ -141,10 +143,10 @@ async fn test_create_mint_with_metadata() {
         mint_signer: mint_signer_pda,
         mint: mint_pda,
         compression_config: config_pda,
-        light_token_compressible_config: COMPRESSIBLE_CONFIG_V1,
-        rent_sponsor: RENT_SPONSOR,
+        light_token_config: LIGHT_TOKEN_CONFIG,
+        light_token_rent_sponsor: LIGHT_TOKEN_RENT_SPONSOR,
         light_token_program: LIGHT_TOKEN_PROGRAM_ID.into(),
-        light_token_cpi_authority: light_token_types::CPI_AUTHORITY_PDA.into(),
+        light_token_cpi_authority: light_token::constants::LIGHT_TOKEN_CPI_AUTHORITY,
         system_program: solana_sdk::system_program::ID,
     };
 
