@@ -22,7 +22,6 @@ pub struct TakeOffer<'info> {
 
     /// CHECK: Authority PDA (writable for vault close)
     #[account(
-        mut,
         seeds = [AUTH_SEED],
         bump,
     )]
