@@ -331,9 +331,9 @@ pub struct SwapExactTokensForTokens<'info> {
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_a]
     #[account(mut)]
-    pub spl_interface_pda_a: UncheckedAccount<'info>,
+    pub spl_interface_pda_a: Option<AccountInfo<'info>>,
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_b]
     #[account(mut)]
-    pub spl_interface_pda_b: UncheckedAccount<'info>,
+    pub spl_interface_pda_b: Option<AccountInfo<'info>>,
 }
