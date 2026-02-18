@@ -120,10 +120,9 @@ pub fn send_offered_tokens_to_vault<'info>(
         Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
         Some(params.spl_interface_bump_a),
     )
-    .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+    ?;
 
     cpi.invoke()
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e).into())
 }
 
 pub fn save_offer<'info>(
