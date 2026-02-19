@@ -4,7 +4,7 @@
 //! is always a Light Token account:
 //!
 //! - `Spl` / `Token2022`: standard associated token accounts, transfers via `TransferInterfaceCpi`
-//! - `Light`: Light Token accounts, transfers via `TransferCheckedCpi`
+//! - `Light`: Light Token accounts, transfers via `TransferInterfaceCpi`
 //! - `LightSpl` / `LightT22`: SPL/Token 2022 mints converted into Light Token accounts before
 //!   the escrow starts (tokens are minted to a temp associated token account, then
 //!   transferred to an associated Light Token account via `transfer_spl_to_light`)

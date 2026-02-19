@@ -1,12 +1,12 @@
 //! Escrow tests for 5 token configurations. Vault is always a Light Token account.
 //!
-//! | Test | Mint | User accounts | Transfer path |
-//! |------|------|---------------|---------------|
-//! | `test_escrow_spl` | SPL | SPL | `TransferInterfaceCpi` |
-//! | `test_escrow_t22` | Token 2022 | Token 2022 | `TransferInterfaceCpi` |
-//! | `test_escrow_light` | Light Token | Light Token | `TransferInterfaceCpi` |
-//! | `test_escrow_spl_light` | SPL | Light Token | `TransferInterfaceCpi` |
-//! | `test_escrow_t22_light` | Token 2022 | Light Token | `TransferInterfaceCpi` |
+//! | Test | Mint | User accounts |
+//! |------|------|---------------|
+//! | `test_escrow_spl` | SPL | SPL |
+//! | `test_escrow_t22` | Token 2022 | Token 2022 |
+//! | `test_escrow_light` | Light Token | Light Token |
+//! | `test_escrow_spl_light` | SPL | Light Token |
+//! | `test_escrow_t22_light` | Token 2022 | Light Token |
 //!
 //! Each test also simulates the cold/hot lifecycle:
 //! Light Token accounts auto-compress when sponsored rent expires. Before each
@@ -77,7 +77,7 @@ async fn test_escrow_t22_light() {
 /// 1. Create token accounts per `TokenConfig` (see `create_token_account`)
 /// 2. Compress and load all accounts to active state (simulates cold/hot lifecycle)
 /// 3. Make offer: deposit token A into vault, record escrow terms
-/// 4. Compress and load again before take (includes program-owned PDAs)
+/// 4. Compress and load again before take (simulates cold/hot lifecycle)
 /// 5. Take offer: taker sends token B to maker, vault releases token A to taker
 /// 6. Verify balances and account closure
 async fn run_escrow<R: Rpc + TestRpc + Indexer>(

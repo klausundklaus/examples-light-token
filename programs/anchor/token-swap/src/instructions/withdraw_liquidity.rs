@@ -38,8 +38,6 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
 
     let decimals_a = ctx.accounts.mint_a.decimals;
 
-    let is_spl = ctx.accounts.spl_interface_pda_a.is_some();
-
     let mut cpi_a = TransferInterfaceCpi::new(
         amount_a,
         decimals_a,
@@ -50,7 +48,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
         ctx.accounts.light_token_cpi_authority.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
     );
-    if is_spl {
+    if ctx.accounts.spl_interface_pda_a.is_some() {
         cpi_a = cpi_a.with_spl_interface(
             Some(ctx.accounts.mint_a.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
@@ -80,7 +78,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
         ctx.accounts.light_token_cpi_authority.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
     );
-    if is_spl {
+    if ctx.accounts.spl_interface_pda_b.is_some() {
         cpi_b = cpi_b.with_spl_interface(
             Some(ctx.accounts.mint_b.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),

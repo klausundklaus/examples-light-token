@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_token::instruction::{TransferCheckedCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
+use light_token::instruction::{TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
 use light_token::utils::get_token_account_balance;
 
 use crate::constants::{AUTH_SEED, VAULT_SEED};
@@ -97,42 +97,25 @@ impl<'info> Refund<'info> {
         let decimals = self.mint_to_raise.decimals;
         let refund_amount = self.contributor_account.amount;
 
+        let mut cpi = TransferInterfaceCpi::new(
+            refund_amount,
+            decimals,
+            self.vault.to_account_info(),
+            self.contributor_ata.to_account_info(),
+            self.authority.to_account_info(),
+            self.contributor.to_account_info(),
+            self.light_token_cpi_authority.to_account_info(),
+            self.system_program.to_account_info(),
+        );
         if self.spl_interface_pda.is_some() {
-            let cpi = TransferInterfaceCpi::new(
-                refund_amount,
-                decimals,
-                self.vault.to_account_info(),
-                self.contributor_ata.to_account_info(),
-                self.authority.to_account_info(),
-                self.contributor.to_account_info(),
-                self.light_token_cpi_authority.to_account_info(),
-                self.system_program.to_account_info(),
-            )
-            .with_spl_interface(
+            cpi = cpi.with_spl_interface(
                 Some(self.mint_to_raise.to_account_info()),
                 Some(self.token_program.to_account_info()),
                 self.spl_interface_pda.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump),
-            )
-            ?;
-
-            cpi.invoke_signed(&[authority_seeds])
-             ?;
-        } else {
-            TransferCheckedCpi {
-                source: self.vault.to_account_info(),
-                mint: self.mint_to_raise.to_account_info(),
-                destination: self.contributor_ata.to_account_info(),
-                amount: refund_amount,
-                decimals,
-                authority: self.authority.to_account_info(),
-                system_program: self.system_program.to_account_info(),
-                max_top_up: None,
-                fee_payer: Some(self.contributor.to_account_info()),
-            }
-            .invoke_signed(&[authority_seeds])
-     ?;
+            )?;
         }
+        cpi.invoke_signed(&[authority_seeds])?;
 
         self.fundraiser.current_amount = self.fundraiser.current_amount
             .checked_sub(refund_amount)

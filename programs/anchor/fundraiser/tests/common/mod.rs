@@ -4,7 +4,7 @@
 //! is always a Light Token account:
 //!
 //! - `Spl` / `Token2022`: standard associated token accounts, transfers via `TransferInterfaceCpi`
-//! - `Light`: Light Token accounts, transfers via `TransferCheckedCpi`
+//! - `Light`: Light Token accounts, transfers via `TransferInterfaceCpi`
 //! - `LightSpl` / `LightT22`: SPL/Token 2022 mints converted into Light Token accounts before
 //!   the fundraiser starts (tokens are minted to a temporary associated token account, then
 //!   transferred to an associated Light Token account via `transfer_spl_to_light`)
@@ -45,7 +45,7 @@ use solana_signer::Signer;
 /// which CPI path `transfer_tokens()` selects at runtime:
 ///
 /// - SPL/Token 2022 contributor accounts → `TransferInterfaceCpi` (needs interface PDA)
-/// - Light contributor accounts → `TransferCheckedCpi` (no interface PDA)
+/// - Light contributor accounts → `TransferInterfaceCpi` (no interface PDA)
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub enum TokenConfig {

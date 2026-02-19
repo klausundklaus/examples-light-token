@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use fixed::types::I64F64;
 use light_anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use light_token::instruction::{TransferCheckedCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
+use light_token::instruction::{TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
 use light_token::utils::get_token_account_balance;
 
 use crate::{
@@ -81,138 +81,85 @@ pub fn swap_exact_tokens_for_tokens(
     let is_spl = ctx.accounts.spl_interface_pda_a.is_some();
 
     if swap_a {
-        if !is_spl {
-            // fee_payer: Some ensures authority is readonly (required for PDA with account data)
-            TransferCheckedCpi {
-                source: ctx.accounts.trader_account_a.to_account_info(),
-                mint: ctx.accounts.mint_a.to_account_info(),
-                destination: ctx.accounts.pool_account_a.to_account_info(),
-                amount: input,
-                decimals: decimals_a,
-                authority: ctx.accounts.trader.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                max_top_up: None,
-                fee_payer: Some(ctx.accounts.payer.to_account_info()),
-            }
-            .invoke()?;
-
-            TransferCheckedCpi {
-                source: ctx.accounts.pool_account_b.to_account_info(),
-                mint: ctx.accounts.mint_b.to_account_info(),
-                destination: ctx.accounts.trader_account_b.to_account_info(),
-                amount: output,
-                decimals: decimals_b,
-                authority: ctx.accounts.pool_authority.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                max_top_up: None,
-                fee_payer: Some(ctx.accounts.payer.to_account_info()),
-            }
-            .invoke_signed(&[authority_seeds])?;
-        } else {
-            let cpi_input = TransferInterfaceCpi::new(
-                input,
-                decimals_a,
-                ctx.accounts.trader_account_a.to_account_info(),
-                ctx.accounts.pool_account_a.to_account_info(),
-                ctx.accounts.trader.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.light_token_cpi_authority.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            )
-            .with_spl_interface(
+        let mut cpi_input = TransferInterfaceCpi::new(
+            input,
+            decimals_a,
+            ctx.accounts.trader_account_a.to_account_info(),
+            ctx.accounts.pool_account_a.to_account_info(),
+            ctx.accounts.trader.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        );
+        if is_spl {
+            cpi_input = cpi_input.with_spl_interface(
                 Some(ctx.accounts.mint_a.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
                 ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_a),
             )?;
+        }
+        cpi_input.invoke()?;
 
-            cpi_input.invoke()?;
-
-            let cpi_output = TransferInterfaceCpi::new(
-                output,
-                decimals_b,
-                ctx.accounts.pool_account_b.to_account_info(),
-                ctx.accounts.trader_account_b.to_account_info(),
-                ctx.accounts.pool_authority.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.light_token_cpi_authority.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            )
-            .with_spl_interface(
+        let mut cpi_output = TransferInterfaceCpi::new(
+            output,
+            decimals_b,
+            ctx.accounts.pool_account_b.to_account_info(),
+            ctx.accounts.trader_account_b.to_account_info(),
+            ctx.accounts.pool_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        );
+        if is_spl {
+            cpi_output = cpi_output.with_spl_interface(
                 Some(ctx.accounts.mint_b.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
                 ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_b),
             )?;
-
-            cpi_output.invoke_signed(&[authority_seeds])?;
         }
+        cpi_output.invoke_signed(&[authority_seeds])?;
     } else {
-        if !is_spl {
-            TransferCheckedCpi {
-                source: ctx.accounts.trader_account_b.to_account_info(),
-                mint: ctx.accounts.mint_b.to_account_info(),
-                destination: ctx.accounts.pool_account_b.to_account_info(),
-                amount: input,
-                decimals: decimals_b,
-                authority: ctx.accounts.trader.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                max_top_up: None,
-                fee_payer: Some(ctx.accounts.payer.to_account_info()),
-            }
-            .invoke()?;
-
-            TransferCheckedCpi {
-                source: ctx.accounts.pool_account_a.to_account_info(),
-                mint: ctx.accounts.mint_a.to_account_info(),
-                destination: ctx.accounts.trader_account_a.to_account_info(),
-                amount: output,
-                decimals: decimals_a,
-                authority: ctx.accounts.pool_authority.to_account_info(),
-                system_program: ctx.accounts.system_program.to_account_info(),
-                max_top_up: None,
-                fee_payer: Some(ctx.accounts.payer.to_account_info()),
-            }
-            .invoke_signed(&[authority_seeds])?;
-        } else {
-            let cpi_input = TransferInterfaceCpi::new(
-                input,
-                decimals_b,
-                ctx.accounts.trader_account_b.to_account_info(),
-                ctx.accounts.pool_account_b.to_account_info(),
-                ctx.accounts.trader.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.light_token_cpi_authority.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            )
-            .with_spl_interface(
+        let mut cpi_input = TransferInterfaceCpi::new(
+            input,
+            decimals_b,
+            ctx.accounts.trader_account_b.to_account_info(),
+            ctx.accounts.pool_account_b.to_account_info(),
+            ctx.accounts.trader.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        );
+        if is_spl {
+            cpi_input = cpi_input.with_spl_interface(
                 Some(ctx.accounts.mint_b.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
                 ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_b),
             )?;
+        }
+        cpi_input.invoke()?;
 
-            cpi_input.invoke()?;
-
-            let cpi_output = TransferInterfaceCpi::new(
-                output,
-                decimals_a,
-                ctx.accounts.pool_account_a.to_account_info(),
-                ctx.accounts.trader_account_a.to_account_info(),
-                ctx.accounts.pool_authority.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                ctx.accounts.light_token_cpi_authority.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            )
-            .with_spl_interface(
+        let mut cpi_output = TransferInterfaceCpi::new(
+            output,
+            decimals_a,
+            ctx.accounts.pool_account_a.to_account_info(),
+            ctx.accounts.trader_account_a.to_account_info(),
+            ctx.accounts.pool_authority.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+        );
+        if is_spl {
+            cpi_output = cpi_output.with_spl_interface(
                 Some(ctx.accounts.mint_a.to_account_info()),
                 Some(ctx.accounts.token_program.to_account_info()),
                 ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump_a),
             )?;
-
-            cpi_output.invoke_signed(&[authority_seeds])?;
         }
+        cpi_output.invoke_signed(&[authority_seeds])?;
     }
 
     msg!(

@@ -470,7 +470,7 @@ pub mod light_tokens {
 
 pub mod spl_interface {
     use super::*;
-    use light_token::instruction::TransferFromSpl;
+    use light_token::instruction::{SplInterface, TransferInterface};
 
     /// Create an SPL interface PDA for the given mint
     ///
@@ -539,20 +539,25 @@ pub mod spl_interface {
         amount: u64,
         mint_type: MintType,
     ) {
-        let transfer_ix = TransferFromSpl {
-            amount,
-            spl_interface_pda_bump: spl_interface_bump,
-            decimals,
-            source_spl_token_account: *source_spl_ata,
+        let transfer_ix = TransferInterface {
+            source: *source_spl_ata,
             destination: *destination_light_ata,
+            amount,
+            decimals,
             authority: authority.pubkey(),
-            mint: *mint,
             payer: payer.pubkey(),
-            spl_interface_pda: *spl_interface_pda,
-            spl_token_program: mint_type.program_id(),
+            spl_interface: Some(SplInterface {
+                mint: *mint,
+                spl_token_program: mint_type.program_id(),
+                spl_interface_pda: *spl_interface_pda,
+                spl_interface_pda_bump: spl_interface_bump,
+            }),
+            max_top_up: None,
+            source_owner: mint_type.program_id(),
+            destination_owner: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         }
         .instruction()
-        .expect("TransferFromSpl instruction should succeed");
+        .expect("TransferInterface instruction should succeed");
 
         // Sign with both payer and authority if they're different
         let signers: Vec<&Keypair> = if payer.pubkey() == authority.pubkey() {

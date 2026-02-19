@@ -4,7 +4,7 @@
 //! vaults are always Light Token accounts:
 //!
 //! - `Spl` / `Token2022`: standard associated token accounts, transfers via `TransferInterfaceCpi`
-//! - `Light` / `LightToLight`: Light Token accounts, transfers via `TransferCheckedCpi`
+//! - `Light` / `LightToLight`: Light Token accounts, transfers via `TransferInterfaceCpi`
 //! - `LightSpl` / `LightT22`: SPL/Token 2022 mints converted into Light Token accounts before
 //!   the AMM starts (tokens are minted to a temp associated token account, then
 //!   transferred to an associated Light Token account via `transfer_spl_to_light`)
@@ -49,7 +49,7 @@ use spl_token_2022::pod::PodAccount;
 /// which CPI path `transfer_tokens()` selects at runtime:
 ///
 /// - SPL/Token 2022 user accounts → `TransferInterfaceCpi` (needs interface PDA)
-/// - Light user accounts → `TransferCheckedCpi` (no interface PDA)
+/// - Light user accounts → `TransferInterfaceCpi` (no interface PDA)
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub enum TokenConfig {

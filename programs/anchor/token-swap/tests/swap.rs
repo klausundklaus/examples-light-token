@@ -19,22 +19,22 @@
 //! ## Token scenarios
 //!
 //! The pool vaults are always Light Token accounts. The user's account type
-//! determines which CPI path `transfer_tokens()` in `shared.rs` selects:
+//! determines which CPI path the instruction selects:
 //!
-//! | Test | Mint | User accounts | LP mint | Transfer path | Purpose |
-//! |------|------|---------------|---------|---------------|---------|
-//! | `test_swap_spl` | SPL | SPL ATAs | SPL | `TransferInterfaceCpi` | SPL mints work with Light vault |
-//! | `test_swap_t22` | Token 2022 | Token 2022 ATAs | Token 2022 | `TransferInterfaceCpi` | Token 2022 mints work with Light Token vault |
-//! | `test_swap_light` | Light | Light ATAs | SPL | `TransferCheckedCpi` | Light Token mints, SPL LP mint |
-//! | `test_swap_spl_light` | SPL | Light ATAs | SPL | `TransferCheckedCpi` | SPL mint, converted user accounts |
-//! | `test_swap_t22_light` | Token 2022 | Light ATAs | Token 2022 | `TransferCheckedCpi` | Token 2022 mint, converted user accounts |
-//! | `test_swap_full_light` | Light | Light ATAs | Light | `TransferCheckedCpi` | Fully rent-free (Light LP mint) |
+//! | Test | Mint | User accounts | LP mint | Purpose |
+//! |------|------|---------------|---------|---------|
+//! | `test_swap_spl` | SPL | SPL ATAs | SPL | SPL mints work with Light vault |
+//! | `test_swap_t22` | Token 2022 | Token 2022 ATAs | Token 2022 | Token 2022 mints work with Light Token vault |
+//! | `test_swap_light` | Light | Light ATAs | SPL | Light Token mints, SPL LP mint |
+//! | `test_swap_spl_light` | SPL | Light ATAs | SPL | SPL mint, converted user accounts |
+//! | `test_swap_t22_light` | Token 2022 | Light ATAs | Token 2022 | Token 2022 mint, converted user accounts |
+//! | `test_swap_full_light` | Light | Light ATAs | Light | Fully rent-free (Light LP mint) |
 //!
 //! For `Spl`/`Token2022`: user accounts are SPL/Token 2022, vaults are Light →
 //! `TransferInterfaceCpi` (with SPL interface PDA).
 //!
 //! For `Light`/`LightToLight`/`LightSpl`/`LightT22`: all accounts are Light Token →
-//! `TransferCheckedCpi` (no interface PDA needed).
+//! `TransferInterfaceCpi` (no interface PDA needed).
 //!
 //! `LightSpl`/`LightT22` convert tokens from SPL/Token 2022 associated token accounts
 //! into Light Token accounts *before* the AMM interactions start (in
@@ -105,7 +105,7 @@ async fn test_swap_t22() {
 
 /// Light Token mint + Light Token user accounts, SPL LP mint, and Light Token pool vaults.
 ///
-/// All token A/B transfers are Light-to-Light (`TransferCheckedCpi`).
+/// All token A/B transfers are Light-to-Light (`TransferInterfaceCpi`).
 /// LP mint is SPL because `create_pool` uses Anchor's `init` macro
 /// which only supports SPL/T22 mints.
 #[tokio::test]
@@ -118,7 +118,7 @@ async fn test_swap_light() {
 /// SPL mint + Light Token user accounts, SPL LP mint. SPL tokens converted to
 /// Light Token accounts in setup via `transfer_spl_to_light`.
 ///
-/// All transfers use `TransferCheckedCpi`.
+/// All transfers use `TransferInterfaceCpi`.
 #[tokio::test]
 async fn test_swap_spl_light() {
     let mut rpc = create_test_rpc().await;
@@ -129,7 +129,7 @@ async fn test_swap_spl_light() {
 /// Token 2022 mint + Light Token user accounts, Token 2022 LP mint. Token 2022 tokens
 /// converted to Light Token accounts in setup via `transfer_spl_to_light`.
 ///
-/// All transfers use `TransferCheckedCpi`.
+/// All transfers use `TransferInterfaceCpi`.
 #[tokio::test]
 async fn test_swap_t22_light() {
     let mut rpc = create_test_rpc().await;
@@ -140,7 +140,7 @@ async fn test_swap_t22_light() {
 /// Light Token mints + Light Token user accounts + Light Token LP mint.
 ///
 /// Uses `create_pool_light_lp` to create the LP mint as a Light Token mint via CPI.
-/// All transfers use `TransferCheckedCpi`.
+/// All transfers use `TransferInterfaceCpi`.
 #[tokio::test]
 async fn test_swap_full_light() {
     let mut rpc = create_test_rpc().await;

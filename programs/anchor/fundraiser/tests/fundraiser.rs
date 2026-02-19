@@ -20,19 +20,19 @@
 //! The vault is always a Light Token account. The contributor's account type
 //! determines which CPI path `TransferInterfaceCpi` selects:
 //!
-//! | Test | Mint | Contributor accounts | Transfer path | Purpose |
-//! |------|------|---------------------|---------------|---------|
-//! | `test_fundraiser_spl` | SPL | SPL associated token accounts | `TransferInterfaceCpi` | SPL mints work with Light vault |
-//! | `test_fundraiser_t22` | Token 2022 | Token 2022 associated token accounts | `TransferInterfaceCpi` | Token 2022 mints work with Light vault |
-//! | `test_fundraiser_light` | Light | Associated Light Token accounts | `TransferCheckedCpi` | Rent-free path |
-//! | `test_fundraiser_spl_light` | SPL | Associated Light Token accounts | `TransferCheckedCpi` | SPL mint, converted contributor accounts |
-//! | `test_fundraiser_t22_light` | Token 2022 | Associated Light Token accounts | `TransferCheckedCpi` | Token 2022 mint, converted contributor accounts |
+//! | Test | Mint | Contributor accounts | Purpose |
+//! |------|------|---------------------|---------|
+//! | `test_fundraiser_spl` | SPL | SPL associated token accounts | SPL mints work with Light vault |
+//! | `test_fundraiser_t22` | Token 2022 | Token 2022 associated token accounts | Token 2022 mints work with Light vault |
+//! | `test_fundraiser_light` | Light | Associated Light Token accounts | Rent-free path |
+//! | `test_fundraiser_spl_light` | SPL | Associated Light Token accounts | SPL mint, converted contributor accounts |
+//! | `test_fundraiser_t22_light` | Token 2022 | Associated Light Token accounts | Token 2022 mint, converted contributor accounts |
 //!
 //! For `Spl`/`Token2022`: contributor accounts are SPL/Token 2022, vault is Light →
 //! `TransferInterfaceCpi` (with SPL interface PDA).
 //!
 //! For `Light`/`LightSpl`/`LightT22`: all accounts are Light Token →
-//! `TransferCheckedCpi` (no interface PDA needed).
+//! `TransferInterfaceCpi` (no interface PDA needed).
 //!
 //! `LightSpl`/`LightT22` convert tokens from SPL/Token 2022 associated token accounts
 //! into associated Light Token accounts *before* the fundraiser starts (in `create_contributor`).
@@ -97,7 +97,7 @@ async fn test_fundraiser_t22() {
 
 /// Light Token mint + Light Token contributor accounts and Light Token vault.
 ///
-/// All transfers use `TransferCheckedCpi`.
+/// All transfers use `TransferInterfaceCpi`.
 #[tokio::test]
 async fn test_fundraiser_light() {
     let mut rpc = create_test_rpc().await;
@@ -108,7 +108,7 @@ async fn test_fundraiser_light() {
 /// SPL mint + Light Token contributor accounts. SPL tokens converted to associated
 /// Light Token accounts in setup via `transfer_spl_to_light`.
 ///
-/// All transfers use `TransferCheckedCpi`.
+/// All transfers use `TransferInterfaceCpi`.
 #[tokio::test]
 async fn test_fundraiser_spl_light() {
     let mut rpc = create_test_rpc().await;
@@ -119,7 +119,7 @@ async fn test_fundraiser_spl_light() {
 /// Token 2022 mint + Light Token contributor accounts. Token 2022 tokens converted to
 /// associated Light Token accounts in setup via `transfer_spl_to_light`.
 ///
-/// All transfers use `TransferCheckedCpi`.
+/// All transfers use `TransferInterfaceCpi`.
 #[tokio::test]
 async fn test_fundraiser_t22_light() {
     let mut rpc = create_test_rpc().await;

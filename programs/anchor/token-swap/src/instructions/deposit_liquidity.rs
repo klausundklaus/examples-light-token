@@ -80,74 +80,45 @@ pub fn deposit_liquidity(
     let decimals_a = ctx.accounts.mint_a.decimals;
     let decimals_b = ctx.accounts.mint_b.decimals;
 
-    let is_spl = ctx.accounts.spl_interface_pda_a.is_some();
-
-    if !is_spl {
-        // fee_payer: Some ensures authority is readonly (required for PDA with account data)
-        TransferCheckedCpi {
-            source: ctx.accounts.depositor_account_a.to_account_info(),
-            mint: ctx.accounts.mint_a.to_account_info(),
-            destination: ctx.accounts.pool_account_a.to_account_info(),
-            amount: amount_a,
-            decimals: decimals_a,
-            authority: ctx.accounts.depositor.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
-            fee_payer: Some(ctx.accounts.payer.to_account_info()),
-        }
-        .invoke()?;
-
-        TransferCheckedCpi {
-            source: ctx.accounts.depositor_account_b.to_account_info(),
-            mint: ctx.accounts.mint_b.to_account_info(),
-            destination: ctx.accounts.pool_account_b.to_account_info(),
-            amount: amount_b,
-            decimals: decimals_b,
-            authority: ctx.accounts.depositor.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
-            fee_payer: Some(ctx.accounts.payer.to_account_info()),
-        }
-        .invoke()?;
-    } else {
-        let cpi_a = TransferInterfaceCpi::new(
-            amount_a,
-            decimals_a,
-            ctx.accounts.depositor_account_a.to_account_info(),
-            ctx.accounts.pool_account_a.to_account_info(),
-            ctx.accounts.depositor.to_account_info(),
-            ctx.accounts.payer.to_account_info(),
-            ctx.accounts.light_token_cpi_authority.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-        )
-        .with_spl_interface(
+    let mut cpi_a = TransferInterfaceCpi::new(
+        amount_a,
+        decimals_a,
+        ctx.accounts.depositor_account_a.to_account_info(),
+        ctx.accounts.pool_account_a.to_account_info(),
+        ctx.accounts.depositor.to_account_info(),
+        ctx.accounts.payer.to_account_info(),
+        ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
+    );
+    if ctx.accounts.spl_interface_pda_a.is_some() {
+        cpi_a = cpi_a.with_spl_interface(
             Some(ctx.accounts.mint_a.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
             ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
             Some(spl_interface_bump_a),
         )?;
+    }
+    cpi_a.invoke()?;
 
-        cpi_a.invoke()?;
-
-        let cpi_b = TransferInterfaceCpi::new(
-            amount_b,
-            decimals_b,
-            ctx.accounts.depositor_account_b.to_account_info(),
-            ctx.accounts.pool_account_b.to_account_info(),
-            ctx.accounts.depositor.to_account_info(),
-            ctx.accounts.payer.to_account_info(),
-            ctx.accounts.light_token_cpi_authority.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-        )
-        .with_spl_interface(
+    let mut cpi_b = TransferInterfaceCpi::new(
+        amount_b,
+        decimals_b,
+        ctx.accounts.depositor_account_b.to_account_info(),
+        ctx.accounts.pool_account_b.to_account_info(),
+        ctx.accounts.depositor.to_account_info(),
+        ctx.accounts.payer.to_account_info(),
+        ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
+    );
+    if ctx.accounts.spl_interface_pda_b.is_some() {
+        cpi_b = cpi_b.with_spl_interface(
             Some(ctx.accounts.mint_b.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
             ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
             Some(spl_interface_bump_b),
         )?;
-
-        cpi_b.invoke()?;
     }
+    cpi_b.invoke()?;
 
     let authority_bump = ctx.bumps.pool_authority;
     let authority_seeds: &[&[u8]] = &[
