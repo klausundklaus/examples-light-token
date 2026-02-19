@@ -62,19 +62,19 @@ spl-token-2022 = "7"
 spl-pod = "0.5"
 
 # Light Protocol
-light-sdk = { version = "0.22.0", features = ["anchor", "v2", "cpi-context"] }
-light-sdk-macros = "0.22.0"
-light-sdk-types = { version = "0.22.0", features = ["v2", "cpi-context"] }
-light-account = { version = "0.22.0", features = ["anchor", "token"] }
-light-compressible = { version = "0.6.0", features = ["anchor"] }
-light-hasher = { version = "5.0.0", features = ["solana"] }
-light-macros = "2.2.0"
-light-compressed-account = "0.11.0"
-light-token = { version = "0.22.1", features = ["anchor"] }
-light-token-types = { version = "0.22.0", features = ["anchor"] }
-light-token-interface = "0.5.0"
-light-program-test = "0.22.0"
-light-client = { version = "0.22.0", features = ["v2", "anchor"] }
+light-sdk = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/sdk", features = ["anchor", "v2", "cpi-context"] }
+light-sdk-macros = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/macros" }
+light-sdk-types = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/sdk-types", features = ["v2", "cpi-context"] }
+light-account = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/account", features = ["anchor", "token"] }
+light-compressible = { path = "/home/tilo/Workspace/light-protocol/program-libs/compressible", features = ["anchor"] }
+light-hasher = { path = "/home/tilo/Workspace/light-protocol/program-libs/hasher", features = ["solana"] }
+light-macros = { path = "/home/tilo/Workspace/light-protocol/program-libs/macros" }
+light-compressed-account = { path = "/home/tilo/Workspace/light-protocol/program-libs/compressed-account" }
+light-token = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/token-sdk", features = ["anchor"] }
+light-token-types = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/token-types", features = ["anchor"] }
+light-token-interface = { path = "/home/tilo/Workspace/light-protocol/program-libs/token-interface" }
+light-program-test = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/program-test" }
+light-client = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/client", features = ["v2", "anchor"] }
 light-anchor-spl = "0.31.1"
 
 # Testing
