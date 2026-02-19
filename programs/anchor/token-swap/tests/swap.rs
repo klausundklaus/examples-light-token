@@ -488,8 +488,8 @@ async fn deposit_liquidity<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda_a: if ctx.token_config.uses_light_user_accounts() { Pubkey::default() } else { ctx.spl_interface_pda_a },
-        spl_interface_pda_b: if ctx.token_config.uses_light_user_accounts() { Pubkey::default() } else { ctx.spl_interface_pda_b },
+        spl_interface_pda_a: if ctx.token_config.uses_light_user_accounts() { None } else { Some(ctx.spl_interface_pda_a) },
+        spl_interface_pda_b: if ctx.token_config.uses_light_user_accounts() { None } else { Some(ctx.spl_interface_pda_b) },
     };
 
     let (_, spl_interface_bump_a) = find_spl_interface_pda(&ctx.mint_a_pubkey, false);

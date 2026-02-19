@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use fixed::types::I64F64;
 use light_anchor_spl::token_interface::{Mint, MintTo, TokenAccount, TokenInterface};
-use light_token::instruction::{MintToCpi, TransferCheckedCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
+use light_token::instruction::{MintToCpi, TransferInterfaceCpi, LIGHT_TOKEN_RENT_SPONSOR};
 use light_token::utils::get_token_account_balance;
 use light_sdk::constants::LIGHT_TOKEN_PROGRAM_ID;
 
@@ -80,7 +80,7 @@ pub fn deposit_liquidity(
     let decimals_a = ctx.accounts.mint_a.decimals;
     let decimals_b = ctx.accounts.mint_b.decimals;
 
-    let is_spl = ctx.accounts.spl_interface_pda_a.key() != Pubkey::default();
+    let is_spl = ctx.accounts.spl_interface_pda_a.is_some();
 
     if !is_spl {
         // fee_payer: Some ensures authority is readonly (required for PDA with account data)
@@ -123,7 +123,7 @@ pub fn deposit_liquidity(
         .with_spl_interface(
             Some(ctx.accounts.mint_a.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
-            Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
+            ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
             Some(spl_interface_bump_a),
         )?;
 
@@ -142,7 +142,7 @@ pub fn deposit_liquidity(
         .with_spl_interface(
             Some(ctx.accounts.mint_b.to_account_info()),
             Some(ctx.accounts.token_program.to_account_info()),
-            Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
+            ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
             Some(spl_interface_bump_b),
         )?;
 
@@ -282,9 +282,9 @@ pub struct DepositLiquidity<'info> {
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_a]
     #[account(mut)]
-    pub spl_interface_pda_a: UncheckedAccount<'info>,
+    pub spl_interface_pda_a: Option<AccountInfo<'info>>,
 
     /// CHECK: SPL interface PDA derived by light-token: ["pool", mint_b]
     #[account(mut)]
-    pub spl_interface_pda_b: UncheckedAccount<'info>,
+    pub spl_interface_pda_b: Option<AccountInfo<'info>>,
 }

@@ -40,10 +40,10 @@ pub mod light_token_anchor_transfer_interface {
                         .map(|a| a.to_account_info()),
                     Some(bump),
                 )
-                .map_err(|e| ProgramError::from(e))?;
+                ?;
         }
 
-        transfer.invoke().map_err(|e| ProgramError::from(e))?;
+        transfer.invoke()?;
         Ok(())
     }
 }

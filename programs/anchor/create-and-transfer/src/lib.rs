@@ -36,8 +36,7 @@ pub mod create_and_transfer {
             ctx.accounts.light_token_cpi_authority.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         )
-        .invoke()
-        .map_err(|e| anchor_lang::prelude::ProgramError::from(e))?;
+        .invoke()?;
         Ok(())
     }
 }

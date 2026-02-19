@@ -68,7 +68,7 @@ pub struct Refund<'info> {
     /// CHECK: SPL interface PDA for mint (token pool holding SPL tokens)
     /// Derived by light-token program: ["pool", mint]
     #[account(mut)]
-    pub spl_interface_pda: UncheckedAccount<'info>,
+    pub spl_interface_pda: Option<AccountInfo<'info>>,
 }
 
 impl<'info> Refund<'info> {
@@ -97,7 +97,7 @@ impl<'info> Refund<'info> {
         let decimals = self.mint_to_raise.decimals;
         let refund_amount = self.contributor_account.amount;
 
-        if self.spl_interface_pda.key() != Pubkey::default() {
+        if self.spl_interface_pda.is_some() {
             let cpi = TransferInterfaceCpi::new(
                 refund_amount,
                 decimals,
@@ -111,7 +111,7 @@ impl<'info> Refund<'info> {
             .with_spl_interface(
                 Some(self.mint_to_raise.to_account_info()),
                 Some(self.token_program.to_account_info()),
-                Some(self.spl_interface_pda.to_account_info()),
+                self.spl_interface_pda.as_ref().map(|a| a.to_account_info()),
                 Some(spl_interface_bump),
             )
             ?;

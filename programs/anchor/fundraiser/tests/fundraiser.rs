@@ -376,11 +376,7 @@ async fn contribute<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda: ctx
-            .spl_interface
-            .as_ref()
-            .map(|i| i.pda)
-            .unwrap_or_default(),
+        spl_interface_pda: ctx.spl_interface.as_ref().map(|i| i.pda),
     };
 
     let (_, spl_interface_bump) = find_spl_interface_pda(&ctx.mint_pubkey, false);
@@ -432,11 +428,7 @@ async fn check_contributions<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda: ctx
-            .spl_interface
-            .as_ref()
-            .map(|i| i.pda)
-            .unwrap_or_default(),
+        spl_interface_pda: ctx.spl_interface.as_ref().map(|i| i.pda),
     };
 
     let (_, spl_interface_bump) = find_spl_interface_pda(&ctx.mint_pubkey, false);
@@ -489,11 +481,7 @@ async fn refund<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda: ctx
-            .spl_interface
-            .as_ref()
-            .map(|i| i.pda)
-            .unwrap_or_default(),
+        spl_interface_pda: ctx.spl_interface.as_ref().map(|i| i.pda),
     };
 
     let (_, spl_interface_bump) = find_spl_interface_pda(&ctx.mint_pubkey, false);
