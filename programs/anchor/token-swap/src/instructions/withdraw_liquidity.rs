@@ -23,10 +23,10 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
 
     let lp_supply = ctx.accounts.pool.lp_supply;
 
-    let pool_a_balance = get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
-    let pool_b_balance = get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+    let pool_a_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())?;
+    let pool_b_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())?;
 
     let amount_a = I64F64::from_num(amount)
         .checked_mul(I64F64::from_num(pool_a_balance))

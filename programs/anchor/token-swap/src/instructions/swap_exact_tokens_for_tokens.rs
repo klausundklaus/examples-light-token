@@ -26,10 +26,10 @@ pub fn swap_exact_tokens_for_tokens(
         input_amount
     };
 
-    let pool_a_balance = get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
-    let pool_b_balance = get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+    let pool_a_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())?;
+    let pool_b_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())?;
 
     let amm = &ctx.accounts.amm;
     let fee_amount = (input as u128)
@@ -224,11 +224,9 @@ pub fn swap_exact_tokens_for_tokens(
 
     // Higher invariant OK - rounding benefits LPs
     let new_pool_a_balance =
-        get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())
-            .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+        get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())?;
     let new_pool_b_balance =
-        get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
-            .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+        get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())?;
 
     if invariant > (new_pool_a_balance as u128)
         .checked_mul(new_pool_b_balance as u128)

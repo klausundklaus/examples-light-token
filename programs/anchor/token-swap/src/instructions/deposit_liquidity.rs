@@ -20,10 +20,10 @@ pub fn deposit_liquidity(
     spl_interface_bump_a: u8,
     spl_interface_bump_b: u8,
 ) -> Result<()> {
-    let pool_a_balance = get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
-    let pool_b_balance = get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+    let pool_a_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_a.to_account_info())?;
+    let pool_b_balance =
+        get_token_account_balance(&ctx.accounts.pool_account_b.to_account_info())?;
 
     let mut amount_a = if amount_a > ctx.accounts.depositor_account_a.amount {
         ctx.accounts.depositor_account_a.amount

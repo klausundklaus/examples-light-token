@@ -67,8 +67,7 @@ pub struct CheckContributions<'info> {
 
 impl<'info> CheckContributions<'info> {
     pub fn check_contributions(&self, _bumps: &CheckContributionsBumps, spl_interface_bump: u8) -> Result<()> {
-        let vault_balance = get_token_account_balance(&self.vault.to_account_info())
-            .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+        let vault_balance = get_token_account_balance(&self.vault.to_account_info())?;
         require!(
             vault_balance >= self.fundraiser.amount_to_raise,
             FundraiserError::TargetNotMet

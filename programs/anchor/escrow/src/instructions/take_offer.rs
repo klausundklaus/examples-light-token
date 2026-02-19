@@ -122,8 +122,7 @@ pub fn withdraw_from_vault(ctx: &Context<TakeOffer>, params: &TakeOfferParams) -
     let offer = &ctx.accounts.offer;
     let authority_seeds: &[&[u8]] = &[AUTH_SEED, &[offer.auth_bump]];
 
-    let vault_balance = get_token_account_balance(&ctx.accounts.vault.to_account_info())
-        .map_err(|_| anchor_lang::prelude::ProgramError::InvalidAccountData)?;
+    let vault_balance = get_token_account_balance(&ctx.accounts.vault.to_account_info())?;
 
     let decimals_a = ctx.accounts.token_mint_a.decimals;
 
