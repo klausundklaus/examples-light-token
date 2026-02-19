@@ -16,6 +16,7 @@ pub mod light_token_anchor_approve {
             owner: ctx.accounts.owner.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             amount,
+            max_top_up: None,
         }
         .invoke()?;
         Ok(())
