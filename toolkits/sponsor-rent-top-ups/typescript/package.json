@@ -1,0 +1,13 @@
+{
+    "name": "light-token-toolkit-sponsor-rent-top-ups",
+    "version": "1.0.0",
+    "description": "Sponsor rent top-ups for users",
+    "type": "module",
+    "scripts": {
+        "sponsor-top-ups": "tsx sponsor-top-ups.ts"
+    },
+    "dependencies": {
+        "@lightprotocol/compressed-token": "^0.23.0-beta.9",
+        "@lightprotocol/stateless.js": "^0.23.0-beta.9"
+    }
+}
