@@ -45,13 +45,14 @@ const payer = Keypair.fromSecretKey(
         recipient.publicKey
     );
 
-    // Transfer tokens between light-token associate token accounts
-    // Hot sender only; for cold balance use createTransferInterfaceInstructions + sliceLast
+    // Transfer tokens. Optional feePayer lets an application cover top-ups
+    // so the sender only signs to authorize the transfer.
     const ix = createLightTokenTransferInstruction(
         senderAta,
         recipientAta,
-        sender.publicKey,
-        500_000_000
+        sender.publicKey,     // owner (signs the transfer)
+        500_000_000,
+        payer.publicKey       // optional: separate feePayer covers top-up
     );
 
     const tx = new Transaction().add(ix);
