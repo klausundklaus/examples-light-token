@@ -89,6 +89,7 @@ pub fn swap_exact_tokens_for_tokens(
             ctx.accounts.trader.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.mint_a.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         );
         if is_spl {
@@ -109,6 +110,7 @@ pub fn swap_exact_tokens_for_tokens(
             ctx.accounts.pool_authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.mint_b.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         );
         if is_spl {
@@ -129,6 +131,7 @@ pub fn swap_exact_tokens_for_tokens(
             ctx.accounts.trader.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.mint_b.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         );
         if is_spl {
@@ -149,6 +152,7 @@ pub fn swap_exact_tokens_for_tokens(
             ctx.accounts.pool_authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.mint_a.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         );
         if is_spl {

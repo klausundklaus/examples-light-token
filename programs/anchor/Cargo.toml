@@ -61,20 +61,20 @@ spl-token = "7"
 spl-token-2022 = "7"
 spl-pod = "0.5"
 
-# Light Protocol
-light-sdk = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/sdk", features = ["anchor", "v2", "cpi-context"] }
-light-sdk-macros = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/macros" }
-light-sdk-types = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/sdk-types", features = ["v2", "cpi-context"] }
-light-account = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/account", features = ["anchor", "token"] }
-light-compressible = { path = "/home/tilo/Workspace/light-protocol/program-libs/compressible", features = ["anchor"] }
-light-hasher = { path = "/home/tilo/Workspace/light-protocol/program-libs/hasher", features = ["solana"] }
-light-macros = { path = "/home/tilo/Workspace/light-protocol/program-libs/macros" }
-light-compressed-account = { path = "/home/tilo/Workspace/light-protocol/program-libs/compressed-account" }
-light-token = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/token-sdk", features = ["anchor"] }
-light-token-types = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/token-types", features = ["anchor"] }
-light-token-interface = { path = "/home/tilo/Workspace/light-protocol/program-libs/token-interface" }
-light-program-test = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/program-test" }
-light-client = { path = "/home/tilo/Workspace/light-protocol/sdk-libs/client", features = ["v2", "anchor"] }
+# Light Protocol (pinned to fix/authority-owner-mutability branch)
+light-sdk = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["anchor", "v2", "cpi-context"] }
+light-sdk-macros = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability" }
+light-sdk-types = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["v2", "cpi-context"] }
+light-account = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["anchor", "token"] }
+light-compressible = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["anchor"] }
+light-hasher = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["solana"] }
+light-macros = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability" }
+light-compressed-account = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability" }
+light-token = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["anchor"] }
+light-token-types = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["anchor"] }
+light-token-interface = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability" }
+light-program-test = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability" }
+light-client = { git = "https://github.com/Lightprotocol/light-protocol", branch = "fix/authority-owner-mutability", features = ["v2", "anchor"] }
 light-anchor-spl = "0.31.1"
 
 # Testing

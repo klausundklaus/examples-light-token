@@ -14,7 +14,7 @@ pub mod light_token_anchor_revoke {
             token_account: ctx.accounts.token_account.to_account_info(),
             owner: ctx.accounts.owner.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
+            fee_payer: ctx.accounts.fee_payer.to_account_info(),
         }
         .invoke()?;
         Ok(())
@@ -29,5 +29,7 @@ pub struct RevokeAccounts<'info> {
     #[account(mut)]
     pub token_account: AccountInfo<'info>,
     pub owner: Signer<'info>,
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }

@@ -105,6 +105,7 @@ impl<'info> Refund<'info> {
             self.authority.to_account_info(),
             self.contributor.to_account_info(),
             self.light_token_cpi_authority.to_account_info(),
+            self.mint_to_raise.to_account_info(),
             self.system_program.to_account_info(),
         );
         if self.spl_interface_pda.is_some() {

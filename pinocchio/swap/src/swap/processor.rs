@@ -110,7 +110,7 @@ pub fn process(
         amount: params.amount_in,
         authority: ctx.user,
         system_program: ctx.system_program,
-        fee_payer: None,
+        fee_payer: Some(ctx.user),
     }
     .invoke()
     .map_err(|_| SwapError::InvalidTokenOwner)?;
@@ -122,7 +122,7 @@ pub fn process(
         amount: amount_out,
         authority: ctx.pool_authority,
         system_program: ctx.system_program,
-        fee_payer: None,
+        fee_payer: Some(ctx.user),
     }
     .invoke_signed(&[signer])
     .map_err(|_| SwapError::InvalidTokenOwner)?;

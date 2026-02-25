@@ -40,8 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         amount: transfer_amount,
         decimals,
         authority: payer.pubkey(),
-        max_top_up: None,
-        fee_payer: None,
+        fee_payer: payer.pubkey(),
     }
     .instruction()?;
 

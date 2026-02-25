@@ -85,18 +85,18 @@ pub struct TakeOffer<'info> {
 
     /// CHECK: SPL interface PDA for mint A (vault->taker transfer)
     #[account(mut)]
-    pub spl_interface_pda_a: UncheckedAccount<'info>,
+    pub spl_interface_pda_a: Option<AccountInfo<'info>>,
 
     /// CHECK: SPL interface PDA for mint B (taker->maker transfer)
     #[account(mut)]
-    pub spl_interface_pda_b: UncheckedAccount<'info>,
+    pub spl_interface_pda_b: Option<AccountInfo<'info>>,
 }
 
 pub fn send_wanted_tokens_to_maker(ctx: &Context<TakeOffer>, params: &TakeOfferParams) -> Result<()> {
     let decimals_b = ctx.accounts.token_mint_b.decimals;
     let token_b_wanted_amount = ctx.accounts.offer.token_b_wanted_amount;
 
-    let cpi = TransferInterfaceCpi::new(
+    let mut cpi = TransferInterfaceCpi::new(
         token_b_wanted_amount,
         decimals_b,
         ctx.accounts.taker_token_account_b.to_account_info(),
@@ -104,16 +104,17 @@ pub fn send_wanted_tokens_to_maker(ctx: &Context<TakeOffer>, params: &TakeOfferP
         ctx.accounts.taker.to_account_info(),
         ctx.accounts.taker.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.token_mint_b.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-    )
-    .with_spl_interface(
-        Some(ctx.accounts.token_mint_b.to_account_info()),
-        Some(ctx.accounts.token_program.to_account_info()),
-        Some(ctx.accounts.spl_interface_pda_b.to_account_info()),
-        Some(params.spl_interface_bump_b),
-    )
-    ?;
-
+    );
+    if ctx.accounts.spl_interface_pda_b.is_some() {
+        cpi = cpi.with_spl_interface(
+            Some(ctx.accounts.token_mint_b.to_account_info()),
+            Some(ctx.accounts.token_program.to_account_info()),
+            ctx.accounts.spl_interface_pda_b.as_ref().map(|a| a.to_account_info()),
+            Some(params.spl_interface_bump_b),
+        )?;
+    }
     cpi.invoke()?;
     Ok(())
 }
@@ -126,7 +127,7 @@ pub fn withdraw_from_vault(ctx: &Context<TakeOffer>, params: &TakeOfferParams) -
 
     let decimals_a = ctx.accounts.token_mint_a.decimals;
 
-    let cpi = TransferInterfaceCpi::new(
+    let mut cpi = TransferInterfaceCpi::new(
         vault_balance,
         decimals_a,
         ctx.accounts.vault.to_account_info(),
@@ -134,16 +135,17 @@ pub fn withdraw_from_vault(ctx: &Context<TakeOffer>, params: &TakeOfferParams) -
         ctx.accounts.authority.to_account_info(),
         ctx.accounts.taker.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.token_mint_a.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-    )
-    .with_spl_interface(
-        Some(ctx.accounts.token_mint_a.to_account_info()),
-        Some(ctx.accounts.token_program.to_account_info()),
-        Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
-        Some(params.spl_interface_bump_a),
-    )
-    ?;
-
+    );
+    if ctx.accounts.spl_interface_pda_a.is_some() {
+        cpi = cpi.with_spl_interface(
+            Some(ctx.accounts.token_mint_a.to_account_info()),
+            Some(ctx.accounts.token_program.to_account_info()),
+            ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
+            Some(params.spl_interface_bump_a),
+        )?;
+    }
     cpi.invoke_signed(&[authority_seeds])?;
 
     msg!(

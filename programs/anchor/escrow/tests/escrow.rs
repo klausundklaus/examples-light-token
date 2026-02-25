@@ -282,11 +282,7 @@ async fn make_offer<R: Rpc + TestRpc + Indexer>(
         pda_rent_sponsor: ctx.rent_sponsor,
         light_token_rent_sponsor: RENT_SPONSOR,
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
-        spl_interface_pda_a: ctx
-            .spl_interface_a
-            .as_ref()
-            .map(|i| i.pda)
-            .unwrap_or_default(),
+        spl_interface_pda_a: ctx.spl_interface_a.as_ref().map(|i| i.pda),
     };
 
     let data = escrow::instruction::MakeOffer {
@@ -346,16 +342,8 @@ async fn take_offer<R: Rpc + TestRpc + Indexer>(
         light_token_program: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         light_token_cpi_authority: CPI_AUTHORITY_PDA,
         light_token_rent_sponsor: RENT_SPONSOR,
-        spl_interface_pda_a: ctx
-            .spl_interface_a
-            .as_ref()
-            .map(|i| i.pda)
-            .unwrap_or_default(),
-        spl_interface_pda_b: ctx
-            .spl_interface_b
-            .as_ref()
-            .map(|i| i.pda)
-            .unwrap_or_default(),
+        spl_interface_pda_a: ctx.spl_interface_a.as_ref().map(|i| i.pda),
+        spl_interface_pda_b: ctx.spl_interface_b.as_ref().map(|i| i.pda),
     };
 
     let data = escrow::instruction::TakeOffer {

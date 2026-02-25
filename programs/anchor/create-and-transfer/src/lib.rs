@@ -34,6 +34,7 @@ pub mod create_and_transfer {
             ctx.accounts.authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.light_token_cpi_authority.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         )
         .invoke()?;

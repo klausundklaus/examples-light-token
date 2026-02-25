@@ -79,7 +79,10 @@ impl<'info> Contribute<'info> {
         require!(amount <= max_contribution, FundraiserError::ContributionTooBig);
 
         let current_time = Clock::get()?.unix_timestamp;
-        let elapsed_days = ((current_time - self.fundraiser.time_started) / SECONDS_TO_DAYS) as u16;
+        let elapsed_days = (current_time.checked_sub(self.fundraiser.time_started)
+            .ok_or(FundraiserError::CalculationOverflow)?
+            .checked_div(SECONDS_TO_DAYS)
+            .ok_or(FundraiserError::CalculationOverflow)?) as u16;
         require!(
             elapsed_days < self.fundraiser.duration,
             FundraiserError::FundraiserEnded
@@ -102,6 +105,7 @@ impl<'info> Contribute<'info> {
             self.contributor.to_account_info(),
             self.contributor.to_account_info(),
             self.light_token_cpi_authority.to_account_info(),
+            self.mint_to_raise.to_account_info(),
             self.system_program.to_account_info(),
         );
         if self.spl_interface_pda.is_some() {

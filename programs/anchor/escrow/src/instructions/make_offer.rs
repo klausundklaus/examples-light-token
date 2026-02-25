@@ -94,7 +94,7 @@ pub struct MakeOffer<'info> {
 
     /// CHECK: SPL interface PDA for mint A
     #[account(mut)]
-    pub spl_interface_pda_a: UncheckedAccount<'info>,
+    pub spl_interface_pda_a: Option<AccountInfo<'info>>,
 }
 
 pub fn send_offered_tokens_to_vault<'info>(
@@ -103,7 +103,7 @@ pub fn send_offered_tokens_to_vault<'info>(
 ) -> Result<()> {
     let decimals = ctx.accounts.token_mint_a.decimals;
 
-    let cpi = TransferInterfaceCpi::new(
+    let mut cpi = TransferInterfaceCpi::new(
         params.token_a_offered_amount,
         decimals,
         ctx.accounts.maker_token_account_a.to_account_info(),
@@ -111,16 +111,17 @@ pub fn send_offered_tokens_to_vault<'info>(
         ctx.accounts.fee_payer.to_account_info(),
         ctx.accounts.fee_payer.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.token_mint_a.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
-    )
-    .with_spl_interface(
-        Some(ctx.accounts.token_mint_a.to_account_info()),
-        Some(ctx.accounts.token_program.to_account_info()),
-        Some(ctx.accounts.spl_interface_pda_a.to_account_info()),
-        Some(params.spl_interface_bump_a),
-    )
-    ?;
-
+    );
+    if ctx.accounts.spl_interface_pda_a.is_some() {
+        cpi = cpi.with_spl_interface(
+            Some(ctx.accounts.token_mint_a.to_account_info()),
+            Some(ctx.accounts.token_program.to_account_info()),
+            ctx.accounts.spl_interface_pda_a.as_ref().map(|a| a.to_account_info()),
+            Some(params.spl_interface_bump_a),
+        )?;
+    }
     cpi.invoke()?;
     Ok(())
 }

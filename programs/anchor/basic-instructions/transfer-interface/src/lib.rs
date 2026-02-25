@@ -23,6 +23,7 @@ pub mod light_token_anchor_transfer_interface {
             ctx.accounts.authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.cpi_authority.to_account_info(),
+            ctx.accounts.mint.clone().unwrap(),
             ctx.accounts.system_program.to_account_info(),
         );
 

@@ -546,13 +546,13 @@ pub mod spl_interface {
             decimals,
             authority: authority.pubkey(),
             payer: payer.pubkey(),
+            mint: *mint,
             spl_interface: Some(SplInterface {
                 mint: *mint,
                 spl_token_program: mint_type.program_id(),
                 spl_interface_pda: *spl_interface_pda,
                 spl_interface_pda_bump: spl_interface_bump,
             }),
-            max_top_up: None,
             source_owner: mint_type.program_id(),
             destination_owner: Pubkey::new_from_array(LIGHT_TOKEN_PROGRAM_ID),
         }

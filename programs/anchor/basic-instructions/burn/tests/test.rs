@@ -23,6 +23,7 @@ async fn test_burn() {
             source: env.associated_token_account,
             mint: env.mint_pda,
             authority: env.payer.pubkey(),
+            fee_payer: env.payer.pubkey(),
             system_program: system_program::ID,
         }
         .to_account_metas(Some(true)),

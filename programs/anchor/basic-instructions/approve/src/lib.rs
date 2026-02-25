@@ -16,7 +16,7 @@ pub mod light_token_anchor_approve {
             owner: ctx.accounts.owner.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
             amount,
-            max_top_up: None,
+            fee_payer: ctx.accounts.fee_payer.to_account_info(),
         }
         .invoke()?;
         Ok(())
@@ -33,5 +33,7 @@ pub struct ApproveAccounts<'info> {
     /// CHECK: Validated by light-token CPI
     pub delegate: AccountInfo<'info>,
     pub owner: Signer<'info>,
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }

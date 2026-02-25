@@ -46,6 +46,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
         ctx.accounts.pool_authority.to_account_info(),
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.mint_a.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
     );
     if ctx.accounts.spl_interface_pda_a.is_some() {
@@ -76,6 +77,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
         ctx.accounts.pool_authority.to_account_info(),
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.light_token_cpi_authority.to_account_info(),
+        ctx.accounts.mint_b.to_account_info(),
         ctx.accounts.system_program.to_account_info(),
     );
     if ctx.accounts.spl_interface_pda_b.is_some() {
@@ -95,8 +97,7 @@ pub fn withdraw_liquidity(ctx: Context<WithdrawLiquidity>, amount: u64, spl_inte
             amount,
             authority: ctx.accounts.depositor.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
-            fee_payer: None,
+            fee_payer: ctx.accounts.payer.to_account_info(),
         }
         .invoke()?;
     } else {

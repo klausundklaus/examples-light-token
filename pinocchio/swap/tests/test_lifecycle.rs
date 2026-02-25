@@ -275,8 +275,7 @@ async fn test_full_lifecycle() {
         destination: user_token_a,
         amount: mint_amount_a,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_a.instruction().unwrap()],
@@ -291,8 +290,7 @@ async fn test_full_lifecycle() {
         destination: user_token_b,
         amount: mint_amount_b,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_b.instruction().unwrap()],
@@ -311,8 +309,7 @@ async fn test_full_lifecycle() {
         destination: vault_a,
         amount: vault_initial_a,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_vault_a.instruction().unwrap()],
@@ -327,8 +324,7 @@ async fn test_full_lifecycle() {
         destination: vault_b,
         amount: vault_initial_b,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_vault_b.instruction().unwrap()],
