@@ -73,10 +73,12 @@ export function useWrap() {
       tx.feePayer = owner;
 
       const signedTx = await signTransaction(tx);
-      return rpc.sendRawTransaction(signedTx.serialize(), {
+      const sig = await rpc.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed',
       });
+      await rpc.confirmTransaction(sig, 'confirmed');
+      return sig;
     } finally {
       setIsLoading(false);
     }

@@ -88,6 +88,7 @@ describe('useWrap', () => {
     expect(mockGetSplInterfaceInfos).toHaveBeenCalled();
     expect(signTransaction).toHaveBeenCalledOnce();
     expect(mockRpc.sendRawTransaction).toHaveBeenCalledOnce();
+    expect(mockRpc.confirmTransaction).toHaveBeenCalledWith('tx-sig-wrap', 'confirmed');
   });
 
   it('throws when no SPL interface is found', async () => {
