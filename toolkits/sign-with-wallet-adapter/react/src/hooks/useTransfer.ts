@@ -1,0 +1,63 @@
+import { useState } from 'react';
+import { PublicKey } from '@solana/web3.js';
+import {
+  createTransferInterfaceInstructions,
+} from '@lightprotocol/compressed-token/unified';
+import { createRpc } from '@lightprotocol/stateless.js';
+import { signAndSendBatches, type SignTransactionFn } from './signAndSendBatches';
+
+export interface TransferParams {
+  ownerPublicKey: string;
+  mint: string;
+  toAddress: string;
+  amount: number;
+  decimals?: number;
+}
+
+export interface TransferArgs {
+  params: TransferParams;
+  signTransaction: SignTransactionFn;
+}
+
+export function useTransfer() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const transfer = async (args: TransferArgs): Promise<string> => {
+    setIsLoading(true);
+
+    try {
+      const { params, signTransaction } = args;
+      const { ownerPublicKey, mint, toAddress, amount, decimals = 9 } = params;
+
+      const rpc = createRpc(import.meta.env.VITE_HELIUS_RPC_URL);
+
+      const owner = new PublicKey(ownerPublicKey);
+      const mintPubkey = new PublicKey(mint);
+      const recipient = new PublicKey(toAddress);
+      const tokenAmount = Math.floor(amount * Math.pow(10, decimals));
+
+      // Returns TransactionInstruction[][].
+      // Each inner array is one transaction.
+      // Almost always returns just one.
+      const instructions = await createTransferInterfaceInstructions(
+        rpc, owner, mintPubkey, tokenAmount, owner, recipient,
+      );
+
+      const signature = await signAndSendBatches(instructions, {
+        rpc,
+        feePayer: owner,
+        signTransaction,
+      });
+
+      if (!signature) {
+        throw new Error('Transfer returned no instructions');
+      }
+
+      return signature;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { transfer, isLoading };
+}

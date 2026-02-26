@@ -1,0 +1,159 @@
+import { useState, useCallback } from 'react';
+import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { createRpc } from '@lightprotocol/stateless.js';
+import {
+  getAssociatedTokenAddressInterface,
+  getAtaInterface,
+} from '@lightprotocol/compressed-token/unified';
+
+export interface TokenBalance {
+  mint: string;
+  decimals: number;
+  isNative: boolean;
+  hot: bigint;
+  cold: bigint;
+  spl: bigint;
+  t22: bigint;
+  unified: bigint;
+}
+
+export function useUnifiedBalance() {
+  const [balances, setBalances] = useState<TokenBalance[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchBalances = useCallback(async (ownerAddress: string) => {
+    if (!ownerAddress) return;
+
+    setIsLoading(true);
+    try {
+      const rpc = createRpc(import.meta.env.VITE_HELIUS_RPC_URL);
+      const owner = new PublicKey(ownerAddress);
+
+      // Per-mint accumulator
+      const mintMap = new Map<string, { spl: bigint; t22: bigint; hot: bigint; cold: bigint; decimals: number }>();
+
+      const getOrCreate = (mintStr: string) => {
+        let entry = mintMap.get(mintStr);
+        if (!entry) {
+          entry = { spl: 0n, t22: 0n, hot: 0n, cold: 0n, decimals: 9 };
+          mintMap.set(mintStr, entry);
+        }
+        return entry;
+      };
+
+      // 1. SOL balance
+      let solLamports = 0;
+      try {
+        solLamports = await rpc.getBalance(owner);
+      } catch {
+        // Failed to fetch SOL balance
+      }
+
+      // 2. SPL accounts
+      try {
+        const splAccounts = await rpc.getTokenAccountsByOwner(owner, {
+          programId: TOKEN_PROGRAM_ID,
+        });
+        for (const { account } of splAccounts.value) {
+          const buf = toBuffer(account.data);
+          if (!buf || buf.length < 72) continue;
+          const mint = new PublicKey(buf.subarray(0, 32));
+          const amount = buf.readBigUInt64LE(64);
+          const mintStr = mint.toBase58();
+          getOrCreate(mintStr).spl += amount;
+        }
+      } catch {
+        // No SPL accounts
+      }
+
+      // 3. Token 2022 accounts
+      try {
+        const t22Accounts = await rpc.getTokenAccountsByOwner(owner, {
+          programId: TOKEN_2022_PROGRAM_ID,
+        });
+        for (const { account } of t22Accounts.value) {
+          const buf = toBuffer(account.data);
+          if (!buf || buf.length < 72) continue;
+          const mint = new PublicKey(buf.subarray(0, 32));
+          const amount = buf.readBigUInt64LE(64);
+          const mintStr = mint.toBase58();
+          getOrCreate(mintStr).t22 += amount;
+        }
+      } catch {
+        // No Token 2022 accounts
+      }
+
+      // 4. Cold balance from compressed token accounts
+      try {
+        const compressed = await rpc.getCompressedTokenBalancesByOwnerV2(owner);
+        for (const item of compressed.value.items) {
+          const mintStr = item.mint.toBase58();
+          getOrCreate(mintStr).cold += BigInt(item.balance.toString());
+        }
+      } catch {
+        // No compressed accounts
+      }
+
+      // 5. Hot balance from Light Token associated token account
+      const mintKeys = [...mintMap.keys()];
+      await Promise.allSettled(
+        mintKeys.map(async (mintStr) => {
+          try {
+            const mint = new PublicKey(mintStr);
+            const ata = getAssociatedTokenAddressInterface(mint, owner);
+            const { parsed } = await getAtaInterface(rpc, ata, owner, mint);
+            const entry = getOrCreate(mintStr);
+            entry.hot = BigInt(parsed.amount.toString());
+          } catch {
+            // Associated token account does not exist for this mint — hot stays 0n
+          }
+        }),
+      );
+
+      // 6. Assemble TokenBalance[]
+      const result: TokenBalance[] = [];
+
+      // SOL entry
+      result.push({
+        mint: 'So11111111111111111111111111111111111111112',
+        decimals: 9,
+        isNative: true,
+        hot: 0n,
+        cold: 0n,
+        spl: BigInt(solLamports),
+        t22: 0n,
+        unified: 0n,
+      });
+
+      // Token entries
+      for (const [mintStr, entry] of mintMap) {
+        result.push({
+          mint: mintStr,
+          decimals: entry.decimals,
+          isNative: false,
+          hot: entry.hot,
+          cold: entry.cold,
+          spl: entry.spl,
+          t22: entry.t22,
+          unified: entry.hot + entry.cold,
+        });
+      }
+
+      setBalances(result);
+    } catch (error) {
+      console.error('Failed to fetch balances:', error);
+      setBalances([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { balances, isLoading, fetchBalances };
+}
+
+function toBuffer(data: Buffer | Uint8Array | string | unknown): Buffer | null {
+  if (data instanceof Buffer) return data;
+  if (data instanceof Uint8Array) return Buffer.from(data);
+  return null;
+}
