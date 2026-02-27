@@ -1,0 +1,23 @@
+name: Sync Docs Snippets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "typescript-client/**"
+      - "rust-client/**"
+      - "programs/anchor/basic-instructions/**"
+      - "programs/anchor/basic-macros/**"
+      - "toolkits/sponsor-rent-top-ups/**"
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch to docs-v2
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DOCS_DISPATCH_TOKEN }}
+          repository: Lightprotocol/docs-v2
+          event-type: sync-examples-light-token
+          client-payload: '{"commit": "${{ github.sha }}"}'

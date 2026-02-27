@@ -5,7 +5,7 @@ You can replace spl_token with light_token instructions as you need. The API is 
 - **[approve](approve/src/lib.rs)** - Approve delegate
 - **[burn](burn/src/lib.rs)** - Burn tokens
 - **[close](close/src/lib.rs)** - Close token account
-- **[create-associated-token-account](create-ata/src/lib.rs)** - Create associated light-token account
+- **[create-associated-token-account](create-associated-token-account/src/lib.rs)** - Create associated light-token account
 - **[create-mint](create-mint/src/lib.rs)** - Create light-token mint
 - **[create-token-account](create-token-account/src/lib.rs)** - Create light-token account
 - **[freeze](freeze/src/lib.rs)** - Freeze token account
@@ -23,7 +23,7 @@ The examples use pure CPI calls which you can combine with existing and / or [li
 
 ```bash
 # for localnet
-npm i -g @lightprotocol/zk-compression-cli@alpha
+npm i -g @lightprotocol/zk-compression-cli@beta
 ```
 
 ```bash

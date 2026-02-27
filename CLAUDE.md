@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Light Token example programs demonstrating rent-free token vaults using Light Protocol on Solana. Contains Anchor programs (escrow, fundraiser, token-swap, light-token-minter), a shared test utilities crate, TypeScript client examples, and toolkits (payments, streaming).
+Light Token example programs demonstrating rent-free token vaults using Light Protocol on Solana. Contains Anchor programs (escrow, fundraiser, token-swap, light-token-minter, pinocchio-swap), a shared test utilities crate, TypeScript and Rust client examples, and toolkits (payments, streaming, sign-with-privy, sponsor-rent-top-ups).
 
 ## Build and test
 

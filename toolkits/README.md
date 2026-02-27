@@ -23,6 +23,12 @@ Light-token operations signed with [Privy](https://privy.io) wallets. Server-sid
 
 [Rust program example to stream mint events](streaming-tokens/) of the Light-Token Program.
 
+### Sponsor Rent Top-Ups
+
+Sponsor rent top-ups for users by setting your application as the fee payer.
+- **[TypeScript](sponsor-rent-top-ups/typescript/)** - Sponsored Light transfer
+- **[Rust](sponsor-rent-top-ups/rust/)** - Sponsored Light transfer
+
 ## Documentation
 
 Learn more [about Light-Token here](https://www.zkcompression.com/light-token/welcome).

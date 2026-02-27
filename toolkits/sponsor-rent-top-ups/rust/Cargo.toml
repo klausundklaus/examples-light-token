@@ -1,0 +1,19 @@
+[package]
+name = "sponsor-rent-top-ups"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "sponsor-top-ups"
+path = "sponsor-top-ups.rs"
+
+[dependencies]
+light-token = "0.23.0"
+light-program-test = "0.23.0"
+light-client = "0.23.0"
+anchor-spl = "0.31"
+solana-sdk = "2"
+spl-token = "7"
+tokio = { version = "1", features = ["full"] }
+blake3 = "=1.5.5"

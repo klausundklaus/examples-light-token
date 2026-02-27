@@ -27,3 +27,5 @@ cli/accounts/
 bugs.md
 
 .surfpool/
+.entire/
+**/Cargo.lock
