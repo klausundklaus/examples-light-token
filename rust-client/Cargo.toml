@@ -10,12 +10,11 @@ path = "src/lib.rs"
 
 [dependencies]
 # Light Protocol SDKs
-light-token = "0.4.0"
-light-token-interface = "0.3.0"
-light-token-client = "0.1.0"
-light-program-test = { version = "0.19.0", features = ["v2"] }
-light-client = { version = "0.19.0", features = ["v2"] }
-light-nullifier-program = "0.1.2"
+light-token = "0.23.0"
+light-token-interface = "0.5.0"
+light-token-client = "0.23.0"
+light-program-test = { version = "0.23.0", default-features = false }
+light-client = { version = "0.23.0", features = ["v2"] }
 
 # Serialization
 borsh = "0.10.4"
@@ -90,10 +89,6 @@ name = "instruction_mint_to_checked"
 path = "instructions/mint_to_checked.rs"
 
 [[example]]
-name = "instruction_transfer_checked"
-path = "instructions/transfer_checked.rs"
-
-[[example]]
 name = "instruction_burn_checked"
 path = "instructions/burn_checked.rs"
 
@@ -102,10 +97,6 @@ name = "instruction_spl_to_light_transfer"
 path = "instructions/spl_to_light_transfer.rs"
 
 # actions/
-[[example]]
-name = "action_transfer_checked"
-path = "actions/transfer_checked.rs"
-
 [[example]]
 name = "action_transfer_interface"
 path = "actions/transfer_interface.rs"
@@ -138,6 +129,3 @@ path = "actions/wrap.rs"
 name = "action_unwrap"
 path = "actions/unwrap.rs"
 
-[[example]]
-name = "action_create_nullifier"
-path = "actions/create_nullifier.rs"

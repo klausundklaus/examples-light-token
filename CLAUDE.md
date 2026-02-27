@@ -23,6 +23,9 @@ cd programs/anchor && cargo test-sbf -p swap_example
 # Run a single test by name
 cd programs/anchor && cargo test-sbf -p escrow -- test_escrow_spl
 
+# Pinocchio swap example
+cd pinocchio/swap && cargo test-sbf -p pinocchio-swap
+
 # TypeScript client examples
 cd typescript-client && npm install && npm run create-mint:action
 ```
@@ -64,9 +67,9 @@ Tests follow: `create_test_rpc()` → `setup_*_test(config)` → `create_token_a
 
 Light accounts auto-compress after rent expires. Escrow tests exercise the full cycle: create → `warp_to_compress` (calls `rpc.warp_epoch_forward(30)`) → `load_light_accounts` → transact. Fundraiser skips this because `Fundraiser` state lacks `LightAccount` derive.
 
-### Local path dependencies
+### Dependencies
 
-`light-client` and `light-program-test` use local path deps pointing to `~/Workspace/light-protocol/`. The workspace `Cargo.toml` also patches all `light-*` crates to local paths to avoid version conflicts.
+All `light-*` crates are sourced from crates.io (currently 0.23.0).
 
 ## Key SDK patterns
 

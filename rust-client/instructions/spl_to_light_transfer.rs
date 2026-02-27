@@ -17,7 +17,7 @@ use solana_system_interface::instruction as system_instruction;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(true, None)).await?;
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(true, None)).await?;
 
     let payer = rpc.get_payer().insecure_clone();
     let decimals = 6u8;
@@ -117,8 +117,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         decimals,
         authority: payer.pubkey(),
         payer: payer.pubkey(),
+        mint,
         spl_interface: Some(spl_interface),
-        max_top_up: None,
         source_owner: spl_token::ID,
         destination_owner: LIGHT_TOKEN_PROGRAM_ID,
     }
@@ -135,8 +135,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         decimals,
         authority: payer.pubkey(),
         payer: payer.pubkey(),
+        mint,
         spl_interface: Some(spl_interface),
-        max_top_up: None,
         source_owner: LIGHT_TOKEN_PROGRAM_ID,
         destination_owner: spl_token::ID,
     }

@@ -23,13 +23,14 @@ pub mod light_token_anchor_transfer_interface {
             ctx.accounts.authority.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.cpi_authority.to_account_info(),
+            ctx.accounts.mint.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
         );
 
         if let Some(bump) = spl_interface_pda_bump {
             transfer = transfer
                 .with_spl_interface(
-                    ctx.accounts.mint.as_ref().map(|a| a.to_account_info()),
+                    Some(ctx.accounts.mint.to_account_info()),
                     ctx.accounts
                         .spl_token_program
                         .as_ref()
@@ -40,10 +41,10 @@ pub mod light_token_anchor_transfer_interface {
                         .map(|a| a.to_account_info()),
                     Some(bump),
                 )
-                .map_err(|e| ProgramError::from(e))?;
+                ?;
         }
 
-        transfer.invoke().map_err(|e| ProgramError::from(e))?;
+        transfer.invoke()?;
         Ok(())
     }
 }
@@ -65,9 +66,9 @@ pub struct TransferAccounts<'info> {
     pub cpi_authority: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
 
-    // SPL interface accounts (optional, for cross-type transfers)
     /// CHECK: Validated by light-token CPI - token mint
-    pub mint: Option<AccountInfo<'info>>,
+    pub mint: AccountInfo<'info>,
+    // SPL interface accounts (optional, for cross-type transfers)
     /// CHECK: SPL Token or Token-2022 program
     pub spl_token_program: Option<AccountInfo<'info>>,
     /// CHECK: Validated by light-token CPI - pool PDA

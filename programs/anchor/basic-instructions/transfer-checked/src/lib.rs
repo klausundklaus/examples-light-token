@@ -22,8 +22,7 @@ pub mod light_token_anchor_transfer_checked {
             decimals,
             authority: ctx.accounts.authority.to_account_info(),
             system_program: ctx.accounts.system_program.to_account_info(),
-            max_top_up: None,
-            fee_payer: None,
+            fee_payer: ctx.accounts.fee_payer.to_account_info(),
         }
         .invoke()?;
         Ok(())
@@ -43,5 +42,7 @@ pub struct TransferCheckedAccounts<'info> {
     #[account(mut)]
     pub destination: AccountInfo<'info>,
     pub authority: Signer<'info>,
+    #[account(mut)]
+    pub fee_payer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }

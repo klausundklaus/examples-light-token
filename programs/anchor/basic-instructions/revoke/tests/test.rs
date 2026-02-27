@@ -21,6 +21,7 @@ async fn test_revoke() {
         delegate: delegate.pubkey(),
         owner: env.payer.pubkey(),
         amount: 500_000,
+        fee_payer: env.payer.pubkey(),
     }
     .instruction()
     .unwrap();
@@ -37,6 +38,7 @@ async fn test_revoke() {
             light_token_program: LIGHT_TOKEN_PROGRAM_ID,
             token_account: env.associated_token_account,
             owner: env.payer.pubkey(),
+            fee_payer: env.payer.pubkey(),
             system_program: system_program::ID,
         }
         .to_account_metas(Some(true)),

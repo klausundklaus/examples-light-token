@@ -42,7 +42,7 @@ async fn test_transfer() {
             payer: env.payer.pubkey(),
             cpi_authority: cpi_authority_pda,
             system_program: system_program::ID,
-            mint: None,
+            mint: env.mint_pda,
             spl_token_program: None,
             spl_interface_pda: None,
         }
@@ -190,7 +190,7 @@ async fn test_transfer_spl_to_light() {
             payer: payer.pubkey(),
             cpi_authority: cpi_authority_pda,
             system_program: system_program::ID,
-            mint: Some(mint),
+            mint: mint,
             spl_token_program: Some(spl_token::ID),
             spl_interface_pda: Some(spl_interface_pda),
         }

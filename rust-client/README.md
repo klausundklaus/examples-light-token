@@ -14,8 +14,6 @@ Rust client examples for light-token and light-token-client.
   - [Instruction](instructions/mint_to_checked.rs)
 - **transfer-interface** - Transfer between light-token, T22, and SPL accounts
   - [Action](actions/transfer_interface.rs) | [Instruction](instructions/transfer_interface.rs)
-- **transfer-checked** - Transfer with decimal validation
-  - [Action](actions/transfer_checked.rs) | [Instruction](instructions/transfer_checked.rs)
 - **spl-to-light-transfer** - Transfer from SPL to Light via TransferInterface
   - [Instruction](instructions/spl_to_light_transfer.rs)
 - **wrap** - Wrap SPL/T22 to light-token

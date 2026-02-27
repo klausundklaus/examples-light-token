@@ -22,6 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         delegate: delegate.pubkey(),
         owner: payer.pubkey(),
         amount: delegate_amount,
+        fee_payer: payer.pubkey(),
     }
     .instruction()?;
 

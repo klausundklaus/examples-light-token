@@ -1,14 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-    # Basic macro examples
-    "basic-macros/counter",
-    "basic-macros/create-mint",
-    "basic-macros/create-associated-token-account",
-    "basic-macros/create-token-account",
-    "create-and-transfer",
-
-    # Basic instruction examples
+    "escrow",
+    "fundraiser",
+    "light-token-minter",
+    "token-swap",
+    "shared-test-utils",
     "basic-instructions/approve",
     "basic-instructions/burn",
     "basic-instructions/close",
@@ -18,10 +15,15 @@ members = [
     "basic-instructions/freeze",
     "basic-instructions/mint-to",
     "basic-instructions/revoke",
+    "basic-instructions/test-utils",
     "basic-instructions/thaw",
     "basic-instructions/transfer-checked",
     "basic-instructions/transfer-interface",
-    "basic-instructions/test-utils",
+    "basic-macros/counter",
+    "basic-macros/create-associated-token-account",
+    "basic-macros/create-mint",
+    "basic-macros/create-token-account",
+    "create-and-transfer",
 ]
 
 [profile.release]
@@ -57,21 +59,22 @@ solana-signer = "2"
 # SPL
 spl-token = "7"
 spl-token-2022 = "7"
+spl-pod = "0.5"
 
 # Light Protocol
-light-sdk = { version = "0.22.0", features = ["anchor", "v2", "cpi-context"] }
-light-sdk-macros = "0.22.0"
-light-sdk-types = { version = "0.22.0", features = ["v2", "cpi-context"] }
-light-account = { version = "0.22.0", features = ["anchor", "token"] }
+light-sdk = { version = "0.23.0", features = ["anchor", "v2", "cpi-context"] }
+light-sdk-macros = "0.23.0"
+light-sdk-types = { version = "0.23.0", features = ["v2", "cpi-context"] }
+light-account = { version = "0.23.0", features = ["anchor", "token"] }
 light-compressible = { version = "0.6.0", features = ["anchor"] }
 light-hasher = { version = "5.0.0", features = ["solana"] }
 light-macros = "2.2.0"
 light-compressed-account = "0.11.0"
-light-token = { version = "0.22.1", features = ["anchor"] }
-light-token-types = { version = "0.22.0", features = ["anchor"] }
+light-token = { version = "0.23.0", features = ["anchor"] }
+light-token-types = { version = "0.23.0", features = ["anchor"] }
 light-token-interface = "0.5.0"
-light-program-test = "0.22.0"
-light-client = { version = "0.22.0", features = ["v2", "anchor"] }
+light-program-test = "0.23.0"
+light-client = { version = "0.23.0", features = ["v2", "anchor"] }
 light-anchor-spl = "0.31.1"
 
 # Testing
@@ -83,4 +86,5 @@ borsh = "0.10.4"
 time = "=0.3.41"
 
 # Internal
+shared-test-utils = { path = "shared-test-utils" }
 test-utils = { path = "basic-instructions/test-utils" }

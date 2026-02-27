@@ -1,88 +1,52 @@
 name: TypeScript
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        types: [opened, synchronize, reopened]
-        branches:
-            - main
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-    SOLANA_CLI_VERSION: "2.1.21"
-    NODE_VERSION: "22"
+  SOLANA_CLI_VERSION: "2.3.11"
+  NODE_VERSION: "22"
 
 jobs:
-    typescript-tests:
-        name: TypeScript Tests
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  typescript-tests:
+    name: TypeScript Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          example: typescript-client
+          solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
+          photon-indexer: "true"
 
-            - name: Cache Solana CLI tools
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cache/solana/
-                      ~/.local/share/solana/
-                  key: solana-cli-${{ runner.os }}-${{ env.SOLANA_CLI_VERSION }}
+      - name: Install dependencies
+        working-directory: typescript-client
+        run: npm install
 
-            - name: Install Solana CLI tools
-              run: |
-                  sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_CLI_VERSION }}/install)"
-                  echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Start test validator
+        run: |
+          light test-validator &
+          for i in $(seq 1 60); do
+            curl -s http://127.0.0.1:8784/health && break
+            sleep 2
+          done
 
-            - name: Install Light CLI
-              run: npm install -g @lightprotocol/zk-compression-cli@beta
+      - name: Run actions
+        working-directory: typescript-client
+        run: npm run test:actions
 
-            - name: Install Rust (for Photon)
-              uses: actions-rust-lang/setup-rust-toolchain@v1
-              with:
-                  toolchain: stable
-                  cache: false
-
-            - name: Cache Photon indexer
-              id: cache-photon
-              uses: actions/cache@v4
-              with:
-                  path: ~/.cargo/bin/photon
-                  key: photon-${{ runner.os }}-ac7df6c388db847b7693a7a1cb766a7c9d7809b5
-
-            - name: Install Photon indexer
-              if: steps.cache-photon.outputs.cache-hit != 'true'
-              run: cargo install --git https://github.com/lightprotocol/photon.git --rev ac7df6c388db847b7693a7a1cb766a7c9d7809b5 --locked
-              env:
-                  RUSTFLAGS: "-A dead-code"
-
-            - name: Generate keypair
-              run: solana-keygen new --no-bip39-passphrase
-
-            - name: Install dependencies
-              working-directory: typescript-client
-              run: npm install
-
-            - name: Start test validator
-              run: |
-                  light test-validator &
-                  for i in $(seq 1 60); do
-                    curl -s http://127.0.0.1:8784/health && break
-                    sleep 2
-                  done
-
-            - name: Run actions
-              working-directory: typescript-client
-              run: npm run test:actions
-
-            - name: Run instructions
-              working-directory: typescript-client
-              run: npm run test:instructions
+      - name: Run instructions
+        working-directory: typescript-client
+        run: npm run test:instructions

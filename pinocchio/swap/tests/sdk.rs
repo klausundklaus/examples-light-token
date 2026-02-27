@@ -10,7 +10,7 @@
 use borsh::BorshDeserialize;
 use light_account::LightDiscriminator;
 use light_client::interface::{
-    AccountInterface, AccountSpec, AccountToFetch, ColdContext, LightProgramInterface, PdaSpec,
+    AccountInterface, AccountSpec, AccountToFetch, LightProgramInterface, PdaSpec,
 };
 use light_account::token::Token;
 use pinocchio_swap::{LightAccountVariant, PoolState, PoolStateSeeds, VaultSeeds};
@@ -165,23 +165,7 @@ impl SwapSdk {
             token_data,
         });
 
-        // For token vaults, convert ColdContext::Token to ColdContext::Account
-        // because they're decompressed as PDAs, not as token accounts
-        // (matches cp-swap pattern)
-        let interface = if account.is_cold() {
-            let compressed_account = match &account.cold {
-                Some(ColdContext::Token(ct)) => ct.account.clone(),
-                Some(ColdContext::Account(ca)) => ca.clone(),
-                None => return Err(SwapSdkError::MissingField("cold_context")),
-            };
-            AccountInterface {
-                key: account.key,
-                account: account.account.clone(),
-                cold: Some(ColdContext::Account(compressed_account)),
-            }
-        } else {
-            account.clone()
-        };
+        let interface = account.clone();
 
         let spec = PdaSpec::new(interface, variant, PROGRAM_ID);
         self.pda_specs.insert(account.key, spec);

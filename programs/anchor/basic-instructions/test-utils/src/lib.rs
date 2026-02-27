@@ -163,8 +163,7 @@ pub async fn mint_tokens(
         destination: associated_token_account,
         amount,
         authority: payer.pubkey(),
-        max_top_up: None,
-        fee_payer: None,
+        fee_payer: payer.pubkey(),
     }
     .instruction()
     .unwrap();

@@ -25,6 +25,7 @@ async fn test_approve() {
             token_account: env.associated_token_account,
             delegate: delegate.pubkey(),
             owner: env.payer.pubkey(),
+            fee_payer: env.payer.pubkey(),
             system_program: system_program::ID,
         }
         .to_account_metas(Some(true)),

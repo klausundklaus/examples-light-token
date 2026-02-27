@@ -30,6 +30,7 @@ async fn test_transfer_checked() {
             mint: env.mint_pda,
             destination: dest_associated_token_account,
             authority: env.payer.pubkey(),
+            fee_payer: env.payer.pubkey(),
             system_program: system_program::ID,
         }
         .to_account_metas(Some(true)),
