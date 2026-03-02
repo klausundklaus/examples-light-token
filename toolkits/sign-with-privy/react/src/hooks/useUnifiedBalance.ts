@@ -31,12 +31,12 @@ export function useUnifiedBalance() {
       const owner = new PublicKey(ownerAddress);
 
       // Per-mint accumulator
-      const mintMap = new Map<string, { spl: bigint; t22: bigint; hot: bigint; cold: bigint; decimals: number }>();
+      const mintMap = new Map<string, { spl: bigint; t22: bigint; hot: bigint; cold: bigint; decimals: number; tokenProgram: PublicKey }>();
 
       const getOrCreate = (mintStr: string) => {
         let entry = mintMap.get(mintStr);
         if (!entry) {
-          entry = { spl: 0n, t22: 0n, hot: 0n, cold: 0n, decimals: 9 };
+          entry = { spl: 0n, t22: 0n, hot: 0n, cold: 0n, decimals: 9, tokenProgram: TOKEN_PROGRAM_ID };
           mintMap.set(mintStr, entry);
         }
         return entry;
@@ -78,7 +78,9 @@ export function useUnifiedBalance() {
           const mint = new PublicKey(buf.subarray(0, 32));
           const amount = buf.readBigUInt64LE(64);
           const mintStr = mint.toBase58();
-          getOrCreate(mintStr).t22 += amount;
+          const entry = getOrCreate(mintStr);
+          entry.t22 += amount;
+          entry.tokenProgram = TOKEN_2022_PROGRAM_ID;
         }
       } catch {
         // No Token 2022 accounts
@@ -101,8 +103,9 @@ export function useUnifiedBalance() {
         mintKeys.map(async (mintStr) => {
           try {
             const mint = new PublicKey(mintStr);
-            const mintInfo = await getMint(rpc, mint);
-            getOrCreate(mintStr).decimals = mintInfo.decimals;
+            const entry = getOrCreate(mintStr);
+            const mintInfo = await getMint(rpc, mint, undefined, entry.tokenProgram);
+            entry.decimals = mintInfo.decimals;
           } catch {
             // Keep default decimals if mint fetch fails
           }
