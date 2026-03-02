@@ -81,7 +81,7 @@ pub async fn setup_mint_with_tokens(
     let mut associated_token_account_pubkeys = Vec::with_capacity(recipients.len());
 
     for (amount, owner) in &recipients {
-        let (associated_token_account_address, _) = derive_token_ata(owner, &mint);
+        let associated_token_account_address = derive_token_ata(owner, &mint);
         associated_token_account_pubkeys.push(associated_token_account_address);
 
         let create_associated_token_account_instruction = CreateAssociatedTokenAccount::new(payer.pubkey(), *owner, mint)
@@ -98,8 +98,7 @@ pub async fn setup_mint_with_tokens(
                 destination: associated_token_account_address,
                 amount: *amount,
                 authority: mint_authority,
-                max_top_up: None,
-                fee_payer: None,
+                fee_payer: payer.pubkey(),
             }
             .instruction()
             .unwrap();
@@ -210,7 +209,7 @@ pub struct SetupContext {
 }
 
 pub async fn setup() -> SetupContext {
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(false, None))
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(false, None))
         .await
         .unwrap();
 
@@ -235,6 +234,7 @@ pub async fn setup() -> SetupContext {
         delegate: delegate.pubkey(),
         owner: payer.pubkey(),
         amount: initial_amount,
+        fee_payer: payer.pubkey(),
     }
     .instruction()
     .unwrap();
@@ -254,7 +254,7 @@ pub async fn setup() -> SetupContext {
 }
 
 pub async fn setup_empty_associated_token_account() -> SetupContext {
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(false, None))
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(false, None))
         .await
         .unwrap();
 
@@ -283,7 +283,7 @@ pub async fn setup_empty_associated_token_account() -> SetupContext {
 }
 
 pub async fn setup_frozen() -> SetupContext {
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(false, None))
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(false, None))
         .await
         .unwrap();
 
@@ -308,6 +308,7 @@ pub async fn setup_frozen() -> SetupContext {
         delegate: delegate.pubkey(),
         owner: payer.pubkey(),
         amount: initial_amount,
+        fee_payer: payer.pubkey(),
     }
     .instruction()
     .unwrap();
@@ -345,7 +346,7 @@ pub struct SplMintContext {
 }
 
 pub async fn setup_spl_mint_context() -> SplMintContext {
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(false, None))
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(false, None))
         .await
         .unwrap();
 
@@ -361,7 +362,7 @@ pub async fn setup_spl_mint_context() -> SplMintContext {
 /// Action examples (create_mint, mint_to) need proofs to create compressed addresses.
 // We must create a compressed address at creation to ensure the mint does not exist yet
 pub async fn setup_rpc_and_payer() -> (LightProgramTest, Keypair) {
-    let rpc = LightProgramTest::new(ProgramTestConfig::new_v2(true, None))
+    let rpc = LightProgramTest::new(ProgramTestConfig::new(true, None))
         .await
         .unwrap();
     let payer = rpc.get_payer().insecure_clone();
@@ -379,7 +380,7 @@ pub struct WrapContext {
 
 /// Sets up SPL mint with interface PDA, SPL associated token account with tokens, and empty Light associated token account.
 pub async fn setup_for_wrap() -> WrapContext {
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(false, None))
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(false, None))
         .await
         .unwrap();
     let payer = rpc.get_payer().insecure_clone();
@@ -388,7 +389,7 @@ pub async fn setup_for_wrap() -> WrapContext {
     let mint = setup_spl_mint(&mut rpc, &payer, decimals).await;
     let source_associated_token_account = setup_spl_associated_token_account(&mut rpc, &payer, &mint, &payer.pubkey(), 1_000_000).await;
 
-    let (light_associated_token_account, _) = derive_token_ata(&payer.pubkey(), &mint);
+    let light_associated_token_account = derive_token_ata(&payer.pubkey(), &mint);
     let create_associated_token_account_instruction = CreateAssociatedTokenAccount::new(payer.pubkey(), payer.pubkey(), mint)
         .instruction()
         .unwrap();
@@ -419,7 +420,7 @@ pub struct UnwrapContext {
 pub async fn setup_for_unwrap() -> UnwrapContext {
     use light_token_client::actions::Wrap;
 
-    let mut rpc = LightProgramTest::new(ProgramTestConfig::new_v2(false, None))
+    let mut rpc = LightProgramTest::new(ProgramTestConfig::new(false, None))
         .await
         .unwrap();
     let payer = rpc.get_payer().insecure_clone();
@@ -430,7 +431,7 @@ pub async fn setup_for_unwrap() -> UnwrapContext {
     let spl_associated_token_account = setup_spl_associated_token_account(&mut rpc, &payer, &mint, &payer.pubkey(), 1_000_000).await;
 
     // Create empty Light associated token account
-    let (light_associated_token_account, _) = derive_token_ata(&payer.pubkey(), &mint);
+    let light_associated_token_account = derive_token_ata(&payer.pubkey(), &mint);
     let create_associated_token_account_instruction = CreateAssociatedTokenAccount::new(payer.pubkey(), payer.pubkey(), mint)
         .instruction()
         .unwrap();

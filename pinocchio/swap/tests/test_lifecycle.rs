@@ -14,10 +14,9 @@ mod sdk;
 mod shared;
 
 use light_client::interface::{
-    create_load_instructions, get_create_accounts_proof, AccountInterfaceExt,
+    create_load_instructions, get_create_accounts_proof, AccountInterface, AccountSpec,
     CreateAccountsProofInput, LightProgramInterface,
 };
-use light_program_test::program_test::LightProgramTest;
 use light_program_test::{program_test::TestRpc, Rpc};
 use light_token::LIGHT_TOKEN_PROGRAM_ID;
 
@@ -187,7 +186,7 @@ async fn test_full_lifecycle() {
     let (pool_pdas, mut token_setup) =
         shared::derive_pool_pdas(&program_id, &authority.pubkey(), &mint_a, &mint_b);
 
-    // Set user token accounts (ATAs)
+    // Set user token accounts
     token_setup.user_token_a = get_associated_token_address_and_bump(&user.pubkey(), &mint_a).0;
     token_setup.user_token_b = get_associated_token_address_and_bump(&user.pubkey(), &mint_b).0;
 
@@ -245,8 +244,8 @@ async fn test_full_lifecycle() {
 
     println!("All accounts created successfully!");
 
-    // ==================== PHASE 5: Create User ATAs and Mint Tokens ====================
-    // Create user ATA for token A
+    // ==================== PHASE 5: Create User Accounts and Mint Tokens ====================
+    // Create user associated token account for token A
     let create_ata_a = CreateAssociatedTokenAccount::new(payer.pubkey(), user.pubkey(), mint_a);
     rpc.create_and_send_transaction(
         &[create_ata_a.instruction().unwrap()],
@@ -254,9 +253,9 @@ async fn test_full_lifecycle() {
         &[&payer],
     )
     .await
-    .expect("Create user ATA A should succeed");
+    .expect("Create user associated token account A should succeed");
 
-    // Create user ATA for token B
+    // Create user associated token account for token B
     let create_ata_b = CreateAssociatedTokenAccount::new(payer.pubkey(), user.pubkey(), mint_b);
     rpc.create_and_send_transaction(
         &[create_ata_b.instruction().unwrap()],
@@ -264,7 +263,7 @@ async fn test_full_lifecycle() {
         &[&payer],
     )
     .await
-    .expect("Create user ATA B should succeed");
+    .expect("Create user associated token account B should succeed");
 
     // Mint tokens to user
     let mint_amount_a = 1_000_000_000u64; // 1B tokens
@@ -275,8 +274,7 @@ async fn test_full_lifecycle() {
         destination: user_token_a,
         amount: mint_amount_a,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_a.instruction().unwrap()],
@@ -291,8 +289,7 @@ async fn test_full_lifecycle() {
         destination: user_token_b,
         amount: mint_amount_b,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_b.instruction().unwrap()],
@@ -311,8 +308,7 @@ async fn test_full_lifecycle() {
         destination: vault_a,
         amount: vault_initial_a,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_vault_a.instruction().unwrap()],
@@ -327,8 +323,7 @@ async fn test_full_lifecycle() {
         destination: vault_b,
         amount: vault_initial_b,
         authority: authority.pubkey(),
-        max_top_up: None,
-        fee_payer: Some(payer.pubkey()),
+        fee_payer: payer.pubkey(),
     };
     rpc.create_and_send_transaction(
         &[mint_to_vault_b.instruction().unwrap()],
@@ -372,9 +367,11 @@ async fn test_full_lifecycle() {
 
     // ==================== PHASE 9: Create SDK from Compressed State ====================
     let pool_interface = rpc
-        .get_account_interface(&pool_state, &program_id)
+        .get_account_interface(&pool_state, None)
         .await
-        .expect("pool should be compressed");
+        .expect("pool should be compressed")
+        .value
+        .expect("pool interface should exist");
     assert!(
         pool_interface.is_cold(),
         "pool_state should be cold after warp"
@@ -383,41 +380,58 @@ async fn test_full_lifecycle() {
     let mut swap_sdk = SwapSdk::from_keyed_accounts(&[pool_interface])
         .expect("from_keyed_accounts should succeed");
 
-    // ==================== PHASE 10: Fetch and Update SDK ====================
-    let accounts_to_fetch = swap_sdk.get_accounts_to_update(&SwapInstruction::Swap);
-    let keyed_accounts = rpc
-        .get_multiple_account_interfaces(&accounts_to_fetch)
-        .await
-        .expect("get_multiple_account_interfaces should succeed");
+    // ==================== PHASE 10: Fetch Compressed Accounts Individually ====================
+    // get_multiple_account_interfaces cannot find compressed token vaults or mints;
+    // fetch each account type with its specialized method instead.
+    let mut fetched_accounts: Vec<AccountInterface> = Vec::new();
+
+    // Vaults (token PDAs)
+    for vault in [&pool_pdas.vault_a, &pool_pdas.vault_b] {
+        if let Ok(response) = rpc.get_token_account_interface(vault, None).await {
+            if let Some(iface) = response.value {
+                fetched_accounts.push(AccountInterface::from(iface));
+            }
+        }
+    }
 
     swap_sdk
-        .update(&keyed_accounts)
+        .update(&fetched_accounts)
         .expect("sdk.update should succeed");
 
     // ==================== PHASE 11: Build Load Instructions ====================
-    let all_specs = swap_sdk.get_specs_for_instruction(&SwapInstruction::Swap);
+    let mut all_specs = swap_sdk.get_specs_for_instruction(&SwapInstruction::Swap);
 
-    // Also need to decompress user ATAs
+    // Mints
+    for mint_pubkey in [&mint_a, &mint_b] {
+        if let Ok(response) = rpc.get_mint_interface(mint_pubkey, None).await {
+            if let Some(iface) = response.value {
+                if iface.is_cold() {
+                    all_specs.push(AccountSpec::Mint(AccountInterface::from(iface)));
+                }
+            }
+        }
+    }
+
+    // User associated token accounts
     let user_ata_a_interface = rpc
-        .get_ata_interface(&user.pubkey(), &mint_a)
+        .get_associated_token_account_interface(&user.pubkey(), &mint_a, None)
         .await
-        .expect("get_ata_interface for user_token_a should succeed");
+        .expect("get_ata for user_token_a should succeed")
+        .value
+        .expect("user_token_a interface should exist");
 
     let user_ata_b_interface = rpc
-        .get_ata_interface(&user.pubkey(), &mint_b)
+        .get_associated_token_account_interface(&user.pubkey(), &mint_b, None)
         .await
-        .expect("get_ata_interface for user_token_b should succeed");
+        .expect("get_ata for user_token_b should succeed")
+        .value
+        .expect("user_token_b interface should exist");
 
-    let mut all_specs_with_atas = all_specs;
-    all_specs_with_atas.push(light_client::interface::AccountSpec::Ata(
-        user_ata_a_interface,
-    ));
-    all_specs_with_atas.push(light_client::interface::AccountSpec::Ata(
-        user_ata_b_interface,
-    ));
+    all_specs.push(AccountSpec::Ata(Box::new(user_ata_a_interface)));
+    all_specs.push(AccountSpec::Ata(Box::new(user_ata_b_interface)));
 
-    let load_ixs = create_load_instructions::<LightAccountVariant, LightProgramTest>(
-        &all_specs_with_atas,
+    let load_ixs = create_load_instructions::<LightAccountVariant, _>(
+        &all_specs,
         payer.pubkey(),
         env.config_pda,
         &rpc,
@@ -430,7 +444,7 @@ async fn test_full_lifecycle() {
     println!("payer pubkey: {}", payer.pubkey());
     println!("user pubkey: {}", user.pubkey());
     println!("authority pubkey: {}", authority.pubkey());
-    // User is needed as owner of user ATAs
+    // User is needed as owner of user associated token accounts
     rpc.create_and_send_transaction(&load_ixs, &payer.pubkey(), &[&payer, &user])
         .await
         .expect("Decompression should succeed");

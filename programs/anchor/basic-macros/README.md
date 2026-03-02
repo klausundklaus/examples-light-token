@@ -3,7 +3,7 @@
 | | |
 |---------|--------|
 | [**counter**](counter) | Create PDA with sponsored rent-exemption |
-| [**create-associated-token-account**](create-ata) | Create associated light-token account |
+| [**create-associated-token-account**](create-associated-token-account) | Create associated light-token account |
 | [**create-mint**](create-mint) | Create light-token mint |
 | [**create-token-account**](create-token-account) | Create light-token account |
 
@@ -17,7 +17,7 @@ For existing programs, you can replace spl_token with light_token instructions a
 
 ```bash
 # for localnet
-npm i -g @lightprotocol/zk-compression-cli@alpha
+npm i -g @lightprotocol/zk-compression-cli@beta
 ```
 
 ```bash

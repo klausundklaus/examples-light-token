@@ -44,6 +44,11 @@ jobs:
           - light-token-macro-create-mint
           - light-token-macro-create-token-account
           - create-and-transfer
+          # example programs
+          - escrow
+          - fundraiser
+          - light-token-minter
+          - swap_example
     steps:
       - uses: actions/checkout@v4
 
@@ -54,6 +59,45 @@ jobs:
           solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
           rust-toolchain: ${{ env.RUST_TOOLCHAIN }}
 
+      - name: Build light-token-minter
+        if: contains(fromJson('["escrow", "fundraiser", "swap_example"]'), matrix.package)
+        working-directory: programs/anchor
+        run: cargo build-sbf --manifest-path light-token-minter/Cargo.toml
+
       - name: Test
         working-directory: programs/anchor
         run: cargo test-sbf -p ${{ matrix.package }} -- --test-threads=1
+
+  test-pinocchio:
+    name: pinocchio-swap
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          example: pinocchio/swap
+          solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
+          rust-toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Test
+        working-directory: pinocchio/swap
+        run: cargo test-sbf -p pinocchio-swap -- --test-threads=1
+
+  check-toolkits:
+    name: sponsor-rent-top-ups
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup
+        with:
+          example: toolkits/sponsor-rent-top-ups/rust
+          solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
+          rust-toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Check
+        working-directory: toolkits/sponsor-rent-top-ups/rust
+        run: cargo check

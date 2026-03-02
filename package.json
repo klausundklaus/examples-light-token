@@ -6,7 +6,8 @@
         "toolkits/payments-and-wallets",
         "toolkits/sign-with-privy/react",
         "toolkits/sign-with-privy/nodejs",
-        "toolkits/sign-with-privy/scripts"
+        "toolkits/sign-with-privy/scripts",
+        "toolkits/sponsor-rent-top-ups/typescript"
     ],
     "scripts": {
         "toolkit:payments": "npm run -w toolkits/payments-and-wallets"

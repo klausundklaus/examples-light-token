@@ -15,8 +15,8 @@ test-sbf = []
 
 [dependencies]
 # Main Light Protocol dependencies
-light-account-pinocchio = { version = "0.20", features = ["token", "std"] }
-light-token-pinocchio = "0.20"
+light-account-pinocchio = { version = "0.23.0", features = ["token", "std"] }
+light-token-pinocchio = "0.23.0"
 light-hasher = { version = "5.0.0", features = ["solana"] }
 
 # Serialization and utilities
@@ -33,11 +33,11 @@ solana-msg = "2.2"
 solana-program-error = "2.2"
 
 [dev-dependencies]
-light-program-test = "0.20"
-light-client = { version = "0.20", features = ["v2", "anchor", "program-test"] }
-light-token = { version = "0.20", features = ["anchor"] }
-light-token-client = "0.20"
-light-account = { version = "0.20", features = ["token"] }
+light-program-test = "0.23.0"
+light-client = { version = "0.23.0", features = ["v2", "anchor", "program-test"] }
+light-token = { version = "0.23.0", features = ["anchor"] }
+light-token-client = "0.23.0"
+light-account = { version = "0.23.0", features = ["token"] }
 tokio = { version = "1", features = ["full"] }
 solana-sdk = "2.2"
 solana-account = "2.2"

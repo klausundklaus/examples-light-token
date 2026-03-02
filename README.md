@@ -42,7 +42,6 @@ Light token is a high-performance token standard that reduces the cost of mint a
 | mint-to | [Action](rust-client/actions/mint_to.rs) | [Instruction](rust-client/instructions/mint_to.rs) | Mint tokens to a light-account |
 | mint-to-checked | | [Instruction](rust-client/instructions/mint_to_checked.rs) | Mint tokens with decimal validation |
 | transfer-interface | [Action](rust-client/actions/transfer_interface.rs) | [Instruction](rust-client/instructions/transfer_interface.rs) | Transfer between light-token, T22, and SPL accounts |
-| transfer-checked | [Action](rust-client/actions/transfer_checked.rs) | [Instruction](rust-client/instructions/transfer_checked.rs) | Transfer with decimal validation |
 | spl-to-light-transfer | | [Instruction](rust-client/instructions/spl_to_light_transfer.rs) | Transfer from SPL to Light via TransferInterface |
 | wrap | [Action](rust-client/actions/wrap.rs) | | Wrap SPL/T22 to light-token |
 | unwrap | [Action](rust-client/actions/unwrap.rs) | | Unwrap light-token to SPL/T22 |

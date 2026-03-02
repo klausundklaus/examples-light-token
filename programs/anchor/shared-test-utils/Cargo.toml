@@ -1,0 +1,45 @@
+[package]
+name = "shared-test-utils"
+version = "0.1.0"
+description = "Shared test utilities for Light Protocol example programs"
+edition = "2021"
+
+[lib]
+name = "shared_test_utils"
+
+[dependencies]
+# Light Protocol dependencies (from workspace)
+light-program-test.workspace = true
+light-client = { workspace = true, features = ["v2", "anchor"] }
+light-sdk.workspace = true
+light-token = { workspace = true, features = ["anchor"] }
+light-account = { workspace = true }
+light-hasher = { workspace = true, features = ["solana"] }
+
+# Example program dependencies (for calling Light mint creation instructions)
+light-token-minter = { path = "../light-token-minter", features = ["no-entrypoint"] }
+
+# Anchor dependencies
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+
+# Solana dependencies
+solana-keypair = { workspace = true }
+solana-signer = { workspace = true }
+solana-instruction = { workspace = true }
+solana-sdk = { workspace = true }
+solana-pubkey = { workspace = true }
+
+# SPL Token dependencies
+spl-token-2022 = { workspace = true }
+spl-pod = { workspace = true }
+
+# Async
+tokio = { workspace = true, features = ["full"] }
+
+[lints.rust.unexpected_cfgs]
+level = "allow"
+check-cfg = [
+    'cfg(target_os, values("solana"))',
+    'cfg(feature, values("frozen-abi", "no-entrypoint"))',
+]
