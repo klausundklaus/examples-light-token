@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token';
 import { createRpc } from '@lightprotocol/stateless.js';
 import {
   getAssociatedTokenAddressInterface,
@@ -95,8 +95,21 @@ export function useUnifiedBalance() {
         // No compressed accounts
       }
 
-      // 5. Hot balance from Light Token associated token account
+      // 5. Fetch actual decimals for each mint
       const mintKeys = [...mintMap.keys()];
+      await Promise.allSettled(
+        mintKeys.map(async (mintStr) => {
+          try {
+            const mint = new PublicKey(mintStr);
+            const mintInfo = await getMint(rpc, mint);
+            getOrCreate(mintStr).decimals = mintInfo.decimals;
+          } catch {
+            // Keep default decimals if mint fetch fails
+          }
+        }),
+      );
+
+      // 6. Hot balance from Light Token associated token account
       await Promise.allSettled(
         mintKeys.map(async (mintStr) => {
           try {
@@ -111,7 +124,7 @@ export function useUnifiedBalance() {
         }),
       );
 
-      // 6. Assemble TokenBalance[]
+      // 7. Assemble TokenBalance[]
       const result: TokenBalance[] = [];
 
       // SOL entry
