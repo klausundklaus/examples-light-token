@@ -13,6 +13,8 @@ Light token is a high-performance token standard that reduces the cost of mint a
 | [Payments and Wallets](toolkits/payments-and-wallets/) | All you need for wallet integrations and payment flows. Minimal API differences to SPL. |
 | [Streaming Tokens](toolkits/streaming-tokens/) | Stream mint events using Laserstream |
 | [Sign with Privy](toolkits/sign-with-privy/) | Light-token operations signed with Privy wallets (Node.js + React) |
+| [Sign with Wallet Adapter](toolkits/sign-with-wallet-adapter/) | Sign light-token transactions with Wallet Adapter (React) |
+| [Sponsor Rent Top-Ups](toolkits/sponsor-rent-top-ups/) | Sponsor rent top-ups for users by setting your application as the fee payer |
 
 ## Client Examples
 
@@ -61,8 +63,9 @@ Light token is a high-performance token standard that reduces the cost of mint a
 | [escrow](programs/anchor/escrow) | Peer-to-peer light-token swap with offer/accept flow |
 | [fundraiser](programs/anchor/fundraiser) | Token fundraiser with target, deadline, and refunds |
 | [light-token-minter](programs/anchor/light-token-minter) | Create light-mints with metadata, mint tokens |
-| [token-swap](programs/anchor/token-swap) | AMM with liquidity pools and swaps |
+| [token-swap](programs/anchor/token-swap) | AMM with liquidity pools and swaps (Anchor) |
 | [cp-swap-reference](https://github.com/Lightprotocol/cp-swap-reference/tree/954f679699dbdfe9711308c8ae9fbd21e69db8aa) | Fork of Raydium AMM that creates markets without paying rent-exemption |
+| [pinocchio-swap](pinocchio/swap) | AMM with liquidity pools and swaps (Pinocchio) |
 | [create-and-transfer](programs/anchor/create-and-transfer) | Create account via macro and transfer via CPI |
 
 ### Macros
