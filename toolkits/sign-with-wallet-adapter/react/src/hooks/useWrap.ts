@@ -8,10 +8,7 @@ import {
   createAssociatedTokenAccountInterfaceIdempotentInstruction,
 } from '@lightprotocol/compressed-token/unified';
 import { createRpc, CTOKEN_PROGRAM_ID } from '@lightprotocol/stateless.js';
-import type { ConnectedStandardSolanaWallet } from '@privy-io/js-sdk-core';
-import { useSignTransaction } from '@privy-io/react-auth/solana';
-
-type SignTransactionFn = ReturnType<typeof useSignTransaction>['signTransaction'];
+import type { SignTransactionFn } from './signAndSendBatches';
 
 export interface WrapParams {
   ownerPublicKey: string;
@@ -22,7 +19,6 @@ export interface WrapParams {
 
 export interface WrapArgs {
   params: WrapParams;
-  wallet: ConnectedStandardSolanaWallet;
   signTransaction: SignTransactionFn;
 }
 
@@ -33,7 +29,7 @@ export function useWrap() {
     setIsLoading(true);
 
     try {
-      const { params, wallet, signTransaction } = args;
+      const { params, signTransaction } = args;
       const { ownerPublicKey, mint, amount, decimals = 9 } = params;
 
       const rpc = createRpc(import.meta.env.VITE_HELIUS_RPC_URL);
@@ -76,18 +72,13 @@ export function useWrap() {
       tx.recentBlockhash = blockhash;
       tx.feePayer = owner;
 
-      const unsignedTxBuffer = tx.serialize({ requireAllSignatures: false });
-      const signedTx = await signTransaction({
-        transaction: unsignedTxBuffer,
-        wallet,
-        chain: 'solana:devnet',
-      });
-
-      const signedTxBuffer = Buffer.from(signedTx.signedTransaction);
-      return rpc.sendRawTransaction(signedTxBuffer, {
+      const signedTx = await signTransaction(tx);
+      const sig = await rpc.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed',
       });
+      await rpc.confirmTransaction(sig, 'confirmed');
+      return sig;
     } finally {
       setIsLoading(false);
     }

@@ -4,11 +4,7 @@ import {
   createTransferInterfaceInstructions,
 } from '@lightprotocol/compressed-token/unified';
 import { createRpc } from '@lightprotocol/stateless.js';
-import type { ConnectedStandardSolanaWallet } from '@privy-io/js-sdk-core';
-import { useSignTransaction } from '@privy-io/react-auth/solana';
-import { signAndSendBatches } from './signAndSendBatches';
-
-type SignTransactionFn = ReturnType<typeof useSignTransaction>['signTransaction'];
+import { signAndSendBatches, type SignTransactionFn } from './signAndSendBatches';
 
 export interface TransferParams {
   ownerPublicKey: string;
@@ -20,7 +16,6 @@ export interface TransferParams {
 
 export interface TransferArgs {
   params: TransferParams;
-  wallet: ConnectedStandardSolanaWallet;
   signTransaction: SignTransactionFn;
 }
 
@@ -31,7 +26,7 @@ export function useTransfer() {
     setIsLoading(true);
 
     try {
-      const { params, wallet, signTransaction } = args;
+      const { params, signTransaction } = args;
       const { ownerPublicKey, mint, toAddress, amount, decimals = 9 } = params;
 
       const rpc = createRpc(import.meta.env.VITE_HELIUS_RPC_URL);
@@ -51,7 +46,6 @@ export function useTransfer() {
       const signature = await signAndSendBatches(instructions, {
         rpc,
         feePayer: owner,
-        wallet,
         signTransaction,
       });
 

@@ -5,11 +5,7 @@ import {
   createUnwrapInstructions,
 } from '@lightprotocol/compressed-token/unified';
 import { createRpc } from '@lightprotocol/stateless.js';
-import type { ConnectedStandardSolanaWallet } from '@privy-io/js-sdk-core';
-import { useSignTransaction } from '@privy-io/react-auth/solana';
-import { signAndSendBatches } from './signAndSendBatches';
-
-type SignTransactionFn = ReturnType<typeof useSignTransaction>['signTransaction'];
+import { signAndSendBatches, type SignTransactionFn } from './signAndSendBatches';
 
 export interface UnwrapParams {
   ownerPublicKey: string;
@@ -20,7 +16,6 @@ export interface UnwrapParams {
 
 export interface UnwrapArgs {
   params: UnwrapParams;
-  wallet: ConnectedStandardSolanaWallet;
   signTransaction: SignTransactionFn;
 }
 
@@ -31,7 +26,7 @@ export function useUnwrap() {
     setIsLoading(true);
 
     try {
-      const { params, wallet, signTransaction } = args;
+      const { params, signTransaction } = args;
       const { ownerPublicKey, mint, amount, decimals = 9 } = params;
 
       const rpc = createRpc(import.meta.env.VITE_HELIUS_RPC_URL);
@@ -58,7 +53,6 @@ export function useUnwrap() {
       const signature = await signAndSendBatches(instructions, {
         rpc,
         feePayer: owner,
-        wallet,
         signTransaction,
       });
 

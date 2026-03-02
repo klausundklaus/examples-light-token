@@ -13,6 +13,7 @@ Light token is a high-performance token standard that reduces the cost of mint a
 | [Payments and Wallets](toolkits/payments-and-wallets/) | All you need for wallet integrations and payment flows. Minimal API differences to SPL. |
 | [Streaming Tokens](toolkits/streaming-tokens/) | Stream mint events using Laserstream |
 | [Sign with Privy](toolkits/sign-with-privy/) | Light-token operations signed with Privy wallets (Node.js + React) |
+| [Sign with Wallet Adapter](toolkits/sign-with-wallet-adapter/) | Sign light-token transactions with Wallet Adapter (React) |
 | [Sponsor Rent Top-Ups](toolkits/sponsor-rent-top-ups/) | Sponsor rent top-ups for users by setting your application as the fee payer |
 
 ## Client Examples

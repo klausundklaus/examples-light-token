@@ -19,6 +19,11 @@ Light-token operations signed with [Privy](https://privy.io) wallets. Server-sid
 - **[React](sign-with-privy/react/)** — Browser app using `@privy-io/react-auth` with embedded wallet signing
 - **[Setup scripts](sign-with-privy/scripts/)** — Create test mints and fund wallets on devnet
 
+### Sign with Wallet Adapter
+
+Sign light-token transactions with [Wallet Adapter](https://github.com/anza-xyz/wallet-adapter). Transfer, wrap, unwrap, and balance queries.
+- **[React](sign-with-wallet-adapter/react/)** — Browser app using `@solana/wallet-adapter-react` with Phantom, Backpack, Solflare, etc.
+
 ### Streaming Tokens
 
 [Rust program example to stream mint events](streaming-tokens/) of the Light-Token Program.
