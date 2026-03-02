@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, getMint } from '@solana/spl-token';
 import { createRpc } from '@lightprotocol/stateless.js';
 import {
   getAssociatedTokenAddressInterface,
@@ -84,8 +84,32 @@ export function useUnifiedBalance() {
         // No Token 2022 accounts
       }
 
-      // 4. Hot balance from Light Token associated token account
+      // 4. Cold balance from compressed token accounts
+      try {
+        const compressed = await rpc.getCompressedTokenBalancesByOwnerV2(owner);
+        for (const item of compressed.value.items) {
+          const mintStr = item.mint.toBase58();
+          getOrCreate(mintStr).cold += BigInt(item.balance.toString());
+        }
+      } catch {
+        // No compressed accounts
+      }
+
+      // 5. Fetch actual decimals for each mint
       const mintKeys = [...mintMap.keys()];
+      await Promise.allSettled(
+        mintKeys.map(async (mintStr) => {
+          try {
+            const mint = new PublicKey(mintStr);
+            const mintInfo = await getMint(rpc, mint);
+            getOrCreate(mintStr).decimals = mintInfo.decimals;
+          } catch {
+            // Keep default decimals if mint fetch fails
+          }
+        }),
+      );
+
+      // 6. Hot balance from Light Token associated token account
       await Promise.allSettled(
         mintKeys.map(async (mintStr) => {
           try {
@@ -100,18 +124,7 @@ export function useUnifiedBalance() {
         }),
       );
 
-      // 5. Cold balance from compressed token accounts
-      try {
-        const compressed = await rpc.getCompressedTokenBalancesByOwnerV2(owner);
-        for (const item of compressed.value.items) {
-          const mintStr = item.mint.toBase58();
-          getOrCreate(mintStr).cold += BigInt(item.balance.toString());
-        }
-      } catch {
-        // No compressed accounts
-      }
-
-      // 6. Assemble TokenBalance[]
+      // 7. Assemble TokenBalance[]
       const result: TokenBalance[] = [];
 
       // SOL entry
