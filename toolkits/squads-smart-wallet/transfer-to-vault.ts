@@ -1,31 +1,25 @@
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
-import { createRpc } from "@lightprotocol/stateless.js";
+import {
+    createRpc,
+    buildAndSignTx,
+    sendAndConfirmTx,
+} from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
     createAtaInterface,
     getAssociatedTokenAddressInterface,
+    mintToInterface,
+    createLightTokenTransferInstruction,
 } from "@lightprotocol/compressed-token";
-import {
-    transferInterface,
-    wrap,
-} from "@lightprotocol/compressed-token/unified";
-import {
-    TOKEN_PROGRAM_ID,
-    createAssociatedTokenAccount,
-    mintTo,
-} from "@solana/spl-token";
 import * as multisig from "@sqds/multisig";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
 const { Permissions } = multisig.types;
 
-// devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
-// localnet:
-const rpc = createRpc();
+const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:8899";
+const rpc = createRpc(RPC_URL);
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
@@ -34,36 +28,16 @@ const payer = Keypair.fromSecretKey(
 );
 
 (async function () {
-    // 1. Create SPL mint (includes SPL interface PDA registration)
-    const { mint } = await createMintInterface(
-        rpc,
-        payer,
-        payer,
-        null,
-        9,
-        undefined,
-        undefined,
-        TOKEN_PROGRAM_ID
-    );
-
-    // 2. Create SPL ATA, mint tokens, wrap into light-token ATA
-    const splAta = await createAssociatedTokenAccount(
-        rpc,
-        payer,
-        mint,
-        payer.publicKey,
-        undefined,
-        TOKEN_PROGRAM_ID
-    );
-    await mintTo(rpc, payer, mint, splAta, payer, 1_000_000);
+    // 1. Create Light Token mint and mint tokens to payer
+    const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const lightTokenAta = getAssociatedTokenAddressInterface(
+    const payerAta = getAssociatedTokenAddressInterface(
         mint,
         payer.publicKey
     );
-    await wrap(rpc, payer, splAta, lightTokenAta, payer, mint, BigInt(1_000_000));
+    await mintToInterface(rpc, payer, mint, payerAta, payer, 1_000_000);
 
-    // 3. Create a 1-of-1 Squads multisig
+    // 2. Create a 1-of-1 Squads multisig
     const createKey = Keypair.generate();
     const [multisigPda] = multisig.getMultisigPda({
         createKey: createKey.publicKey,
@@ -92,20 +66,24 @@ const payer = Keypair.fromSecretKey(
         treasury: programConfig.treasury,
     });
 
-    // 4. Create a light-token ATA owned by the vault (off-curve)
+    // 3. Create a Light Token ATA owned by the vault (off-curve PDA)
     await createAtaInterface(rpc, payer, mint, vaultPda, true);
+    const vaultAta = getAssociatedTokenAddressInterface(mint, vaultPda, true);
 
-    // 5. Transfer light tokens to the vault
-    const sig = await transferInterface(
-        rpc,
-        payer,
-        lightTokenAta,
-        mint,
-        vaultPda,
-        payer,
+    // 4. Transfer Light Tokens to the vault
+    //    Note: transferInterface() rejects off-curve recipients (PDA vaults).
+    //    Use createLightTokenTransferInstruction which accepts any PublicKey.
+    const transferIx = createLightTokenTransferInstruction(
+        payerAta,
+        vaultAta,
+        payer.publicKey,
         500_000
     );
+    const { blockhash } = await rpc.getLatestBlockhash();
+    const tx = buildAndSignTx([transferIx], payer, blockhash, []);
+    const sig = await sendAndConfirmTx(rpc, tx);
 
     console.log("Vault:", vaultPda.toBase58());
+    console.log("Vault ATA:", vaultAta.toBase58());
     console.log("Tx:", sig);
 })();

@@ -1,16 +1,17 @@
 import "dotenv/config";
-import { Keypair, TransactionMessage } from "@solana/web3.js";
-import { createRpc } from "@lightprotocol/stateless.js";
+import { Keypair, TransactionMessage, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+    createRpc,
+    buildAndSignTx,
+    sendAndConfirmTx,
+} from "@lightprotocol/stateless.js";
 import {
     createMintInterface,
     createAtaInterface,
     getAssociatedTokenAddressInterface,
+    createLightTokenTransferInstruction,
 } from "@lightprotocol/compressed-token";
-import {
-    createUnwrapInstructions,
-    transferInterface,
-    wrap,
-} from "@lightprotocol/compressed-token/unified";
+import { wrap, createUnwrapInstructions } from "@lightprotocol/compressed-token/unified";
 import {
     TOKEN_PROGRAM_ID,
     createAssociatedTokenAccount,
@@ -24,11 +25,8 @@ import { readFileSync } from "fs";
 
 const { Permissions } = multisig.types;
 
-// devnet:
-// const RPC_URL = `https://devnet.helius-rpc.com?api-key=${process.env.API_KEY!}`;
-// const rpc = createRpc(RPC_URL);
-// localnet:
-const rpc = createRpc();
+const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:8899";
+const rpc = createRpc(RPC_URL);
 
 const payer = Keypair.fromSecretKey(
     new Uint8Array(
@@ -49,7 +47,7 @@ const payer = Keypair.fromSecretKey(
         TOKEN_PROGRAM_ID
     );
 
-    // 2. Mint SPL tokens, wrap into light-token ATA
+    // 2. Mint SPL tokens, wrap into Light Token ATA
     const splAta = await createAssociatedTokenAccount(
         rpc,
         payer,
@@ -95,20 +93,36 @@ const payer = Keypair.fromSecretKey(
         treasury: programConfig.treasury,
     });
 
-    // 4. Fund vault with light tokens
+    // 4. Fund vault with Light Tokens using createLightTokenTransferInstruction
+    //    (transferInterface rejects off-curve PDA recipients)
     await createAtaInterface(rpc, payer, mint, vaultPda, true);
-    await transferInterface(
-        rpc,
-        payer,
+    const vaultLightAta = getAssociatedTokenAddressInterface(mint, vaultPda, true);
+
+    const fundIx = createLightTokenTransferInstruction(
         lightTokenAta,
-        mint,
-        vaultPda,
-        payer,
+        vaultLightAta,
+        payer.publicKey,
         500_000
     );
+    const { blockhash: bh1 } = await rpc.getLatestBlockhash();
+    const fundTx = buildAndSignTx([fundIx], payer, bh1, []);
+    await sendAndConfirmTx(rpc, fundTx);
 
-    // 5. Unwrap light tokens to SPL inside the vault via vault transaction.
-    //    createUnwrapInstructions takes owner as PublicKey, so it works with PDAs.
+    // 5. Fund vault with SOL for inner transaction fees
+    const solTx = new Transaction().add(
+        SystemProgram.transfer({
+            fromPubkey: payer.publicKey,
+            toPubkey: vaultPda,
+            lamports: 10_000_000, // 0.01 SOL
+        })
+    );
+    solTx.recentBlockhash = (await rpc.getLatestBlockhash()).blockhash;
+    solTx.feePayer = payer.publicKey;
+    solTx.sign(payer);
+    const fundSolSig = await rpc.sendRawTransaction(solTx.serialize());
+    await rpc.confirmTransaction(fundSolSig, "confirmed");
+
+    // 6. Unwrap Light Tokens to SPL inside the vault via vault transaction
     const vaultSplAta = await getAssociatedTokenAddress(
         mint,
         vaultPda,
@@ -128,7 +142,7 @@ const payer = Keypair.fromSecretKey(
         multisigPda
     );
     let txIndex =
-        BigInt(multisigAccount.transactionIndex.toString()) + BigInt(1);
+        BigInt(multisigAccount.transactionIndex.toString()) + 1n;
 
     for (const ixs of unwrapIxBatches) {
         const unwrapMessage = new TransactionMessage({
@@ -137,7 +151,7 @@ const payer = Keypair.fromSecretKey(
             instructions: ixs,
         });
 
-        await multisig.rpc.vaultTransactionCreate({
+        const vtSig = await multisig.rpc.vaultTransactionCreate({
             connection: rpc,
             feePayer: payer,
             multisigPda,
@@ -147,22 +161,25 @@ const payer = Keypair.fromSecretKey(
             ephemeralSigners: 0,
             transactionMessage: unwrapMessage,
         });
+        await rpc.confirmTransaction(vtSig, "confirmed");
 
-        await multisig.rpc.proposalCreate({
+        const proposalSig = await multisig.rpc.proposalCreate({
             connection: rpc,
             feePayer: payer,
             multisigPda,
             transactionIndex: txIndex,
             creator: payer,
         });
+        await rpc.confirmTransaction(proposalSig, "confirmed");
 
-        await multisig.rpc.proposalApprove({
+        const approveSig = await multisig.rpc.proposalApprove({
             connection: rpc,
             feePayer: payer,
             multisigPda,
             transactionIndex: txIndex,
             member: payer,
         });
+        await rpc.confirmTransaction(approveSig, "confirmed");
 
         await multisig.rpc.vaultTransactionExecute({
             connection: rpc,
@@ -176,7 +193,7 @@ const payer = Keypair.fromSecretKey(
         txIndex++;
     }
 
-    // 6. Transfer SPL tokens from vault's SPL ATA to a recipient
+    // 7. Transfer SPL tokens from vault's SPL ATA to a recipient
     const recipient = Keypair.generate();
     const recipientSplAta = await createAssociatedTokenAccount(
         rpc,
@@ -202,7 +219,7 @@ const payer = Keypair.fromSecretKey(
         instructions: [transferIx],
     });
 
-    await multisig.rpc.vaultTransactionCreate({
+    const vtSig2 = await multisig.rpc.vaultTransactionCreate({
         connection: rpc,
         feePayer: payer,
         multisigPda,
@@ -212,22 +229,25 @@ const payer = Keypair.fromSecretKey(
         ephemeralSigners: 0,
         transactionMessage: transferMessage,
     });
+    await rpc.confirmTransaction(vtSig2, "confirmed");
 
-    await multisig.rpc.proposalCreate({
+    const proposalSig2 = await multisig.rpc.proposalCreate({
         connection: rpc,
         feePayer: payer,
         multisigPda,
         transactionIndex: txIndex,
         creator: payer,
     });
+    await rpc.confirmTransaction(proposalSig2, "confirmed");
 
-    await multisig.rpc.proposalApprove({
+    const approveSig2 = await multisig.rpc.proposalApprove({
         connection: rpc,
         feePayer: payer,
         multisigPda,
         transactionIndex: txIndex,
         member: payer,
     });
+    await rpc.confirmTransaction(approveSig2, "confirmed");
 
     const sig = await multisig.rpc.vaultTransactionExecute({
         connection: rpc,
