@@ -1,222 +1,221 @@
-# Squads Smart Wallet + Light Token Integration
+# Squads Smart Account + Light Token Integration
 
-This toolkit demonstrates how to use rent-free Light Tokens with Squads Protocol v4 multisig vaults. Squads vaults are standard Solana PDAs, which makes them fully compatible with the Light Token interface system.
+This toolkit demonstrates how to use rent-free Light Tokens with Squads Smart Accounts — programmable wallets with configurable access control on Solana.
 
 ## Overview
 
-Light Tokens use real Solana ATAs (Associated Token Accounts) with protocol-sponsored rent. Squads vaults are PDAs that can own these ATAs. This means you can:
+A Squads Smart Account is a wallet (PDA) with rules: who can sign, at what threshold, with what time lock. Light Tokens are real Solana ATAs with protocol-sponsored rent. Combined, you get a programmable wallet that holds rent-free tokens.
 
-- Hold rent-free tokens in a multisig-controlled vault
-- Transfer Light Tokens to and from vaults
-- Unwrap Light Tokens back to SPL/T22 inside a vault and transfer as normal SPL
+Two execution modes:
 
-## Key Concept: Vault PDA as Token Owner
+- **Sync** — Immediate execution in a single transaction. Requires all signers present and `timeLock=0`. No proposal overhead.
+- **Async** — Full proposal lifecycle: create → propose → approve → execute. For multi-party governance.
 
-A Squads vault PDA is derived from the multisig PDA:
+## Smart Account Setup
 
 ```typescript
-import * as multisig from "@sqds/multisig";
+import * as smartAccount from "@sqds/smart-account";
 
-const [multisigPda] = multisig.getMultisigPda({ createKey: createKey.publicKey });
-const [vaultPda] = multisig.getVaultPda({ multisigPda, index: 0 });
+// Read ProgramConfig to get the next available account index
+const programConfig =
+    await smartAccount.accounts.ProgramConfig.fromAccountAddress(
+        rpc,
+        smartAccount.getProgramConfigPda({})[0]
+    );
+const accountIndex =
+    BigInt(programConfig.smartAccountIndex.toString()) + 1n;
+
+// Derive PDAs
+const [settingsPda] = smartAccount.getSettingsPda({ accountIndex });
+const [walletPda] = smartAccount.getSmartAccountPda({
+    settingsPda,
+    accountIndex: 0,
+});
+
+// Create 1-of-1 smart account (timeLock=0 enables sync execution)
+await smartAccount.rpc.createSmartAccount({
+    connection: rpc,
+    treasury: programConfig.treasury,
+    creator: payer,
+    settings: settingsPda,
+    settingsAuthority: null,
+    threshold: 1,
+    signers: [
+        { key: payer.publicKey, permissions: smartAccount.types.Permissions.all() },
+    ],
+    timeLock: 0,
+    rentCollector: null,
+});
 ```
 
-Since the vault PDA is off-curve (not a valid keypair), you must set `allowOwnerOffCurve = true` when creating or deriving ATAs for it:
+For multi-party governance, add more signers and increase the threshold:
 
 ```typescript
-import { createAtaInterface, getAssociatedTokenAddressInterface } from "@lightprotocol/compressed-token";
+const { Permission, Permissions } = smartAccount.types;
 
-await createAtaInterface(rpc, payer, mint, vaultPda, true);
-const vaultAta = getAssociatedTokenAddressInterface(mint, vaultPda, true);
+signers: [
+    { key: admin.publicKey, permissions: Permissions.all() },
+    { key: signer2.publicKey, permissions: Permissions.fromPermissions([Permission.Vote]) },
+    { key: signer3.publicKey, permissions: Permissions.fromPermissions([Permission.Vote]) },
+],
+threshold: 2,
 ```
 
-## Important: Off-Curve PDA Transfers
+## Off-Curve PDA Transfers
 
-The high-level SDK functions `transferInterface()` and `createTransferInterfaceInstructions()` enforce on-curve validation for recipients and owners, which means they **reject Squads vault PDAs** (and any other off-curve PDA).
+The wallet PDA is off-curve (not a valid keypair). The high-level SDK functions `transferInterface()` and `createTransferInterfaceInstructions()` reject off-curve addresses.
 
-Use `createLightTokenTransferInstruction()` instead — it builds a raw ATA-to-ATA transfer instruction that accepts any `PublicKey` for source, destination, and owner:
+Use `createLightTokenTransferInstruction()` instead — it accepts any `PublicKey`:
 
 ```typescript
-import {
-    createLightTokenTransferInstruction,
-    getAssociatedTokenAddressInterface,
-} from "@lightprotocol/compressed-token";
-import { buildAndSignTx, sendAndConfirmTx } from "@lightprotocol/stateless.js";
+import { createLightTokenTransferInstruction } from "@lightprotocol/compressed-token";
 
 const ix = createLightTokenTransferInstruction(
     sourceAta,     // source Light Token ATA
     destAta,       // destination Light Token ATA
-    ownerPubkey,   // owner of the source ATA (can be off-curve PDA)
+    ownerPubkey,   // owner of source ATA (can be off-curve PDA)
     amount,
     feePayer       // optional, defaults to owner
 );
+```
 
+## Fund the Smart Wallet
+
+Anyone can send Light Tokens to a smart wallet — no approval needed.
+
+```typescript
+// Create wallet's Light Token ATA (allowOwnerOffCurve=true for PDAs)
+await createAtaInterface(rpc, payer, mint, walletPda, true);
+const walletAta = getAssociatedTokenAddressInterface(mint, walletPda, true);
+
+// Transfer
+const ix = createLightTokenTransferInstruction(
+    payerAta, walletAta, payer.publicKey, amount
+);
 const { blockhash } = await rpc.getLatestBlockhash();
 const tx = buildAndSignTx([ix], payer, blockhash, []);
 await sendAndConfirmTx(rpc, tx);
 ```
 
-## Transfers TO Vault
+See `fund-wallet.ts` for a complete example.
 
-Transfer Light Tokens into a vault using `createLightTokenTransferInstruction`:
+## Smart Wallet Sends — Sync Execution
+
+Single transaction, immediate execution. The smart account program executes the inner instruction via CPI, signing with the wallet PDA's seeds.
 
 ```typescript
-const vaultAta = getAssociatedTokenAddressInterface(mint, vaultPda, true);
-
-const ix = createLightTokenTransferInstruction(
-    payerAta,          // source
-    vaultAta,          // destination (off-curve vault PDA)
-    payer.publicKey,   // owner of source
-    amount
+// Build Light Token transfer instruction
+const transferIx = createLightTokenTransferInstruction(
+    walletAta, recipientAta, walletPda, amount, walletPda
 );
 
-const { blockhash } = await rpc.getLatestBlockhash();
-const tx = buildAndSignTx([ix], payer, blockhash, []);
-await sendAndConfirmTx(rpc, tx);
+// Compile for synchronous execution
+const { instructions, accounts } =
+    smartAccount.utils.instructionsToSynchronousTransactionDetails({
+        vaultPda: walletPda,
+        members: [payer.publicKey],
+        transaction_instructions: [transferIx],
+    });
+
+// Build sync execution instruction
+const syncIx = smartAccount.instructions.executeTransactionSync({
+    settingsPda,
+    numSigners: 1,
+    accountIndex: 0,
+    instructions,
+    instruction_accounts: accounts,
+});
+
+// Send as a single transaction
+const msg = new TransactionMessage({
+    payerKey: payer.publicKey,
+    recentBlockhash: blockhash,
+    instructions: [syncIx],
+}).compileToV0Message();
+const tx = new VersionedTransaction(msg);
+tx.sign([payer]);
+await rpc.sendRawTransaction(tx.serialize());
 ```
 
-See `transfer-to-vault.ts` for a complete example.
+See `wallet-send-sync.ts` for a complete example.
 
-## Transfers FROM Vault
+## Smart Wallet Sends — Async Proposal Flow
 
-Transfers from a vault require wrapping the instruction in a Squads vault transaction. The vault PDA "signs" via CPI inside the Squads program.
-
-### Step 1: Build the transfer instruction
+Multi-step governance flow. Each step must be confirmed before the next.
 
 ```typescript
-const ix = createLightTokenTransferInstruction(
-    vaultAta,          // source (vault's Light Token ATA)
-    recipientAta,      // destination
-    vaultPda,          // owner (off-curve PDA)
-    amount,
-    vaultPda           // fee payer for the inner tx
+// Read current transaction index
+const settings = await smartAccount.accounts.Settings.fromAccountAddress(
+    rpc, settingsPda
 );
-```
+const txIndex = BigInt(settings.transactionIndex.toString()) + 1n;
 
-### Step 2: Wrap in a Squads vault transaction
-
-```typescript
-import { TransactionMessage } from "@solana/web3.js";
-
-const message = new TransactionMessage({
-    payerKey: vaultPda,
-    recentBlockhash: (await rpc.getLatestBlockhash()).blockhash,
-    instructions: [ix],
+// 1. Create transaction
+await smartAccount.rpc.createTransaction({
+    connection: rpc, feePayer: payer, settingsPda,
+    transactionIndex: txIndex, creator: payer.publicKey,
+    accountIndex: 0, ephemeralSigners: 0,
+    transactionMessage: new TransactionMessage({
+        payerKey: walletPda,
+        recentBlockhash: blockhash,
+        instructions: [transferIx],
+    }),
 });
 
-const vtSig = await multisig.rpc.vaultTransactionCreate({
-    connection: rpc,
-    feePayer: payer,
-    multisigPda,
-    transactionIndex: txIndex,
-    creator: payer.publicKey,
-    vaultIndex: 0,
-    ephemeralSigners: 0,
-    transactionMessage: message,
+// 2. Create proposal
+await smartAccount.rpc.createProposal({
+    connection: rpc, feePayer: payer, settingsPda,
+    transactionIndex: txIndex, creator: payer,
 });
-await rpc.confirmTransaction(vtSig, "confirmed");
-```
 
-### Step 3: Propose, approve, execute
-
-Each step must be confirmed before the next (especially important on devnet):
-
-```typescript
-const proposalSig = await multisig.rpc.proposalCreate({
-    connection: rpc, feePayer: payer, multisigPda, transactionIndex: txIndex, creator: payer,
+// 3. Approve (repeat for each signer up to threshold)
+await smartAccount.rpc.approveProposal({
+    connection: rpc, feePayer: payer, settingsPda,
+    transactionIndex: txIndex, signer: payer,
 });
-await rpc.confirmTransaction(proposalSig, "confirmed");
 
-const approveSig = await multisig.rpc.proposalApprove({
-    connection: rpc, feePayer: payer, multisigPda, transactionIndex: txIndex, member: payer,
-});
-await rpc.confirmTransaction(approveSig, "confirmed");
-
-await multisig.rpc.vaultTransactionExecute({
-    connection: rpc, feePayer: payer, multisigPda, transactionIndex: txIndex,
-    member: payer.publicKey, signers: [payer],
+// 4. Execute
+await smartAccount.rpc.executeTransaction({
+    connection: rpc, feePayer: payer, settingsPda,
+    transactionIndex: txIndex, signer: payer.publicKey,
+    signers: [payer],
 });
 ```
 
-**Note**: The vault must hold enough SOL to pay for the inner transaction fees. Fund it before creating the vault transaction:
-
-```typescript
-import { SystemProgram, Transaction } from "@solana/web3.js";
-
-const solTx = new Transaction().add(
-    SystemProgram.transfer({
-        fromPubkey: payer.publicKey,
-        toPubkey: vaultPda,
-        lamports: 10_000_000, // 0.01 SOL
-    })
-);
-```
-
-See `transfer-from-vault.ts` for a complete example.
-
-## SPL Transfers FROM Vault
-
-You can unwrap Light Tokens back to standard SPL inside the vault, then transfer the SPL tokens out via a Squads vault transaction. This is useful when interacting with protocols that only accept standard SPL tokens.
-
-1. Fund vault with Light Tokens using `createLightTokenTransferInstruction`
-2. Unwrap Light Tokens to the vault's SPL ATA via `createUnwrapInstructions`
-3. Build a standard SPL `createTransferInstruction`
-4. Wrap each step in a Squads vault transaction and execute
-
-See `transfer-spl-from-vault.ts` for a complete example.
+See `wallet-send-async.ts` for a complete example.
 
 ## Running the Examples
-
-All examples use `RPC_URL` environment variable (defaults to `http://127.0.0.1:8899` for localnet).
 
 ```bash
 npm install
 
-# Run against devnet
+# Set RPC endpoint (defaults to localhost)
 export RPC_URL="https://devnet.helius-rpc.com?api-key=YOUR_KEY"
 
-# Transfer Light Tokens to a vault
-npx tsx transfer-to-vault.ts
+# Fund a smart wallet with Light Tokens
+npx tsx fund-wallet.ts
 
-# Transfer Light Tokens from a vault
-npx tsx transfer-from-vault.ts
+# Smart wallet sends LTs (sync — single transaction)
+npx tsx wallet-send-sync.ts
 
-# Unwrap and transfer SPL from a vault
-npx tsx transfer-spl-from-vault.ts
+# Smart wallet sends LTs (async — proposal flow)
+npx tsx wallet-send-async.ts
 
-# Run integration test (full end-to-end flow)
+# Run full integration test (all 3 flows)
 npx tsx squads-light-token.test.ts
-```
-
-## Creating the Multisig
-
-All examples create a 1-of-1 multisig for simplicity. For production use, configure multiple members and a higher threshold:
-
-```typescript
-const { Permissions } = multisig.types;
-
-await multisig.rpc.multisigCreateV2({
-    connection: rpc,
-    createKey,
-    creator: payer,
-    multisigPda,
-    configAuthority: null,
-    timeLock: 0,
-    members: [
-        { key: member1.publicKey, permissions: Permissions.all() },
-        { key: member2.publicKey, permissions: Permissions.all() },
-        { key: member3.publicKey, permissions: Permissions.all() },
-    ],
-    threshold: 2,
-    rentCollector: null,
-    treasury: programConfig.treasury,
-});
 ```
 
 ## Dependencies
 
-- `@lightprotocol/compressed-token` - Light Token SDK
-- `@lightprotocol/stateless.js` - Light Protocol RPC client
-- `@sqds/multisig` - Squads Protocol v4 SDK
-- `@solana/web3.js` - Solana web3 (peer dependency)
-- `@solana/spl-token` - SPL Token program (for unwrap/SPL transfer examples)
+- `@lightprotocol/compressed-token` — Light Token SDK
+- `@lightprotocol/stateless.js` — Light Protocol RPC client
+- `@sqds/smart-account` — Squads Smart Account SDK
+- `@solana/web3.js` — Solana web3 (peer dependency)
+
+## Program IDs
+
+| Program | ID |
+|---------|-----|
+| Squads Smart Account | `SMRTzfY6DfH5ik3TKiyLFfXexV8uSG3d2UksSCYdunG` |
+| Light Compressed Token | `cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m` |
+| Light System Program | `SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7` |

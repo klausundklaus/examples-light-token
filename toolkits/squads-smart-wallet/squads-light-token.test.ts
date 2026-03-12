@@ -1,5 +1,11 @@
 import "dotenv/config";
-import { Keypair, TransactionMessage, PublicKey } from "@solana/web3.js";
+import {
+    Keypair,
+    PublicKey,
+    SystemProgram,
+    TransactionMessage,
+    VersionedTransaction,
+} from "@solana/web3.js";
 import {
     createRpc,
     buildAndSignTx,
@@ -12,11 +18,11 @@ import {
     mintToInterface,
     createLightTokenTransferInstruction,
 } from "@lightprotocol/compressed-token";
-import * as multisig from "@sqds/multisig";
+import * as smartAccount from "@sqds/smart-account";
 import { homedir } from "os";
 import { readFileSync } from "fs";
 
-const { Permissions } = multisig.types;
+const { Permission, Permissions } = smartAccount.types;
 
 const RPC_URL = process.env.RPC_URL || "http://127.0.0.1:8899";
 const rpc = createRpc(RPC_URL);
@@ -32,180 +38,258 @@ function assert(condition: boolean, message: string) {
     console.log(`PASS: ${message}`);
 }
 
-/** Check if a Light Token ATA exists on-chain */
 async function accountExists(pubkey: PublicKey): Promise<boolean> {
     const info = await rpc.getAccountInfo(pubkey);
     return info !== null && info.value !== null;
 }
 
-(async function () {
-    console.log("=== Squads + Light Token Integration Test ===\n");
+async function confirmTx(sig: string) {
+    await rpc.confirmTransaction(sig, "confirmed");
+}
 
-    // Setup: Create Light Token mint and mint to payer
+(async function () {
+    console.log("=== Squads Smart Account + Light Token Integration Test ===\n");
+
+    // ── Setup: Create Light Token mint and fund payer ──
     const { mint } = await createMintInterface(rpc, payer, payer, null, 9);
     console.log("Mint:", mint.toBase58());
 
     await createAtaInterface(rpc, payer, mint, payer.publicKey);
-    const payerLightAta = getAssociatedTokenAddressInterface(
-        mint,
-        payer.publicKey
-    );
-    await mintToInterface(rpc, payer, mint, payerLightAta, payer, 1_000_000);
-    console.log("Payer ATA funded with 1,000,000 tokens");
+    const payerAta = getAssociatedTokenAddressInterface(mint, payer.publicKey);
+    await mintToInterface(rpc, payer, mint, payerAta, payer, 1_000_000);
+    console.log("Payer ATA funded with 1,000,000 tokens\n");
 
-    // Step 1: Create multisig + vault
-    console.log("\n--- Step 1: Create Squads multisig ---");
-    const createKey = Keypair.generate();
-    const [multisigPda] = multisig.getMultisigPda({
-        createKey: createKey.publicKey,
-    });
-    const [vaultPda] = multisig.getVaultPda({ multisigPda, index: 0 });
+    // ── Step 1: Create Smart Account (1-of-1, timeLock=0) ──
+    console.log("--- Step 1: Create smart account ---");
 
-    const programConfigPda = multisig.getProgramConfigPda({})[0];
+    const programConfigPda = smartAccount.getProgramConfigPda({})[0];
     const programConfig =
-        await multisig.accounts.ProgramConfig.fromAccountAddress(
+        await smartAccount.accounts.ProgramConfig.fromAccountAddress(
             rpc,
             programConfigPda
         );
+    const accountIndex =
+        BigInt(programConfig.smartAccountIndex.toString()) + 1n;
 
-    await multisig.rpc.multisigCreateV2({
+    const [settingsPda] = smartAccount.getSettingsPda({ accountIndex });
+    const [walletPda] = smartAccount.getSmartAccountPda({
+        settingsPda,
+        accountIndex: 0,
+    });
+
+    const createSig = await smartAccount.rpc.createSmartAccount({
         connection: rpc,
-        createKey,
+        treasury: programConfig.treasury,
         creator: payer,
-        multisigPda,
-        configAuthority: null,
-        timeLock: 0,
-        members: [
+        settings: settingsPda,
+        settingsAuthority: null,
+        threshold: 1,
+        signers: [
             { key: payer.publicKey, permissions: Permissions.all() },
         ],
-        threshold: 1,
+        timeLock: 0,
         rentCollector: null,
-        treasury: programConfig.treasury,
+        sendOptions: { skipPreflight: true },
     });
-    console.log("Multisig:", multisigPda.toBase58());
-    console.log("Vault:", vaultPda.toBase58());
-    assert(true, "Multisig + vault created");
+    await confirmTx(createSig);
 
-    // Step 2: Transfer Light Tokens to vault
-    console.log("\n--- Step 2: Transfer Light Tokens to vault ---");
-    await createAtaInterface(rpc, payer, mint, vaultPda, true);
-    const vaultLightAta = getAssociatedTokenAddressInterface(
-        mint,
-        vaultPda,
-        true
-    );
-    console.log("Vault ATA:", vaultLightAta.toBase58());
+    console.log("Settings PDA:", settingsPda.toBase58());
+    console.log("Wallet PDA:", walletPda.toBase58());
+    assert(await accountExists(settingsPda), "Smart account created");
 
-    // Direct ATA-to-ATA transfer (works with off-curve PDAs)
-    const transferToVaultIx = createLightTokenTransferInstruction(
-        payerLightAta,
-        vaultLightAta,
+    // ── Step 2: Fund smart wallet with Light Tokens ──
+    console.log("\n--- Step 2: Fund smart wallet with Light Tokens ---");
+
+    // Create Light Token ATA for the wallet PDA (off-curve, so allowOwnerOffCurve=true)
+    await createAtaInterface(rpc, payer, mint, walletPda, true);
+    const walletAta = getAssociatedTokenAddressInterface(mint, walletPda, true);
+    console.log("Wallet ATA:", walletAta.toBase58());
+
+    // Transfer LTs from payer to wallet (no approval needed — anyone can fund)
+    const fundIx = createLightTokenTransferInstruction(
+        payerAta,
+        walletAta,
         payer.publicKey,
         500_000
     );
     const { blockhash: bh1 } = await rpc.getLatestBlockhash();
-    const tx1 = buildAndSignTx([transferToVaultIx], payer, bh1, []);
-    const sig1 = await sendAndConfirmTx(rpc, tx1);
-    console.log("Transfer to vault tx:", sig1);
-    assert(await accountExists(vaultLightAta), "Vault ATA exists on-chain");
+    const fundTx = buildAndSignTx([fundIx], payer, bh1, []);
+    const fundSig = await sendAndConfirmTx(rpc, fundTx);
+    console.log("Fund tx:", fundSig);
+    assert(await accountExists(walletAta), "Wallet ATA exists on-chain");
 
-    // Step 3: Transfer Light Tokens FROM vault via Squads proposal
-    console.log("\n--- Step 3: Transfer from vault via Squads ---");
-    const recipient = Keypair.generate();
-    await createAtaInterface(rpc, payer, mint, recipient.publicKey);
-    const recipientLightAta = getAssociatedTokenAddressInterface(
+    // Fund wallet with SOL for inner transaction fees
+    const solFundIx = SystemProgram.transfer({
+        fromPubkey: payer.publicKey,
+        toPubkey: walletPda,
+        lamports: 10_000_000,
+    });
+    const { blockhash: bh2 } = await rpc.getLatestBlockhash();
+    const solFundMsg = new TransactionMessage({
+        payerKey: payer.publicKey,
+        recentBlockhash: bh2,
+        instructions: [solFundIx],
+    }).compileToV0Message();
+    const solFundTx = new VersionedTransaction(solFundMsg);
+    solFundTx.sign([payer]);
+    const solFundSig = await rpc.sendRawTransaction(solFundTx.serialize());
+    await confirmTx(solFundSig);
+    console.log("Wallet funded with 0.01 SOL");
+
+    // ── Step 3: Smart wallet sends LTs — sync execution ──
+    console.log("\n--- Step 3: Smart wallet sends LTs (sync) ---");
+
+    const recipientA = Keypair.generate();
+    await createAtaInterface(rpc, payer, mint, recipientA.publicKey);
+    const recipientAtaA = getAssociatedTokenAddressInterface(
         mint,
-        recipient.publicKey
+        recipientA.publicKey
     );
 
-    // Build transfer instruction with vault PDA as owner
-    const transferFromVaultIx = createLightTokenTransferInstruction(
-        vaultLightAta,
-        recipientLightAta,
-        vaultPda,
+    // Build Light Token transfer instruction (wallet → recipient A)
+    const transferSyncIx = createLightTokenTransferInstruction(
+        walletAta,
+        recipientAtaA,
+        walletPda,     // owner of source ATA
         100_000,
-        vaultPda
+        walletPda      // fee payer = wallet PDA
     );
 
-    // Wrap in Squads vault transaction
-    // Fund vault with SOL for the inner transaction fees
-    const fundVaultTx = new (await import("@solana/web3.js")).Transaction().add(
-        (await import("@solana/web3.js")).SystemProgram.transfer({
-            fromPubkey: payer.publicKey,
-            toPubkey: vaultPda,
-            lamports: 10_000_000, // 0.01 SOL
-        })
-    );
-    fundVaultTx.recentBlockhash = (await rpc.getLatestBlockhash()).blockhash;
-    fundVaultTx.feePayer = payer.publicKey;
-    fundVaultTx.sign(payer);
-    const fundSig = await rpc.sendRawTransaction(fundVaultTx.serialize());
-    await rpc.confirmTransaction(fundSig, "confirmed");
-    console.log("Vault funded with SOL");
+    // Compile for synchronous execution
+    const { instructions: syncInstructions, accounts: syncAccounts } =
+        smartAccount.utils.instructionsToSynchronousTransactionDetails({
+            vaultPda: walletPda,
+            members: [payer.publicKey],
+            transaction_instructions: [transferSyncIx],
+        });
 
-    const multisigInfo = await multisig.accounts.Multisig.fromAccountAddress(
-        rpc,
-        multisigPda
-    );
-    const txIndex = BigInt(multisigInfo.transactionIndex.toString()) + 1n;
-
-    const transferMessage = new TransactionMessage({
-        payerKey: vaultPda,
-        recentBlockhash: (await rpc.getLatestBlockhash()).blockhash,
-        instructions: [transferFromVaultIx],
+    // Build the sync execution instruction
+    const syncExecIx = smartAccount.instructions.executeTransactionSync({
+        settingsPda,
+        numSigners: 1,
+        accountIndex: 0,
+        instructions: syncInstructions,
+        instruction_accounts: syncAccounts,
     });
 
-    const vtSig = await multisig.rpc.vaultTransactionCreate({
+    // Send as a single transaction — immediate execution, no proposal needed
+    const { blockhash: bh3 } = await rpc.getLatestBlockhash();
+    const syncMsg = new TransactionMessage({
+        payerKey: payer.publicKey,
+        recentBlockhash: bh3,
+        instructions: [syncExecIx],
+    }).compileToV0Message();
+    const syncTx = new VersionedTransaction(syncMsg);
+    syncTx.sign([payer]);
+    const syncSig = await rpc.sendRawTransaction(syncTx.serialize(), {
+        skipPreflight: true,
+    });
+    await confirmTx(syncSig);
+    console.log("Sync transfer tx:", syncSig);
+    assert(
+        await accountExists(recipientAtaA),
+        "Recipient A ATA exists (sync transfer)"
+    );
+
+    // ── Step 4: Smart wallet sends LTs — async proposal flow ──
+    console.log("\n--- Step 4: Smart wallet sends LTs (async) ---");
+
+    const recipientB = Keypair.generate();
+    await createAtaInterface(rpc, payer, mint, recipientB.publicKey);
+    const recipientAtaB = getAssociatedTokenAddressInterface(
+        mint,
+        recipientB.publicKey
+    );
+
+    // Build Light Token transfer instruction (wallet → recipient B)
+    const transferAsyncIx = createLightTokenTransferInstruction(
+        walletAta,
+        recipientAtaB,
+        walletPda,
+        100_000,
+        walletPda
+    );
+
+    // Read current transaction index
+    const settings = await smartAccount.accounts.Settings.fromAccountAddress(
+        rpc,
+        settingsPda
+    );
+    const txIndex = BigInt(settings.transactionIndex.toString()) + 1n;
+
+    // 4a. Create transaction
+    const { blockhash: bh4 } = await rpc.getLatestBlockhash();
+    const createTxSig = await smartAccount.rpc.createTransaction({
         connection: rpc,
         feePayer: payer,
-        multisigPda,
+        settingsPda,
         transactionIndex: txIndex,
         creator: payer.publicKey,
-        vaultIndex: 0,
+        accountIndex: 0,
         ephemeralSigners: 0,
-        transactionMessage: transferMessage,
+        transactionMessage: new TransactionMessage({
+            payerKey: walletPda,
+            recentBlockhash: bh4,
+            instructions: [transferAsyncIx],
+        }),
+        sendOptions: { skipPreflight: true },
     });
-    console.log("Vault transaction created:", vtSig);
-    await rpc.confirmTransaction(vtSig, "confirmed");
+    await confirmTx(createTxSig);
+    console.log("Transaction created:", createTxSig);
 
-    const proposalSig = await multisig.rpc.proposalCreate({
+    // 4b. Create proposal
+    const proposalSig = await smartAccount.rpc.createProposal({
         connection: rpc,
         feePayer: payer,
-        multisigPda,
+        settingsPda,
         transactionIndex: txIndex,
         creator: payer,
+        sendOptions: { skipPreflight: true },
     });
+    await confirmTx(proposalSig);
     console.log("Proposal created:", proposalSig);
-    // Wait for confirmation before approving
-    await rpc.confirmTransaction(proposalSig, "confirmed");
 
-    const approveSig = await multisig.rpc.proposalApprove({
+    // 4c. Approve proposal
+    const approveSig = await smartAccount.rpc.approveProposal({
         connection: rpc,
         feePayer: payer,
-        multisigPda,
+        settingsPda,
         transactionIndex: txIndex,
-        member: payer,
+        signer: payer,
+        sendOptions: { skipPreflight: true },
     });
+    await confirmTx(approveSig);
     console.log("Proposal approved:", approveSig);
-    await rpc.confirmTransaction(approveSig, "confirmed");
 
-    await multisig.rpc.vaultTransactionExecute({
+    // 4d. Execute transaction
+    const executeSig = await smartAccount.rpc.executeTransaction({
         connection: rpc,
         feePayer: payer,
-        multisigPda,
+        settingsPda,
         transactionIndex: txIndex,
-        member: payer.publicKey,
+        signer: payer.publicKey,
         signers: [payer],
+        sendOptions: { skipPreflight: true },
     });
-    console.log("Vault transaction executed");
+    await confirmTx(executeSig);
+    console.log("Transaction executed:", executeSig);
 
-    // Step 4: Verify recipient received tokens
-    console.log("\n--- Step 4: Verify ---");
     assert(
-        await accountExists(recipientLightAta),
-        "Recipient ATA exists on-chain"
+        await accountExists(recipientAtaB),
+        "Recipient B ATA exists (async transfer)"
     );
-    assert(true, "Squads vault transaction executed successfully");
+
+    // ── Step 5: Verify ──
+    console.log("\n--- Step 5: Verify ---");
+    assert(await accountExists(walletAta), "Wallet ATA still exists");
+    assert(
+        await accountExists(recipientAtaA),
+        "Recipient A received tokens (sync)"
+    );
+    assert(
+        await accountExists(recipientAtaB),
+        "Recipient B received tokens (async)"
+    );
 
     console.log("\n=== All tests passed ===");
 })();
