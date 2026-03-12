@@ -7,10 +7,12 @@
         "toolkits/sign-with-privy/react",
         "toolkits/sign-with-privy/nodejs",
         "toolkits/sign-with-privy/scripts",
-        "toolkits/sponsor-rent-top-ups/typescript"
+        "toolkits/sponsor-rent-top-ups/typescript",
+        "toolkits/squads-smart-wallet"
     ],
     "scripts": {
-        "toolkit:payments": "npm run -w toolkits/payments-and-wallets"
+        "toolkit:payments": "npm run -w toolkits/payments-and-wallets",
+        "toolkit:squads": "npm run -w toolkits/squads-smart-wallet"
     },
     "dependencies": {
         "@lightprotocol/compressed-token": "beta",
