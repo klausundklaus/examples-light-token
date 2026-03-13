@@ -8,7 +8,8 @@
         "toolkits/sign-with-privy/nodejs",
         "toolkits/sign-with-privy/scripts",
         "toolkits/sponsor-rent-top-ups/typescript",
-        "toolkits/squads-smart-wallet"
+        "toolkits/squads-smart-wallet",
+        "vendor/smart-account-program/sdk/smart-account"
     ],
     "scripts": {
         "toolkit:payments": "npm run -w toolkits/payments-and-wallets",

@@ -12,6 +12,6 @@
     "dependencies": {
         "@lightprotocol/compressed-token": "^0.23.0-beta.9",
         "@lightprotocol/stateless.js": "^0.23.0-beta.9",
-        "@sqds/smart-account": "github:Squads-Protocol/smart-account-program#main"
+        "@sqds/smart-account": "*"
     }
 }

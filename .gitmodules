@@ -1,3 +1,6 @@
 [submodule "programs/anchor/cp-swap-reference"]
 	path = programs/anchor/cp-swap-reference
 	url = https://github.com/Lightprotocol/cp-swap-reference.git
+[submodule "vendor/smart-account-program"]
+	path = vendor/smart-account-program
+	url = https://github.com/klausundklaus/smart-account-program.git
